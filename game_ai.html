@@ -70,15 +70,19 @@
 
     <div id="diff-slot" class="diff-slot"></div>
 
+    <div id="settings-slot" class="diff-slot"></div>
+
     <p class="game-note">你走一步，机器人想一步（深度前瞻）再走一步，随后停下等你。难度越高，机器人想得越深。</p>
 
   </div>
 
   <script src="js/swipe.js"></script>
   <script src="js/assist.js"></script>
+  <script src="js/sfx.js"></script>
   <script src="js/ai2048.js"></script>
   <script>
     window.AiDuel && window.AiDuel();
+    window.Sound && Sound.mount('settings-slot', { label: '音效' });
     window.Assist && Assist.mount('diff-slot', {
       label: '机器人难度', key: '2048-botdiff', def: 'med',
       options: [['easy', '简单'], ['med', '中等'], ['hard', '困难']]

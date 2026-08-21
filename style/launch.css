@@ -45,7 +45,7 @@
 /* ---------- 棋盘（重力朝底，顶部 row=0） ---------- */
 .board {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   width: min(320px, 88vw); margin: 18px auto 0;
   aspect-ratio: 4 / 5; padding: 7px;
   background: linear-gradient(180deg, var(--board-hi), var(--board));

@@ -48,6 +48,8 @@
 
     <div id="diff-slot" class="diff-slot"></div>
 
+    <div id="settings-slot" class="diff-slot"></div>
+
     <div class="msg" id="grav-msg"></div>
 
     <p class="manual">
@@ -74,10 +76,12 @@
 
   <script src="js/swipe.js"></script>
   <script src="js/assist.js"></script>
+  <script src="js/sfx.js"></script>
   <script src="js/gravity2048.js"></script>
   <script>
     window.OrbitGame && window.OrbitGame();
-    window.Assist && Assist.mount('diff-slot', { label: '援助 / 难度', key: '2048-diff', def: 'off' });
+    window.Assist && Assist.mount('diff-slot', { label: '难度', key: '2048-diff' });
+    window.Sound && Sound.mount('settings-slot', { label: '音效' });
   </script>
 </body>
 </html>

@@ -49,6 +49,8 @@
 
     <div class="msg" id="launch-msg"></div>
 
+    <div id="settings-slot" class="diff-slot"></div>
+
     <div class="manual">
       <b>点选</b>一张牌再<b>点选</b>列发射 · 键盘 <b>1/2/3</b> 选牌，<b>Q/W/E/R</b> 发射，<b>空格</b> 射向最空列<br>
       <button class="btn btn-primary" id="launch-restart">重新开始</button>
@@ -56,9 +58,11 @@
 
   </div>
 
+  <script src="js/sfx.js"></script>
   <script src="js/launch2048.js"></script>
   <script>
     var lg = new window.LaunchGame();
+    window.Sound && Sound.mount('settings-slot', { label: '音效' });
   </script>
 </body>
 </html>

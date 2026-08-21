@@ -55,6 +55,8 @@
 
     <div id="diff-slot" class="diff-slot"></div>
 
+    <div id="settings-slot" class="diff-slot"></div>
+
     <div class="game-container">
       <div class="game-message">
         <p></p>
@@ -90,9 +92,11 @@
   <script src="js/game_manager.js"></script>
   <script src="js/modes.js"></script>
   <script src="js/assist.js"></script>
+  <script src="js/sfx.js"></script>
   <script src="js/application.js"></script>
   <script>
-    window.Assist && Assist.mount('diff-slot', { label: '援助 / 难度', key: '2048-diff', def: 'off' });
+    window.Assist && Assist.mount('diff-slot', { label: '难度', key: '2048-diff' });
+    window.Sound && Sound.mount('settings-slot', { label: '音效' });
   </script>
 </body>
 </html>

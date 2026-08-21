@@ -137,20 +137,16 @@ GameManager.prototype.addStartTiles = function () {
   }
 };
 
-// Adds a tile in a position chosen by the active difficulty/assist (default off = random)
+// Adds a tile in a position chosen by the active difficulty (scientifically: value distribution)
 GameManager.prototype.addRandomTile = function () {
   if (!this.grid.cellsAvailable()) return;
 
   var cell, value;
-  // 每日模式要求可复现：绕过援助(assist)，走后端可复现随机
-  if (this.mode !== "daily" && window.Assist && window.Assist.get() !== "off") {
-    var strengthS = window.Assist.strength(window.Assist.get());
-    var b = this.gridToBoard();
-    var pick = window.Assist.pick4(b, strengthS);
-    if (pick) {
-      cell = { x: pick.c, y: pick.r };
-      value = window.Assist.pickValue(strengthS);
-    }
+  // 每日模式要求可复现：绕过难度(assist)，走后端可复现随机
+  if (this.mode !== "daily" && window.Assist) {
+    value = window.Assist.spawnValue(window.Assist.get());
+    cell = { x: Math.floor(this.rng() * this.size), y: Math.floor(this.rng() * this.size) };
+    if (!this.grid.cellAvailable(cell)) cell = this.pickSpawnCell();
   }
   if (!cell) {
     value = this.pickSpawnValue();
@@ -360,6 +356,7 @@ GameManager.prototype.move = function (direction) {
           // 2048+：连击 —— 一步内多次合并叠加倍率，额外加分
           self.combo++;
           self.score += merged.value;
+          if (window.Sound && window.Sound.merge) window.Sound.merge(); // 合体果冻声
           if (self.combo > 1) {
             self.comboBonus += merged.value;
           }
@@ -382,6 +379,7 @@ GameManager.prototype.move = function (direction) {
     this.undoStack  = preMove;
     this.moves++;
     if (this.comboBonus > 0) this.score += this.comboBonus;
+    if (window.Sound && window.Sound.drop) window.Sound.drop(); // 落子闷响
 
     this.addRandomTile();
 

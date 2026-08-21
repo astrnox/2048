@@ -27,6 +27,8 @@
 
     <div id="diff-slot" class="diff-slot"></div>
 
+    <div id="settings-slot" class="diff-slot"></div>
+
     <div class="hex-board" id="hex-board"></div>
 
     <div class="combo-wrap"><span class="combo" id="hex-combo"></span></div>
@@ -41,10 +43,12 @@
 
   <script src="js/swipe.js"></script>
   <script src="js/assist.js"></script>
+  <script src="js/sfx.js"></script>
   <script src="js/hex2048.js"></script>
   <script>
     var game = new window.HexGame(document.getElementById("hex-board"));
-    window.Assist && Assist.mount('diff-slot', { label: '援助 / 难度', key: '2048-diff', def: 'off' });
+    window.Assist && Assist.mount('diff-slot', { label: '难度', key: '2048-diff' });
+    window.Sound && Sound.mount('settings-slot', { label: '音效' });
     document.getElementById("restart").addEventListener("click", function () { game.restart(); });
     document.addEventListener("click", function (e) {
       if (e.target && (e.target.id === "restart2" || e.target.id === "keep")) {

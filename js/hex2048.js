@@ -186,14 +186,8 @@
   HexGame.prototype.spawn = function () {
     var empties = this.emptyCells();
     if (!empties.length) return;
-    var c, val;
-    if (window.Assist && window.Assist.get() !== "off") {
-      // 援助：按难度推算最合适的落点与值（轴向空位评分，O(空位数)）
-      var s = window.Assist.strength(window.Assist.get());
-      var p = window.Assist.pickHex(this.board, empties, s, key);
-      if (p) { c = { q: p.q, r: p.r }; val = window.Assist.pickValue(s); }
-    }
-    if (!c) { c = empties[Math.floor(Math.random() * empties.length)]; val = Math.random() < 0.9 ? 2 : 4; }
+    var c = empties[Math.floor(Math.random() * empties.length)];
+    var val = (window.Assist) ? window.Assist.spawnValue(window.Assist.get()) : (Math.random() < 0.9 ? 2 : 4);
     this.board[key(c.q, c.r)] = val;
   };
 
@@ -263,6 +257,7 @@
         mergedThisMove[nextK] = true;
         self.score += val * 2;
         self.merges++; // 2048+ 计数连击
+        if (window.Sound && window.Sound.merge) window.Sound.merge();
         if (val * 2 === WIN_VAL) self.won = true;
         self.flash = nextK;
         moved = true;
@@ -275,6 +270,7 @@
 
     if (moved) {
       this.spawn();
+      if (window.Sound && window.Sound.drop) window.Sound.drop();
       if (!this.movesAvailable()) this.over = true;
       this.flashCombo();
       this.actuate();

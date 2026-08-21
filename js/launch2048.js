@@ -145,6 +145,7 @@
 
     this.score += res.gain;
     if (res.merges >= 2) this.flashCombo(res.merges);
+    if (window.Sound) { window.Sound.drop(); if (res.merges > 0) window.Sound.merge(); }
 
     this.checkState();
     this.render();

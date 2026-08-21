@@ -31,5 +31,17 @@ window.requestAnimationFrame(function () {
       buttons[i].classList.add("active");
     }
   }
-  game.setMode(initial);
+
+  // 有经典存档且请求的是经典模式：恢复上次进度，不要 setMode 清档
+  var hasSave = false;
+  try {
+    var s = window.localStorage.getItem("gameState");
+    hasSave = !!s;
+  } catch (e) {}
+  if (hasSave && initial === "classic") {
+    game.actuator.setMode("classic");
+    game.actuator.continueGame();
+  } else {
+    game.setMode(initial);
+  }
 });

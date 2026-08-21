@@ -167,8 +167,8 @@
 OrbitGame.prototype.spawnAtRandom = function () {
     var p = this.pickCell();
     if (!p) return;
-    var v = (window.Assist && window.Assist.get() !== "off")
-      ? window.Assist.pickValue(window.Assist.strength(window.Assist.get()))
+    var v = (window.Assist)
+      ? window.Assist.spawnValue(window.Assist.get())
       : (Math.random() < 0.9 ? 2 : 4);
     this.board[p.r][p.c] = v;
   };
@@ -199,6 +199,7 @@ OrbitGame.prototype.spawnAtRandom = function () {
     this.board = res.board;
     this.score += res.gained;
     this.merges = res.merges;
+    if (window.Sound) { window.Sound.drop(); if (res.merges > 0) window.Sound.merge(); }
     this.flashCombo();
     if (maxVal(this.board) >= WIN_VAL && !this.won) this.won = true;
     this.spawnFalling();
@@ -223,8 +224,8 @@ OrbitGame.prototype.spawnAtRandom = function () {
   OrbitGame.prototype.spawnFalling = function () {
     var p = this.pickCell();
     if (!p) return;
-    var v = (window.Assist && window.Assist.get() !== "off")
-      ? window.Assist.pickValue(window.Assist.strength(window.Assist.get()))
+    var v = (window.Assist)
+      ? window.Assist.spawnValue(window.Assist.get())
       : (Math.random() < 0.9 ? 2 : 4);
     this.board[p.r][p.c] = v;
     this.lastDrop.push({ fromRow: 0, toRow: p.r, toCol: p.c, isNew: true });
@@ -315,20 +316,36 @@ OrbitGame.prototype.spawnAtRandom = function () {
       }
     });
 
-    // 统一 指针(鼠标/触摸)：轻点 = 坠落；左右拖动 = 转动；向下拖动 = 坠落
-    var downX = 0, downY = 0, startT = 0, dragging = false;
+    // 统一 指针(鼠标/触摸)：按住并左右拖动 → 实时旋转这颗星，松手吸附到 0/90/180/270；
+    // 轻点 / 向下拖动 → 坠落
+    var downX = 0, downY = 0, startT = 0, dragging = false, liveAngle = 0;
     var board = this.elBoard;
     board.addEventListener("pointerdown", function (e) {
       downX = e.clientX; downY = e.clientY; startT = Date.now(); dragging = false;
+      liveAngle = self.rot * 90;
+      board.style.transition = "none"; // 拖动时实时跟手
     });
     board.addEventListener("pointermove", function (e) {
+      var dx = e.clientX - downX;
       if (Math.abs(e.clientX - downX) > 14 || Math.abs(e.clientY - downY) > 14) dragging = true;
+      if (dragging) {
+        liveAngle = self.rot * 90 + dx * 0.45;
+        board.style.transform = "rotate(" + liveAngle + "deg)";
+      }
     });
     board.addEventListener("pointerup", function (e) {
+      board.style.transition = ""; // 恢复过渡，用于吸附动画
       var dx = e.clientX - downX, dy = e.clientY - downY;
       var adx = Math.abs(dx), ady = Math.abs(dy);
+      if (dragging && adx >= ady) {
+        // 吸附到最近的 90° 倍数（0/90/180/270）
+        var snapped = Math.round(liveAngle / 90) * 90;
+        self.rot = ((Math.round(snapped / 90) % 4) + 4) % 4;
+        board.style.transform = "rotate(" + (self.rot * 90) + "deg)";
+        self.setCompass();
+        return;
+      }
       if (!dragging && (Date.now() - startT) < 600) { self.drop(); return; } // 轻点
-      if (adx >= ady && adx > 20) { self.tilt(dx > 0 ? 1 : -1); return; } // 左右转
       if (ady > adx && dy > 20) { self.drop(); return; } // 向下坠落
     });
 

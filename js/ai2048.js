@@ -305,6 +305,7 @@
     this.pMerge += res.gained;
     this.pCombo = res.merges; // 2048+ 本步连击
     spawn(this.p);
+    if (window.Sound) { window.Sound.drop(); if (res.merges > 0) window.Sound.merge(); }
     this.checkWin();
     if (window.nudge) window.nudge(this.el.pBoard, dir); // 滑动跟随的推力
     this.renderP();
