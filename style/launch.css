@@ -42,14 +42,12 @@
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ---------- 棋盘（顶上落下，底端为重力方向） ---------- */
+/* ---------- 棋盘（重力朝底，顶部 row=0） ---------- */
 .board {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(5, 1fr);
-  gap: 6px; padding: 7px;
+  position: relative;
+  overflow: hidden;
   width: min(320px, 88vw); margin: 18px auto 0;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 4 / 5; padding: 7px;
   background: linear-gradient(180deg, var(--board-hi), var(--board));
   border-radius: 12px;
   box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.16), 0 2px 0 rgba(93, 71, 48, 0.14), 0 14px 30px rgba(93, 71, 48, 0.16);
@@ -59,34 +57,66 @@
 }
 @keyframes board-in { from { opacity: 0; } }
 
-.lcell {
-  position: relative;
+/* 空槽底格（占位托盘） */
+.board-bg {
+  position: absolute; inset: 7px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 6px;
+  pointer-events: none;
+}
+.board-bgcell {
   background: rgba(238, 228, 218, 0.35);
   border-radius: 6px;
   box-shadow: inset 0 1px 2px rgba(93, 71, 48, 0.10);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: clamp(17px, 5vw, 24px); line-height: 1; color: var(--ink);
-  font-variant-numeric: tabular-nums;
-  animation: cell-in 0.18s var(--ease-pop) both;
 }
-@keyframes cell-in { from { transform: scale(0.82); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-.lcell.t2    { background: var(--t2);   color: #776e65; box-shadow: var(--shadow-tile); }
-.lcell.t4    { background: var(--t4);   color: #776e65; box-shadow: var(--shadow-tile); }
-.lcell.t8    { background: var(--t8);   color: #f9f6f2; box-shadow: var(--shadow-tile); }
-.lcell.t16   { background: var(--t16);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
-.lcell.t32   { background: var(--t32);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
-.lcell.t64   { background: var(--t64);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
-.lcell.t128  { background: var(--t128); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 18px rgba(243, 215, 116, 0.35); }
-.lcell.t256  { background: var(--t256); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 20px rgba(243, 215, 116, 0.42); }
-.lcell.t512  { background: var(--t512); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 22px rgba(243, 215, 116, 0.5); }
-.lcell.t1024 { background: var(--t1024); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 24px rgba(243, 215, 116, 0.55); }
-.lcell.t2048, .lcell.star {
+/* 瓦片：绝对定位 + transform 驱动位移动画 */
+.ltile {
+  position: absolute; top: 0; left: 0; z-index: 2;
+  transition: transform 0.22s cubic-bezier(0.3, 0.9, 0.4, 1);
+}
+.ltile-inner {
+  width: 100%; height: 100%; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: clamp(17px, 5vw, 24px); line-height: 1;
+  color: var(--ink); font-variant-numeric: tabular-nums;
+}
+
+.ltile-inner.t2    { background: var(--t2);   color: #776e65; box-shadow: var(--shadow-tile); }
+.ltile-inner.t4    { background: var(--t4);   color: #776e65; box-shadow: var(--shadow-tile); }
+.ltile-inner.t8    { background: var(--t8);   color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.ltile-inner.t16   { background: var(--t16);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.ltile-inner.t32   { background: var(--t32);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.ltile-inner.t64   { background: var(--t64);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.ltile-inner.t128  { background: var(--t128); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 18px rgba(243, 215, 116, 0.35); }
+.ltile-inner.t256  { background: var(--t256); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 20px rgba(243, 215, 116, 0.42); }
+.ltile-inner.t512  { background: var(--t512); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 22px rgba(243, 215, 116, 0.5); }
+.ltile-inner.t1024 { background: var(--t1024); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 24px rgba(243, 215, 116, 0.55); }
+.ltile-inner.t2048, .ltile-inner.star {
   background: var(--t2048); color: #f9f6f2;
   box-shadow: var(--shadow-tile), 0 0 26px rgba(237, 194, 46, 0.6);
 }
-.lcell.t4096 { background: var(--tsuper); color: #f9f6f2; box-shadow: var(--shadow-tile); }
-.lcell.t1024, .lcell.t2048 { font-size: clamp(12px, 3.8vw, 18px); }
+.ltile-inner.t4096 { background: var(--tsuper); color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.ltile-inner.t1024, .ltile-inner.t2048 { font-size: clamp(12px, 3.8vw, 18px); }
+
+/* 发射飞行：从发射台自下而上，到顶后下坠回落 */
+.ltile-inner.fly { animation: lt-fly 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes lt-fly {
+  0%   { transform: translateY(560%) translateX(0) scale(0.5); opacity: 0.7; }
+  42%  { transform: translateY(-190%) translateX(0) scale(1.05); opacity: 1; }
+  72%  { transform: translateY(9%) translateX(0) scale(0.96); }
+  100% { transform: translateY(0) translateX(0) scale(1); }
+}
+
+/* 合体弹跳 */
+.ltile-inner.pop { animation: lt-pop 0.26s var(--ease-pop); }
+@keyframes lt-pop {
+  0%   { transform: scale(0.4); }
+  55%  { transform: scale(1.16); }
+  100% { transform: scale(1); }
+}
 
 /* ---------- 发射床 ---------- */
 .launch-bed { width: min(320px, 88vw); margin: 12px auto 0; text-align: center; animation: cli-rise 0.4s var(--ease-pop) 0.12s both; }
