@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>2048 · AI 对抗</title>
+  <link rel="shortcut icon" href="favicon.ico">
+  <link href="style/ai.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+  <div class="container">
+
+    <div class="topbar">
+      <a class="home-link" href="index.html">← 返回首页</a>
+    </div>
+
+    <header class="stage-head">
+      <h1 class="title">AI · 对抗</h1>
+      <p class="subtitle">你在左 · 机器人在右 · 谁先合成 <b>2048</b> 谁赢</p>
+    </header>
+
+    <div class="race-info">
+      <div class="effort">
+        <span class="rate-dot you"></span><span>你的步数由你掌控</span>
+      </div>
+      <div class="clock">
+        <span class="clock-label">⌛ 本局用时</span>
+        <span class="clock-main" id="race-timer">0:00</span>
+      </div>
+      <div class="effort">
+        <span class="rate-dot bot"></span><span>机器人每 0.5s 走一步</span>
+      </div>
+    </div>
+
+    <div class="arena">
+      <section class="side you">
+        <div class="side-head">
+          <span class="side-badge">你</span>
+          <div class="side-stats">
+            <div class="stat"><span class="stat-num" id="score-p">0</span><span class="stat-label">得分</span></div>
+            <div class="stat"><span class="stat-num golden" id="merges-p">+0</span><span class="stat-label">合成</span></div>
+          </div>
+        </div>
+        <div class="board" id="board-p"></div>
+        <p class="side-key">方向键 / WASD 控制左边的棋盘</p>
+      </section>
+
+      <div class="vs">VS</div>
+
+      <section class="side bot">
+        <div class="side-head">
+          <div class="side-stats right">
+            <div class="stat"><span class="stat-num" id="score-b">0</span><span class="stat-label">得分</span></div>
+            <div class="stat"><span class="stat-num golden" id="merges-b">+0</span><span class="stat-label">合成</span></div>
+          </div>
+          <span class="side-badge bot">AI</span>
+        </div>
+        <div class="board" id="board-b"></div>
+        <p class="side-key">🤖 自动走子，无需操作</p>
+      </section>
+    </div>
+
+    <div class="banner" id="banner">
+      <span class="banner-text" id="banner-text"></span>
+      <button class="replay" id="replay">再战一局</button>
+    </div>
+
+    <p class="game-note">核心规则和经典 2048 完全一致——你的镜像对手用启发式 AI 每 0.5 秒走一步。</p>
+
+  </div>
+
+  <script src="js/ai2048.js"></script>
+  <script>
+    window.AiDuel && window.AiDuel();
+  </script>
+</body>
+</html>

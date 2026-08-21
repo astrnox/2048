@@ -133,7 +133,7 @@ body::before {
 /* ---------- Cards ---------- */
 .cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 22px;
 }
 
@@ -166,6 +166,8 @@ body::before {
 .card.card-classic::before { background: linear-gradient(90deg, var(--classic), var(--jumbo)); }
 .card.card-time::before    { background: linear-gradient(90deg, var(--time), #ff8a50); }
 .card.card-endless::before { background: linear-gradient(90deg, var(--endless), #b39a83); }
+.card.card-hex::before     { background: linear-gradient(90deg, #6b60a0, #4f7dc9); }
+.card.card-ai::before      { background: linear-gradient(90deg, var(--bot, #6b60a0), #2f9e8f); }
 
 .card:hover {
   transform: translateY(-8px) rotate(-0.6deg);
@@ -195,6 +197,17 @@ body::before {
 }
 .card-time .card-chip    { background: var(--time); }
 .card-endless .card-chip { background: var(--endless); }
+.card-hex .card-chip     { background: linear-gradient(160deg, #6b60a0, #4f7dc9); }
+.card-ai .card-chip      { background: linear-gradient(160deg, #2f9e8f, #2579b5); font-size: 26px; }
+
+.card-new {
+  position: absolute; top: 12px; right: 12px;
+  background: var(--time); color: #fff; font-size: 11px; font-weight: 700;
+  padding: 3px 9px; border-radius: 20px; letter-spacing: 1px;
+  box-shadow: 0 4px 10px rgba(246, 94, 59, 0.4);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
 .card-title {
   font-size: 22px;
