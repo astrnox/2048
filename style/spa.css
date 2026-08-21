@@ -1,24 +1,19 @@
 /* =============================================================
-   2048 肉鸽 · 首页系统
-   暖米色 #F5F0E6 + 半透明菱形格纹
-   金黄渐变立体字 + 深酒红描边
+   2048 · 首页系统（简约大气版）
+   温暖米色底 + 疏落圆点点缀 · 留白克制
+   全部尺寸用 clamp()/vw/vh 流式，PC 与移动端自适应
    ============================================================= */
 
 :root {
-  --bg:         #F5F0E6;   /* 暖米色 */
-  --bg-dim:     #E8E0D4;   /* 格纹深色 */
-  --gold-hi:    #FFD700;   /* 金黄高光 */
-  --gold-lo:    #FF8C00;   /* 橙金暗影 */
-  --wine:       #4A1C1C;   /* 深酒红描边 */
-  --ink:        #333333;   /* 按钮文字 */
-  --sub:        #666666;   /* 返回菜单/次要 */
-  --foot:       #AAAAAA;   /* 版本号 */
-  --shadow-hi:  #D4C9B8;   /* 按钮底边阴影色 */
-  --modal:      #FFFFFF;
-
-  --btn-w:      min(70vw, 320px);
-  --btn-h:      64px;
-  --btn-r:      16px;
+  --bg:         #F5F0E6;   /* 暖米色底 */
+  --ink:        #3A322B;   /* 深暖棕主字 */
+  --sub:        #8D8377;   /* 次级按钮 / 次要字 */
+  --gold:       #C99A4A;   /* 克制暖金点缀 */
+  --dot:        rgba(90, 76, 60, 0.10);   /* 圆点 */
+  --dot-soft:   rgba(90, 76, 60, 0.06);
+  --card:       #FFFFFF;   /* 按钮/卡片面 */
+  --shadow-sm:  0 1px 2px rgba(90, 76, 60, 0.06), 0 10px 26px rgba(90, 76, 60, 0.08);
+  --shadow-card: 0 1px 2px rgba(90, 76, 60, 0.06), 0 24px 60px rgba(90, 76, 60, 0.18);
 
   --ease:       cubic-bezier(0.34, 1.1, 0.64, 1);
   --slide-t:    300ms;
@@ -37,73 +32,23 @@ html, body {
   overflow: hidden;
 }
 
-/* ===== 菱形格纹背景 ===== */
+/* ===== 简约圆点背景 ===== */
 body {
   background-color: var(--bg);
   background-image:
-    repeating-linear-gradient(  45deg, var(--bg-dim) 0 1px, transparent 1px 60px),
-    repeating-linear-gradient( -45deg, var(--bg-dim) 0 1px, transparent 1px 60px);
+    radial-gradient(circle, var(--dot) 1px, transparent 1.6px);
+  background-size: clamp(22px, 5vw, 36px) clamp(22px, 5vw, 36px);
   position: relative;
-}
-
-/* 可选：让格纹呈现方块菱形交替 */
-body::after {
-  content: "";
-  position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background-image:
-    linear-gradient( 45deg, var(--bg-dim) 0 30px, transparent 30px 60px),
-    linear-gradient(-45deg, transparent 0 30px, var(--bg-dim) 30px 60px);
-  background-size: 60px 60px;
-  opacity: 0.35;
-  mix-blend-mode: multiply;
-}
-
-/* =====================================================
-   顶栏
-   ===================================================== */
-.app-topbar {
-  position: fixed; z-index: 30; top: 0; left: 0; right: 0;
-  display: flex; justify-content: space-between; align-items: flex-start;
-  padding: 10px 18px 0; pointer-events: none;
-}
-.app-fps {
-  font-size: 12px; color: var(--sub); font-weight: 600;
-  letter-spacing: 0.5px;
-  padding-top: 4px;
-}
-.app-pill {
-  display: inline-flex; align-items: center; gap: 6px;
-  width: 60px; height: 28px; padding: 0 10px;
-  background: rgba(153, 153, 153, 0.45);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-radius: 14px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-.pill-dots { display: inline-flex; gap: 2px; padding: 0 2px; }
-.pill-dots i {
-  width: 3.5px; height: 3.5px; border-radius: 50%;
-  background: #ffffff; opacity: 0.95;
-}
-.pill-divider { width: 1px; height: 14px; background: rgba(255,255,255,0.35); }
-.pill-circle {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 16px; height: 16px; border-radius: 50%;
-  border: 1.5px solid #fff;
-}
-.pill-dot {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: #fff; opacity: 0.95;
-  box-shadow: 0 0 0 1.5px rgba(255,255,255,0.2);
 }
 
 /* =====================================================
    底部版本号
    ===================================================== */
 .app-foot {
-  position: fixed; z-index: 20; left: 0; right: 0; bottom: 20px;
-  text-align: center; font-size: 12px; color: var(--foot);
-  letter-spacing: 1px; font-weight: 500;
+  position: fixed; z-index: 20; left: 0; right: 0;
+  bottom: max(12px, 2.5vh);
+  text-align: center; font-size: 11px; color: var(--sub);
+  letter-spacing: 2px; font-weight: 500; opacity: 0.7;
 }
 
 /* =====================================================
@@ -138,90 +83,55 @@ body::after {
 .stage {
   width: 100%;
   display: flex; flex-direction: column; align-items: center;
-  padding: 0 16px 60px;
-  gap: 60px;
+  padding: 0 clamp(14px, 4vw, 32px) 60px;
+  gap: clamp(40px, 9vh, 84px);
 }
 
 /* =====================================================
-   品牌 Logo：2048 金黄立体字 + 肉鸽
+   品牌 Logo：净面大字 "2048"
    ===================================================== */
 .brand {
   display: flex; flex-direction: column; align-items: center;
   animation: brand-in 0.8s var(--ease) both;
 }
-@keyframes brand-in { from { opacity: 0; transform: translateY(-16px) scale(0.94); } to { opacity: 1; transform: none; } }
+@keyframes brand-in { from { opacity: 0; transform: translateY(-12px) scale(0.97); } to { opacity: 1; transform: none; } }
 
 .logo-2048 {
-  position: relative;
   margin: 0;
-  font-size: clamp(64px, 18vw, 120px);
-  font-weight: 900;
+  font-size: clamp(58px, 19vw, 148px);
+  font-weight: 800;
   line-height: 1;
-  letter-spacing: 1px;
-  color: var(--gold-hi);
-  background-image: linear-gradient(180deg, var(--gold-hi) 0%, #FFAA00 50%, var(--gold-lo) 100%);
-  -webkit-background-clip: text;
-          background-clip: text;
-  -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: 4px var(--wine);
-          text-stroke: 4px var(--wine);
-  filter:
-    drop-shadow( 0  2px  0 var(--wine))
-    drop-shadow( 0  4px  0 #3A1515)
-    drop-shadow( 0  8px  0 #2E1111)
-    drop-shadow( 0 14px 18px rgba(74, 28, 28, 0.45));
-  transition: transform 0.3s var(--ease);
+  letter-spacing: clamp(1px, 0.5vw, 4px);
+  color: var(--ink);
 }
-/* 顶部高光椭圆 */
+/* 克制暖金小圆点，增强品牌识别又不喧宾夺主 */
+.logo-2048::after {
+  content: "·";
+  color: var(--gold);
+  margin-left: 0.1em;
+}
+
+/* 底部细金线，更显大气收束 */
+.logo-2048 { position: relative; }
 .logo-2048::before {
   content: "";
   position: absolute;
-  top: 11%; left: 12%;
-  width: 76%; height: 20%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0));
-  border-radius: 50%;
-  -webkit-text-fill-color: initial;
-  filter: blur(2px);
-  pointer-events: none;
-  z-index: 2;
-}
-
-.brand-sub {
-  position: relative;
-  margin: 14px 0 0; padding: 4px 30px 8px;
-  font-size: clamp(36px, 8vw, 56px);
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: 4px;
-  color: #fff;
-  -webkit-text-stroke: 3px var(--wine);
-          text-stroke: 3px var(--wine);
-  transform: translateY(-8px);
-  filter:
-    drop-shadow(0 2px  0 var(--wine))
-    drop-shadow(0 4px  0 #3A1515)
-    drop-shadow(0 7px 12px rgba(74, 28, 28, 0.4));
-}
-/* "肉鸽" 下方白色描边高光 */
-.brand-sub::after {
-  content: "";
-  position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%);
-  width: 80%; height: 6px;
-  background: rgba(0, 0, 0, 0.18);
-  border-radius: 50%;
-  filter: blur(2px);
+  left: 50%; bottom: clamp(-18px, -3vw, -26px); transform: translateX(-50%);
+  width: clamp(56px, 22%, 120px); height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
 }
 
 /* =====================================================
    模式选择页：当前模式 chip
    ===================================================== */
 .mode-chip {
-  margin: -16px 0 -44px;
+  margin: clamp(-18px, -3vh, -12px) 0 clamp(30px, 7vh, 56px);
   padding: 7px 22px;
-  font-size: 14px; font-weight: 700; letter-spacing: 2px;
-  color: var(--wine);
-  background: rgba(255, 170, 0, 0.22);
-  border: 1.5px solid rgba(74, 28, 28, 0.25);
+  font-size: clamp(13px, 3.6vw, 15px); font-weight: 700; letter-spacing: 3px;
+  color: var(--gold);
+  background: rgba(201, 154, 74, 0.12);
+  border: 1px solid rgba(201, 154, 74, 0.35);
   border-radius: 999px;
   animation: chip-in 0.5s var(--ease) both;
 }
@@ -232,58 +142,55 @@ body::after {
    ===================================================== */
 .btn-stack {
   display: flex; flex-direction: column; align-items: center;
-  gap: 22px;
+  gap: clamp(14px, 3.4vh, 26px);
   width: 100%;
 }
 
-/* 3D 按钮 */
+/* 简约按钮：白底 + 柔和投影，克制的按压反馈 */
 .btn-3d {
   position: relative;
-  width: var(--btn-w);
-  height: var(--btn-h);
+  width: min(72vw, 380px);
+  height: clamp(52px, 8.5vh, 66px);
   border: 0;
-  border-radius: var(--btn-r);
-  background: #FFFFFF;
+  border-radius: clamp(12px, 3vw, 18px);
+  background: var(--card);
   color: var(--ink);
   font-family: inherit;
-  font-size: 20px;
+  font-size: clamp(16px, 4.6vw, 20px);
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: clamp(1px, 1vw, 4px);
   text-align: center;
   cursor: pointer;
   overflow: hidden;
-  box-shadow:
-    0 8px  0 var(--shadow-hi),
-    0 12px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-sm);
   transition:
-    transform 0.12s ease,
-    box-shadow 0.12s ease,
+    transform 0.15s ease,
+    box-shadow 0.25s ease,
     color 0.2s ease,
     background 0.2s ease;
   user-select: none;
   -webkit-user-select: none;
 }
 .btn-3d:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    0 9px  0 var(--shadow-hi),
-    0 14px 24px rgba(0, 0, 0, 0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(90, 76, 60, 0.08), 0 16px 34px rgba(90, 76, 60, 0.12);
 }
 .btn-3d:active {
-  transform: translateY(4px);
-  box-shadow:
-    0 4px  0 var(--shadow-hi),
-    0 6px  10px rgba(0, 0, 0, 0.14);
+  transform: translateY(0) scale(0.985);
+  box-shadow: 0 1px 2px rgba(90, 76, 60, 0.08), 0 6px 14px rgba(90, 76, 60, 0.06);
 }
 
 /* 返回菜单 / 返回 次要按钮 */
-.btn-3d-muted { color: var(--sub); }
+.btn-3d-muted {
+  color: var(--sub);
+  background: rgba(255, 255, 255, 0.55);
+}
 
 /* 禁用态：无存档时继续游戏 */
 .btn-3d.is-disabled {
   opacity: 0.4;
   pointer-events: none;
-  color: #BBBBBB;
+  color: #B9B2A9;
 }
 
 /* 进入 stagger：按钮从下向上依次淡入（子菜单用） */
@@ -312,13 +219,13 @@ body::after {
 }
 
 /* =====================================================
-   涟漪 ripple（黑色）
+   涟漪 ripple（柔和深色）
    ===================================================== */
 .btn-3d .ripple {
   position: absolute;
   border-radius: 50%;
   transform: scale(0);
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(90, 76, 60, 0.16);
   animation: ripple-anim 0.6s ease-out forwards;
   pointer-events: none;
 }
@@ -333,14 +240,14 @@ body::after {
   position: fixed; z-index: 50; inset: 0;
   display: none;
   align-items: center; justify-content: center;
-  padding: 20px;
+  padding: clamp(16px, 4vw, 28px);
 }
 .modal.is-open { display: flex; animation: modal-fade 0.25s ease both; }
 @keyframes modal-fade { from { opacity: 0; } }
 
 .modal-backdrop {
   position: absolute; inset: 0;
-  background: rgba(74, 28, 28, 0.28);
+  background: rgba(90, 76, 60, 0.24);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
@@ -348,11 +255,11 @@ body::after {
 .modal-card {
   position: relative;
   width: 100%; max-width: 360px;
-  background: #FFFFFF;
-  border-radius: 20px;
-  padding: 28px 24px 24px;
+  background: var(--card);
+  border-radius: clamp(16px, 4vw, 22px);
+  padding: clamp(24px, 6vw, 32px) clamp(20px, 5vw, 28px);
   text-align: center;
-  box-shadow: 0 8px 0 var(--shadow-hi), 0 20px 60px rgba(0, 0, 0, 0.22);
+  box-shadow: var(--shadow-card);
   animation: modal-rise 0.35s var(--ease) both;
 }
 @keyframes modal-rise {
@@ -360,49 +267,18 @@ body::after {
 }
 .modal-title {
   margin: 0 0 10px;
-  font-size: 22px; font-weight: 800;
-  color: var(--wine);
+  font-size: clamp(20px, 5vw, 24px); font-weight: 700;
+  color: var(--ink);
   letter-spacing: 2px;
 }
 .modal-text {
   margin: 0 0 22px;
-  font-size: 14px; line-height: 1.8; color: #555;
+  font-size: clamp(13px, 3.6vw, 14px); line-height: 1.8; color: var(--sub);
 }
-.modal-actions { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.modal-actions { display: flex; flex-direction: column; gap: clamp(12px, 3vh, 16px); align-items: center; }
 .modal-actions .btn-3d {
-  width: 100%; max-width: 280px; height: 56px; font-size: 17px;
+  width: 100%; max-width: 280px; height: clamp(48px, 7vh, 56px); font-size: clamp(15px, 4vw, 17px);
 }
 .modal-cancel {
-  background: #F5F0E6;
-  box-shadow:
-    0 6px  0 #CFC2AE,
-    0 10px 16px rgba(0, 0, 0, 0.1);
-}
-.modal-cancel:active {
-  box-shadow:
-    0 3px  0 #CFC2AE,
-    0 5px  8px rgba(0, 0, 0, 0.1);
-}
-.modal-ok {
-  background: linear-gradient(180deg, var(--gold-hi), var(--gold-lo));
-  color: var(--wine);
-  box-shadow:
-    0 6px  0 #C97300,
-    0 10px 16px rgba(255, 140, 0, 0.25);
-}
-.modal-ok:active {
-  box-shadow:
-    0 3px  0 #C97300,
-    0 5px  10px rgba(255, 140, 0, 0.2);
-}
-
-/* =====================================================
-   响应式：小屏更紧凑
-   ===================================================== */
-@media (max-width: 380px) {
-  .btn-3d { font-size: 18px; height: 58px; }
-  .stage { gap: 48px; padding-bottom: 50px; }
-}
-@media (min-height: 900px) {
-  .stage { padding-top: 20px; }
+  background: #EFE9DC;
 }
