@@ -124,6 +124,27 @@
 @keyframes gr-nu3 { 0% { transform: translateX(8px); } 100% { transform: translateX(0); } }
 .garden:active { transform: scale(0.99); }
 
+/* ---------- 移动/合体/新芽动画 ---------- */
+.bcell.b-in { animation: bcell-in 0.24s var(--ease-pop) both; }
+@keyframes bcell-in {
+  from { transform: translateY(5px) scale(0.88); opacity: 0; }
+  60%  { transform: translateY(0) scale(1.06); opacity: 1; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* ---------- 连击徽标 ---------- */
+.combo-wrap { min-height: 24px; margin-top: 12px; text-align: center; }
+.combo {
+  display: inline-block; color: var(--accent-deep); font-size: 14px;
+  font-weight: 700; letter-spacing: 1px; opacity: 0; transform: translateY(6px);
+}
+.combo.on { animation: combo-pop 0.6s var(--ease-pop); opacity: 1; }
+@keyframes combo-pop {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.8); }
+  30%  { opacity: 1; transform: translateY(0) scale(1.15); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 /* ---------- 收成篮：陶土 chip ---------- */
 .harvest-row { display: flex; justify-content: center; gap: 12px; margin-top: 22px; }
 .basket {

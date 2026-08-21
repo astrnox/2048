@@ -28,7 +28,7 @@
 
   // dir: 0 up,1 right,2 down,3 left
   function tryMove(board, dir) {
-    var b = clone(board), gained = 0, moved = false;
+    var b = clone(board), gained = 0, moved = false, merges = 0;
     var axis = (dir === 0 || dir === 2) ? 1 : 0;
     var forward = (dir === 1 || dir === 2) ? -1 : 1;
     for (var lane = 0; lane < 4; lane++) {
@@ -41,23 +41,24 @@
       var res = slideMerge(vals);
       if (res.moved) moved = true;
       gained += res.gained;
+      merges += res.merges;
       for (var j = 0; j < 4; j++) {
         var rr2 = axis === 0 ? lane : (forward === 1 ? j : 3 - j);
         var cc2 = axis === 0 ? (forward === 1 ? j : 3 - j) : lane;
         b[rr2][cc2] = res.line[j];
       }
     }
-    return { board: b, gained: gained, moved: moved };
+    return { board: b, gained: gained, moved: moved, merges: merges };
   }
   function slideMerge(vals) {
     var nz = vals.filter(function (v) { return v !== 0; });
-    var out = [], moved = nz.length !== vals.length, gained = 0;
+    var out = [], moved = nz.length !== vals.length, gained = 0, merges = 0;
     for (var i = 0; i < nz.length; i++) {
-      if (i + 1 < nz.length && nz[i] === nz[i + 1]) { out.push(nz[i] * 2); gained += nz[i] * 2; i++; moved = true; }
+      if (i + 1 < nz.length && nz[i] === nz[i + 1]) { out.push(nz[i] * 2); gained += nz[i] * 2; merges++; i++; moved = true; }
       else out.push(nz[i]);
     }
     while (out.length < 4) out.push(0);
-    return { line: out, gained: gained, moved: moved };
+    return { line: out, gained: gained, moved: moved, merges: merges };
   }
   function deadOr(b) {
     if (emptyCells(b).length) return false;
@@ -82,6 +83,10 @@
     this.elBest = document.getElementById("seed-best");
     this.elMsg = document.getElementById("seed-msg");
     this.elSeason = document.getElementById("season-marker");
+    // 2048+ 连击 + 移动动画
+    this.elCombo = document.getElementById("seed-combo");
+    this.prev = null;       // 上一帧棋盘，用于判定哪些瓦片动了
+    this.merges = 0;
 
     this.plant(); this.plant();         // 开局两粒种子
     this.render();
@@ -118,10 +123,12 @@
 
   SeedGame.prototype.move = function (dir) {
     if (this.over || (this.won && !this.keep)) return;
+    this.prev = clone(this.board); // 供移动动画判定
     var res = tryMove(this.board, dir);
     if (!res.moved) return;
     this.board = res.board;
     this.score += res.gained;
+    this.merges = res.merges;       // 2048+ 本步连击数
     if (res.gained > 0) this.stall = 0; else this.stall++;
 
     // 春天：久不合体，额外发芽
@@ -134,8 +141,21 @@
     this.secondChance(); // 若错过，仍可能合体；这里做最终判定
     this.save();
     if (window.nudge) window.nudge(this.elBoard, dir); // 滑动跟随的推力
+    this.flashCombo();
     this.render();
     this.announce();
+  };
+
+  // 2048+：一步内多次合并 → 弹连击徽标
+  SeedGame.prototype.flashCombo = function () {
+    if (this.elCombo && this.merges >= 2) {
+      this.elCombo.textContent = "×" + this.merges + " 连击";
+      this.elCombo.classList.remove("on");
+      void this.elCombo.offsetWidth;
+      this.elCombo.classList.add("on");
+    } else if (this.elCombo) {
+      this.elCombo.classList.remove("on");
+    }
   };
 
   // 更新胜负状态
@@ -173,6 +193,8 @@
 
   SeedGame.prototype.restart = function () {
     this.board = emptyBoard(); this.score = 0; this.won = false; this.over = false; this.keep = false; this.stall = 0;
+    this.prev = null; this.merges = 0;
+    if (this.elCombo) this.elCombo.classList.remove("on");
     this.plant(); this.plant();
     this.render();
     if (this.elMsg) this.elMsg.style.display = "none";
@@ -183,6 +205,7 @@
     this.elBest.textContent = this.best;
     this.seasonDots();
     this.elBoard.innerHTML = "";
+    var prev = this.prev || null;
     for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++) {
       var cell = document.createElement("div");
       cell.className = "bcell";
@@ -192,9 +215,11 @@
         cell.className += " t" + v;
         if (v === 2 && this.seeds[k(r, c)]) cell.className += " seed";
         if (v >= 2048) cell.className += " harvest";
+        if (!prev || prev[r][c] !== v) cell.className += " b-in"; // 动了/合了/新芽：播移动动画
       }
       this.elBoard.appendChild(cell);
     }
+    this.prev = null;
   };
 
   SeedGame.prototype.seasonDots = function () {

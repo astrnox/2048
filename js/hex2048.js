@@ -85,6 +85,9 @@
     this.keepPlaying = false;
 
     this.nodeByKey = {}; // key -> <g> element
+    // 2048+ 连击
+    this.elCombo = document.getElementById("hex-combo");
+    this.merges = 0;
 
     this.buildSVG();
     this.bindInput();
@@ -240,6 +243,7 @@
     var moved = false;
     var self = this;
     var mergedThisMove = {};
+    this.merges = 0; // 2048+ 本步连击
 
     cells.forEach(function (cell) {
       var fromK = key(cell.q, cell.r);
@@ -258,6 +262,7 @@
         self.board[nextK] = val * 2;
         mergedThisMove[nextK] = true;
         self.score += val * 2;
+        self.merges++; // 2048+ 计数连击
         if (val * 2 === WIN_VAL) self.won = true;
         self.flash = nextK;
         moved = true;
@@ -271,7 +276,20 @@
     if (moved) {
       this.spawn();
       if (!this.movesAvailable()) this.over = true;
+      this.flashCombo();
       this.actuate();
+    }
+  };
+
+  // 2048+：一步内多次合并 → 弹连击徽标
+  HexGame.prototype.flashCombo = function () {
+    if (this.elCombo && this.merges >= 2) {
+      this.elCombo.textContent = "×" + this.merges + " 连击";
+      this.elCombo.classList.remove("on");
+      void this.elCombo.offsetWidth;
+      this.elCombo.classList.add("on");
+    } else if (this.elCombo) {
+      this.elCombo.classList.remove("on");
     }
   };
 
@@ -281,6 +299,8 @@
     this.won = false;
     this.over = false;
     this.keepPlaying = false;
+    this.merges = 0;
+    if (this.elCombo) this.elCombo.classList.remove("on");
     this.addStartTiles();
     this.actuate();
   };

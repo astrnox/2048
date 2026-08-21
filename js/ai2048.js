@@ -34,11 +34,12 @@
   }
 
   // Move board towards dir. dir: 0 up,1 right,2 down,3 left.
-  // Returns { board, gained, moved } (board is a fresh copy).
+  // Returns { board, gained, moved, merges } (board is a fresh copy).
   function tryMove(board, dir) {
     var b = clone(board);
     var gained = 0;
     var moved = false;
+    var merges = 0;
 
     var line = function (r, c, axis) { return axis === 0 ? r : c; };
 
@@ -61,6 +62,7 @@
       var res = slideMerge(vals);
       if (res.moved) moved = true;
       gained += res.gained;
+      merges += res.merges;
       // write back
       for (var j = 0; j < 4; j++) {
         var rr2 = axis === 0 ? lane : (forward === 1 ? j : 3 - j);
@@ -69,7 +71,7 @@
       }
     }
 
-    return { board: b, gained: gained, moved: moved };
+    return { board: b, gained: gained, moved: moved, merges: merges };
   }
 
   // Slide a 4-lane left (existing values first), merge equals once.
@@ -78,10 +80,12 @@
     var out = [];
     var moved = nz.length !== vals.length;
     var gained = 0;
+    var merges = 0;
     for (var i = 0; i < nz.length; i++) {
       if (i + 1 < nz.length && nz[i] === nz[i + 1]) {
         out.push(nz[i] * 2);
         gained += nz[i] * 2;
+        merges++;
         i++; // consume next
         moved = true;
       } else {
@@ -90,7 +94,7 @@
     }
     while (out.length < 4) out.push(0);
     // compare to original to detect if moved (merge already flagged)
-    return { line: out, gained: gained, moved: moved };
+    return { line: out, gained: gained, moved: moved, merges: merges };
   }
 
   function maxVal(b) {
@@ -219,9 +223,11 @@
       timer: document.getElementById("race-timer"),
       banner: document.getElementById("banner"),
       bannerText: document.getElementById("banner-text"),
-      aiStatus: document.getElementById("ai-status")
+      aiStatus: document.getElementById("ai-status"),
+      combo: document.getElementById("ai-combo")
     };
     this.pMerge = 0; this.bMerge = 0;
+    this.pCombo = 0; // 2048+ 你本步连击
 
     this.newRound();
   }
@@ -229,9 +235,11 @@
   Duel.prototype.newRound = function () {
     var self = this;
     this.round++;
-    this.p = emptyBoard(); this.ps = 0; this.pMerge = 0;
+    this.p = emptyBoard(); this.ps = 0; this.pMerge = 0; this.pCombo = 0;
     this.b = emptyBoard(); this.bs = 0; this.bMerge = 0;
     this.winner = null;
+
+    if (this.el.combo) this.el.combo.classList.remove("on");
 
     spawn(this.p); spawn(this.p); spawn(this.p);
     spawn(this.b); spawn(this.b); spawn(this.b);
@@ -242,6 +250,20 @@
 
     this.setStatus("你的回合");
     this.render();
+  };
+
+  // 2048+：你本步多次合并 → 弹连击徽标
+  Duel.prototype.flashCombo = function () {
+    var c = this.el.combo;
+    if (!c) return;
+    if (this.pCombo >= 2) {
+      c.textContent = "×" + this.pCombo + " 连击";
+      c.classList.remove("on");
+      void c.offsetWidth;
+      c.classList.add("on");
+    } else {
+      c.classList.remove("on");
+    }
   };
 
   // 你的落子触发机器人：先"思考"，再走一步，然后停下来等你
@@ -281,10 +303,12 @@
     this.p = res.board;
     this.ps += res.gained;
     this.pMerge += res.gained;
+    this.pCombo = res.merges; // 2048+ 本步连击
     spawn(this.p);
     this.checkWin();
     if (window.nudge) window.nudge(this.el.pBoard, dir); // 滑动跟随的推力
     this.renderP();
+    this.flashCombo();
     if (!this.winner) this.think(); // 你动一步 → 机器人想一步
   };
 

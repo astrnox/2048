@@ -114,6 +114,19 @@
 
 .side-key { text-align: center; font-size: 12px; color: var(--dim); margin: 12px 0 0; }
 
+/* ---------- 玩家连击徽标 ---------- */
+.combo-wrap { min-height: 24px; margin-top: 10px; text-align: center; }
+.combo {
+  display: inline-block; color: var(--accent-deep); font-size: 14px;
+  font-weight: 700; letter-spacing: 1px; opacity: 0; transform: translateY(6px);
+}
+.combo.on { animation: combo-pop 0.6s var(--ease-pop); opacity: 1; }
+@keyframes combo-pop {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.8); }
+  30%  { opacity: 1; transform: translateY(0) scale(1.15); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 /* ---------- VS 徽章 ---------- */
 .vs {
   align-self: center;
