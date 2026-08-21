@@ -1,151 +1,119 @@
 /* =============================================================
-   种子 · 万物生长
-   燕麦色纸底 → 已统一为任务台控制台肤色（参见 ui.css）。
-   只保留花圃、季节、收成的地方样式。
+   种子 · 万物生长 — 暖陶 Warm Clay
+   依赖 ui.css。本文件只补充：园丁手记卡、季节指示、
+   花圃棋盘、收成篮、消息卡。garden 是 nudge() 目标，
+   不可挂载入场动画（nu0~nu3 反复增删会导致动画重播）。
    ============================================================= */
 @import url("ui.css");
 
-:root {
-  --paper:   #efe7d6;
-  --paper-2: #e7ddc6;
-  --ink:     #3a4133;
-  --ink-soft:#7a7a68;
-  --moss:    #5b7d53;
-  --moss-2:  #7f9e63;
-  --rust:    #a85c3a;
-  --gold:    #c99a3c;
-  --line:    rgba(58, 65, 51, 0.22);
+.grove {
+  position: relative; z-index: 1;
+  max-width: 520px; margin: 0 auto; padding: 24px 18px 56px;
 }
 
-* { box-sizing: border-box; }
-
-html, body { height: 100%; }
-
-body {
-  margin: 0;
-  color: var(--ink);
-  font-family: Georgia, "Songti SC", "Noto Serif SC", serif;
-  background:
-    radial-gradient(700px 420px at 12% -6%, rgba(197, 142, 70, 0.12), transparent 60%),
-    radial-gradient(760px 460px at 100% 108%, rgba(91, 125, 83, 0.12), transparent 60%),
-    linear-gradient(165deg, var(--paper), var(--paper-2));
-  background-attachment: fixed;
-  overflow-x: hidden;
-}
-
-/* 十字织网纹底 */
-body::before {
-  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background-image:
-    linear-gradient(rgba(58,65,51,0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(58,65,51,0.055) 1px, transparent 1px);
-  background-size: 44px 44px;
-}
-/* 稀疏的种子点 */
-body::after {
-  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background-image:
-    radial-gradient(1.5px 1.5px at 14% 20%, rgba(168,92,58,0.4), transparent 60%),
-    radial-gradient(1.5px 1.5px at 80% 84%, rgba(91,125,83,0.4), transparent 60%),
-    radial-gradient(1px 1px at 90% 30%, rgba(168,92,58,0.3), transparent 60%);
-}
-
-.grove { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; padding: 24px 18px 56px; }
-
-.leaves-head {
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 13px; letter-spacing: 2px;
-}
-.home-link {
-  color: var(--ink-soft); text-decoration: none; font-size: 13px; letter-spacing: 1px;
-  border-bottom: 1px dotted var(--line); padding-bottom: 2px;
-}
-.home-link:hover { color: var(--rust); }
-.latin { color: var(--moss); opacity: 0.9; font-size: 12px; letter-spacing: 3px; }
-
+/* ---------- 园丁手记卡 ---------- */
 .sheet {
   position: relative;
-  margin-top: 18px; padding: 28px 24px 30px;
-  background: rgba(255, 251, 242, 0.72);
+  margin-top: 20px; padding: 30px 24px 32px;
+  background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 3px;
-  box-shadow: 0 24px 60px rgba(60, 52, 40, 0.16);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
   text-align: center;
+  animation: cli-rise 0.5s var(--ease-pop) both;
 }
 .stamp {
-  position: absolute; top: -12px; left: 50%; transform: translateX(-50%) rotate(-2deg);
-  width: 168px; margin: 0; padding: 6px 0;
-  font-size: 12px; letter-spacing: 2px; color: var(--paper);
-  background: var(--rust); border-radius: 2px;
-  box-shadow: 0 6px 14px rgba(168, 92, 58, 0.4);
+  position: absolute; top: -13px; left: 50%; transform: translateX(-50%) rotate(-1.5deg);
+  width: 180px; margin: 0; padding: 6px 0;
+  font-size: 11.5px; letter-spacing: 2px; color: #fff; font-weight: 700;
+  background: linear-gradient(180deg, var(--accent-hi), var(--accent));
+  border-radius: var(--radius-pill);
+  box-shadow: 0 2px 0 var(--accent-deep), 0 8px 18px rgba(224, 120, 74, 0.35);
 }
 
 .headline {
-  margin: 6px 0 2px;
-  font-size: 60px; font-weight: 700; line-height: 1; letter-spacing: 8px;
-  color: var(--ink);
+  margin: 8px 0 2px;
+  font-size: clamp(46px, 10vw, 60px); font-weight: 800; line-height: 1;
+  letter-spacing: 6px; color: var(--ink);
 }
-.headline::first-letter { color: var(--moss); }
+.headline::first-letter { color: var(--accent); }
+.lede { margin: 12px 0 0; font-size: 13.5px; line-height: 1.9; color: var(--dim); }
+.lede b { color: var(--accent); font-weight: 700; }
 
-.lede { margin: 12px 0 0; font-size: 14px; line-height: 1.9; color: var(--ink-soft); }
-.lede b { color: var(--ink); }
-
-/* 季节 */
+/* ---------- 季节指示 ---------- */
 .season {
   display: flex; flex-direction: column; align-items: center; gap: 6px;
-  margin-top: 16px; font-size: 12px; color: var(--moss); letter-spacing: 1px;
+  margin-top: 16px; font-size: 12px; color: var(--dim); letter-spacing: 1px;
 }
 .season-dots { display: flex; gap: 6px; }
 .season-dots i {
   width: 12px; height: 12px; border-radius: 50%;
-  border: 1px solid var(--moss); opacity: 0.4;
+  border: 1.5px solid var(--button); opacity: 0.35;
+  transition: background 0.25s ease, border-color 0.25s ease, opacity 0.25s ease, box-shadow 0.25s ease;
 }
-.season-dots i.hot { background: var(--rust); border-color: var(--rust); opacity: 1; }
-.season-note { font-size: 11px; color: var(--ink-soft); letter-spacing: 1px; }
+.season-dots i.hot {
+  background: var(--accent); border-color: var(--accent); opacity: 1;
+  box-shadow: 0 0 0 3px rgba(224, 120, 74, 0.18);
+}
+.season-note { font-size: 11px; color: var(--dim); letter-spacing: 1px; }
 
-/* 花圃 */
+/* ---------- 花圃：陶土棋盘 ---------- */
 .garden {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-  width: min(320px, 78vw); margin: 20px auto 0; aspect-ratio: 1 / 1;
-  background: rgba(91, 125, 83, 0.14);
-  border: 1px solid var(--line); border-radius: 3px; padding: 8px;
+  width: min(324px, 100%); margin: 20px auto 0; aspect-ratio: 1 / 1;
+  background: linear-gradient(180deg, var(--board-hi), var(--board));
+  border-radius: 12px; padding: 8px;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.16), 0 2px 0 rgba(93, 71, 48, 0.14), 0 14px 30px rgba(93, 71, 48, 0.16);
   touch-action: none;
   -webkit-user-select: none; user-select: none;
 }
 .bcell {
   position: relative;
-  background: rgba(255, 251, 242, 0.85);
-  border: 1px solid var(--line);
+  background: rgba(238, 228, 218, 0.35);
   display: flex; align-items: center; justify-content: center;
-  border-radius: 3px;
-  font-weight: 700; font-size: 26px; line-height: 1; color: var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 1px 2px rgba(93, 71, 48, 0.10);
+  font-weight: 700; font-size: clamp(20px, 5.8vw, 27px); line-height: 1; color: var(--ink);
   font-variant-numeric: tabular-nums;
   transition: background 0.2s ease, transform 0.12s ease, color 0.2s ease;
 }
-.bcell.t2   { background: #f6efdb; color: #5b7d53; }
-.bcell.t4   { background: #e8e2bd; color: #4f6f47; }
-.bcell.t8   { background: #d9d9a0; color: #3f5c39; }
-.bcell.t16  { background: #bdcd8c; color: #2e4a28; }
-.bcell.t32  { background: #9fbc78; color: #223a1e; }
-.bcell.t64  { background: #83a866; color: #1c3019; }
-.bcell.t128 { background: #c9a85a; color: #3a3417; }
-.bcell.t256 { background: #c1933d; color: #2f2b12; }
-.bcell.t512 { background: #a86f35; color: #251f0e; }
-.bcell.t1024{ background: #925a2f; color: #1d180b; }
-.bcell.t2048, .bcell.harvest { background: var(--rust); color: #f9f0e0; box-shadow: 0 0 0 3px rgba(168,92,58,0.35); }
-.bcell.t4096 { background: #5f6b3a; color: #f3ecd6; }
-.bcell.t8192 { background: #3a4133; color: #efe7d6; }
-/* 种子：小圆点 + 破土动画 */
-.bcell.seed { background: #f6efdb; color: var(--moss); }
+
+/* ---------- 经典瓦片色阶 + 物理厚度 ---------- */
+.bcell.t2   { background: var(--t2);   color: #776e65; box-shadow: var(--shadow-tile); }
+.bcell.t4   { background: var(--t4);   color: #776e65; box-shadow: var(--shadow-tile); }
+.bcell.t8   { background: var(--t8);   color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.bcell.t16  { background: var(--t16);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.bcell.t32  { background: var(--t32);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.bcell.t64  { background: var(--t64);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.bcell.t128 { background: var(--t128); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 18px rgba(243, 215, 116, 0.35); }
+.bcell.t256 { background: var(--t256); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 20px rgba(243, 215, 116, 0.42); }
+.bcell.t512 { background: var(--t512); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 22px rgba(243, 215, 116, 0.5); }
+.bcell.t1024{ background: var(--t1024); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 24px rgba(243, 215, 116, 0.55); }
+.bcell.t2048, .bcell.harvest {
+  background: var(--t2048); color: #f9f6f2;
+  box-shadow: var(--shadow-tile), 0 0 26px rgba(237, 194, 46, 0.6);
+}
+.bcell.t4096 { background: var(--tsuper); color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.bcell.t8192 { background: var(--tsuper); color: #f9f6f2; box-shadow: var(--shadow-tile); }
+
+/* 四位数以上缩小字号，防溢出 */
+.bcell.t1024, .bcell.t2048 { font-size: clamp(16px, 4.7vw, 21px); }
+.bcell.t4096, .bcell.t8192 { font-size: clamp(13px, 4vw, 17px); }
+
+/* ---------- 种子：小圆点 + 破土动画 ---------- */
+.bcell.seed { background: var(--t2); color: var(--dim); }
 .bcell.seed::after {
   content: ""; position: absolute; left: 50%; top: 14%; transform: translateX(-50%);
   width: 8px; height: 8px; border-radius: 50%;
-  background: var(--rust); box-shadow: 0 0 0 2px rgba(168,92,58,0.25);
-  animation: sprout 0.5s ease both;
+  background: var(--accent); box-shadow: 0 0 0 3px rgba(245, 149, 99, 0.28);
+  animation: sprout 0.5s var(--ease-pop) both;
 }
-@keyframes sprout { from { transform: translateX(-50%) translateY(6px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+@keyframes sprout {
+  from { transform: translateX(-50%) translateY(6px) scale(0.4); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+}
 
-/* 滑动跟随的推力动画（花圃容器） */
+/* ---------- 滑动回弹（花圃容器） ---------- */
 .garden.nu0 { animation: gr-nu0 0.2s ease; }
 .garden.nu1 { animation: gr-nu1 0.2s ease; }
 .garden.nu2 { animation: gr-nu2 0.2s ease; }
@@ -154,39 +122,52 @@ body::after {
 @keyframes gr-nu1 { 0% { transform: translateX(-8px); } 100% { transform: translateX(0); } }
 @keyframes gr-nu2 { 0% { transform: translateY(-8px); } 100% { transform: translateY(0); } }
 @keyframes gr-nu3 { 0% { transform: translateX(8px); } 100% { transform: translateX(0); } }
-/* 新合的果：轻回弹 */
 .garden:active { transform: scale(0.99); }
 
-/* 收成 */
-.harvest-row { display: flex; justify-content: center; gap: 14px; margin-top: 20px; }
-.basket { min-width: 96px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 3px; background: rgba(255,251,242,0.6); }
-.basket .label { display: block; font-size: 11px; letter-spacing: 2px; color: var(--ink-soft); }
-.basket .num { display: block; font-size: 26px; font-weight: 700; color: var(--moss); font-variant-numeric: tabular-nums; }
-.basket.best .num { color: var(--rust); }
+/* ---------- 收成篮：陶土 chip ---------- */
+.harvest-row { display: flex; justify-content: center; gap: 12px; margin-top: 22px; }
+.basket {
+  min-width: 104px; padding: 9px 16px;
+  background: linear-gradient(180deg, var(--board-hi), var(--board));
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-chip);
+}
+.basket .label { display: block; font-size: 11px; letter-spacing: 1.5px; color: rgba(249, 246, 242, 0.92); font-weight: 700; }
+.basket .num { display: block; font-size: 26px; font-weight: 700; line-height: 1.15; color: #fff; font-variant-numeric: tabular-nums; }
+.basket.best .num { color: var(--gold); }
 
+/* ---------- 消息卡（陶土） ---------- */
 .msg {
-  display: none; margin: 16px auto 0; max-width: 320px; padding: 12px 14px;
-  font-size: 16px; line-height: 1.8; color: #f9f0e0;
-  background: var(--moss); border-radius: 3px;
+  display: none; margin: 16px auto 0; max-width: 340px; padding: 16px 18px;
+  font-size: 15px; line-height: 1.8; color: #fff; text-align: center;
+  background: linear-gradient(180deg, var(--board-hi), var(--board));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  animation: cli-rise 0.4s var(--ease-pop) both;
 }
+.msg b { color: var(--gold); }
 .msg .sd-act {
-  margin: 4px 5px; padding: 4px 12px; border: 1px solid rgba(0,0,0,0.25);
-  background: transparent; font-family: inherit; font-size: 14px; font-weight: 700;
-  cursor: pointer; color: #f9f0e0;
+  margin: 4px 5px; padding: 7px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: transparent; font-family: inherit; font-size: 13px; font-weight: 700;
+  letter-spacing: 1px; cursor: pointer; color: #fff;
+  border-radius: var(--radius-pill);
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
-.msg .sd-act:hover { background: rgba(0,0,0,0.12); }
+.msg .sd-act:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.8); }
 
-.cli-actions { margin-top: 14px; text-align: center; }
+/* ---------- 操作区 ---------- */
+.cli-actions { margin-top: 18px; text-align: center; }
 
-.manual { margin-top: 18px; font-size: 13px; line-height: 2; color: var(--ink-soft); }
+.manual { margin: 20px 0 0; font-size: 12.5px; line-height: 2.2; color: var(--dim); text-align: center; }
 .manual b {
-  display: inline-block; min-width: 34px; padding: 2px 7px; margin: 0 2px;
-  border: 1px solid var(--line); border-radius: 2px; color: var(--ink); font-weight: normal; font-size: 12px;
+  display: inline-block; min-width: 30px; padding: 3px 9px; margin: 0 3px;
+  background: var(--card); border: 1px solid var(--line); border-bottom-width: 2px;
+  border-radius: 6px; color: var(--ink); font-weight: 700; font-size: 12px;
+  letter-spacing: 1px; box-shadow: 0 1px 0 rgba(93, 71, 48, 0.05);
 }
 .manual .fine { font-size: 11px; opacity: 0.75; }
 
 @media (max-width: 420px) {
-  .headline { font-size: 48px; letter-spacing: 5px; }
-  .sheet { padding: 24px 16px 26px; }
-  .bcell { font-size: 21px; }
+  .sheet { padding: 26px 14px 28px; }
 }

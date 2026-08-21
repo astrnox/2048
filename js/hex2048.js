@@ -58,18 +58,15 @@
 
   function tileColor(val) {
     var colors = {
-      2: "#1c2824", 4: "#202f29", 8: "#24352e", 16: "#2a3b36",
-      32: "#31453f", 64: "#38494e", 128: "#46584a", 256: "#546845",
-      512: "#6c7a42", 1024: "#858a3e", 2048: "#7ad6a4",
-      4096: "#dfe6dd", 8192: "#e8f2ea"
+      2: "#eee4da", 4: "#ede0c8", 8: "#f2b179", 16: "#f59563",
+      32: "#f67c5f", 64: "#f65e3b", 128: "#edcf72", 256: "#edcc61",
+      512: "#edc850", 1024: "#edc53f", 2048: "#edc22e",
+      4096: "#3c3a32", 8192: "#5bca57"
     };
-    return colors[val] || "#dfe6dd";
+    return colors[val] || "#3c3a32";
   }
   function tileTextColor(val) {
-    if (val === 2048) return "#07120c";
-    if (val === 2 || val === 4) return "#8be0b4";
-    if (val >= 4096) return "#0a0d11";
-    return "#fffff0";
+    return (val === 2 || val === 4) ? "#776e65" : "#f9f6f2";
   }
   function tileFontSize(val) {
     if (val < 100)  return "28px";
@@ -186,8 +183,15 @@
   HexGame.prototype.spawn = function () {
     var empties = this.emptyCells();
     if (!empties.length) return;
-    var c = empties[Math.floor(Math.random() * empties.length)];
-    this.board[key(c.q, c.r)] = Math.random() < 0.9 ? 2 : 4;
+    var c, val;
+    if (window.Assist && window.Assist.get() !== "off") {
+      // 援助：按难度推算最合适的落点与值（轴向空位评分，O(空位数)）
+      var s = window.Assist.strength(window.Assist.get());
+      var p = window.Assist.pickHex(this.board, empties, s, key);
+      if (p) { c = { q: p.q, r: p.r }; val = window.Assist.pickValue(s); }
+    }
+    if (!c) { c = empties[Math.floor(Math.random() * empties.length)]; val = Math.random() < 0.9 ? 2 : 4; }
+    this.board[key(c.q, c.r)] = val;
   };
 
   HexGame.prototype.movesAvailable = function () {

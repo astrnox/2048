@@ -113,84 +113,83 @@
     return true;
   }
 
-  /* ---- Bot heuristic ----
-     Empty cells are king; reward merges, cap sum-of-rows disorder
-     and hug the corner with a big tile. Weighted so the bot is
-     competent but a quick human can out-race it. */
-  function evaluate(board, gained) {
-    var score = gained * 3;
-    score += emptyCells(board).length * 70;
+  /* ---- Bot: Expectimax (2048-style) ----
+     AI 在反"随便滑动必输"的意义上要够硬：走一步前把所有可能局面
+     （自己的走法 + 对手随机放 2/4）往前推几层，用蛇形角位权重打分，
+     让大数始终压向角落、留空位，从而稳定合成 2048。 */
+  // 蛇形权重：大数越靠近左上角分越高
+  var W = [
+    [16, 15, 14, 13],
+    [ 9,  8,  7, 12],
+    [ 5,  4,  6, 11],
+    [ 1,  2,  3, 10]
+  ];
 
-    var merges = 0;
-    for (var r = 0; r < 4; r++)
-      for (var c = 0; c < 4; c++) {
-        var v = board[r][c];
-        if (!v) continue;
-        if (c + 1 < 4 && board[r][c + 1] === v) merges++;
-        if (r + 1 < 4 && board[r + 1][c] === v) merges++;
-      }
-    score += merges * 110;
-
-    // monotonicity: penalty for big-then-small ordering changes
-    var mono = 0;
-    for (var r2 = 0; r2 < 4; r2++) {
-      for (var dir = 0; dir < 2; dir++) {
-        var prev = 0, first = true;
-        for (var c2 = 0; c2 < 4; c2++) {
-          var v = board[r2][dir ? c2 : 3 - c2];
-          if (v === 0) continue;
-          if (!first && v > prev) mono += v - prev;
-          prev = v; first = false;
-        }
-      }
+  function heuristic(board) {
+    var s = 0, empty = 0;
+    for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++) {
+      var v = board[r][c];
+      if (!v) { empty++; continue; }
+      s += v * W[r][c];
+      // 平滑：紧邻数字差距越小越好
+      if (c + 1 < 4 && board[r][c + 1]) s -= Math.abs(v - board[r][c + 1]) * 2;
+      if (r + 1 < 4 && board[r + 1][c]) s -= Math.abs(v - board[r + 1][c]) * 2;
     }
-    for (var c3 = 0; c3 < 4; c3++) {
-      for (var dir2 = 0; dir2 < 2; dir2++) {
-        var prev2 = 0, first2 = true;
-        for (var r3 = 0; r3 < 4; r3++) {
-          var v2 = board[r3][c3];
-          if (v2 === 0) continue;
-          if (!first2 && v2 > prev2) mono += v2 - prev2;
-          prev2 = v2; first2 = false;
-        }
-      }
-    }
-    score -= mono * 6;
-
-    score += maxVal(board) * 2;
-    return score;
+    s += empty * 260;
+    return s;
   }
 
-  function bestMove(board) {
-    var best = null, bestScore = -Infinity;
+  // 从空位里随机抽样至多 k 个，作为"对手随机放子"的采样（限制计算量）
+  function sampleCells(cells, k) {
+    var copy = cells.slice(), res = [];
+    while (copy.length && res.length < k) {
+      var i = Math.floor(Math.random() * copy.length);
+      res.push(copy[i]);
+      copy.splice(i, 1);
+    }
+    return res;
+  }
+
+  // 全局节点预算：让每次决策的计算量严格受控，深度再高也不至于卡顿
+  var budget = 0;
+  var NODE_BUDGETS = { 2: 800, 4: 3200, 6: 16000 }; // 简单/中等/困难
+
+  // chanceNode=true 表示轮到随机放子（对手），false 表示自己挑最好走法
+  function expectimax(board, depth, chanceNode) {
+    if (depth <= 0 || --budget <= 0) return heuristic(board);
+    if (chanceNode) {
+      var cells = emptyCells(board);
+      if (!cells.length) return (depth <= 1) ? heuristic(board) : -Infinity;
+      var samples = sampleCells(cells, Math.min(3, cells.length));
+      var total = 0;
+      for (var i = 0; i < samples.length; i++) {
+        var rc = samples[i];
+        var b2 = clone(board); b2[rc[0]][rc[1]] = 2;
+        var b4 = clone(board); b4[rc[0]][rc[1]] = 4;
+        total += 0.9 * expectimax(b2, depth - 1, false) + 0.1 * expectimax(b4, depth - 1, false);
+      }
+      return total / samples.length;
+    } else {
+      var best = -Infinity;
+      for (var d = 0; d < 4; d++) {
+        var res = tryMove(board, d);
+        if (res.moved) best = Math.max(best, expectimax(res.board, depth - 1, true));
+      }
+      return best === -Infinity ? heuristic(board) : best;
+    }
+  }
+
+  function bestMove(board, depth) {
+    depth = depth || 4;
+    budget = NODE_BUDGETS[depth] || 3200;
+    var bestDir = null, best = -Infinity;
     for (var d = 0; d < 4; d++) {
       var res = tryMove(board, d);
       if (!res.moved) continue;
-      var s = evaluate(res.board, res.gained);
-      if (s > bestScore) { bestScore = s; best = d; }
+      var s = expectimax(res.board, depth, true); // 自己走一步后，推对手随机放子
+      if (s > best) { best = s; bestDir = d; }
     }
-    return best;
-  }
-
-  // 深一层回溯：先选出眼前最好的走法，再"再想一步"（minmax 式前瞻）
-  function bestMoveSmart(board) {
-    var best = null, bestScore = -Infinity;
-    for (var d = 0; d < 4; d++) {
-      var res = tryMove(board, d);
-      if (!res.moved) continue;
-      var h = evaluate(res.board, res.gained);
-      var sub = -Infinity;
-      for (var d2 = 0; d2 < 4; d2++) {
-        var r2 = tryMove(res.board, d2);
-        if (r2.moved) {
-          var s2 = evaluate(r2.board, r2.gained);
-          if (s2 > sub) sub = s2;
-        }
-      }
-      var v = (sub === -Infinity) ? h : h + sub * 0.4;
-      if (v > bestScore) { bestScore = v; best = d; }
-    }
-    return best;
+    return bestDir;
   }
 
   // ---------------- Rendering ----------------
@@ -256,7 +255,10 @@
 
   Duel.prototype.aiAct = function () {
     if (this.winner) return;
-    var d = bestMoveSmart(this.b);
+    // 难度 → 搜索深度：简单=浅(弱) 中等=标准 困难=深(强)；bot 档位存于 2048-botdiff
+    var diff = (window.Assist && window.Assist.get("2048-botdiff")) || "med";
+    var depth = window.Assist ? window.Assist.botDepth(diff) : 4;
+    var d = bestMove(this.b, depth);
     if (d === null) { this.checkWin(); this.renderB(); this.setStatus(this.winner ? "" : "机器入局停止"); return; }
     var res = tryMove(this.b, d);
     this.bs += res.gained;

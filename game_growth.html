@@ -31,6 +31,8 @@
 
       <div class="garden" id="board-seed"></div>
 
+      <div id="diff-slot" class="diff-slot"></div>
+
       <div class="harvest-row">
         <div class="basket"><span class="label">收成</span><span class="num" id="seed-score">0</span></div>
         <div class="basket best"><span class="label">园史最佳</span><span class="num" id="seed-best">0</span></div>
@@ -49,9 +51,11 @@
   </div>
 
   <script src="js/swipe.js"></script>
+  <script src="js/assist.js"></script>
   <script src="js/growth2048.js"></script>
   <script>
     var sg = window.SeedGame();
+    window.Assist && Assist.mount('diff-slot', { label: '援助 / 难度', key: '2048-diff', def: 'off' });
     document.getElementById("seed-restart").addEventListener("click", function () { sg.restart(); });
   </script>
 </body>

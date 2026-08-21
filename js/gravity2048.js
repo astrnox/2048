@@ -152,11 +152,25 @@
     for (var i = 0; i < 3; i++) this.spawnAtRandom();
   };
 
-  OrbitGame.prototype.spawnAtRandom = function () {
+  OrbitGame.prototype.pickCell = function () {
     var cells = emptyCells(this.board);
-    if (!cells.length) return;
-    var p = cells[Math.floor(Math.random() * cells.length)];
-    this.board[p[0]][p[1]] = Math.random() < 0.9 ? 2 : 4;
+    if (!cells.length) return null;
+    if (window.Assist && window.Assist.get() !== "off") {
+      var s = window.Assist.strength(window.Assist.get());
+      var p = window.Assist.pick4(this.board, s);
+      if (p) return { r: p.r, c: p.c };
+    }
+    var rc = cells[Math.floor(Math.random() * cells.length)];
+    return { r: rc[0], c: rc[1] };
+  };
+
+OrbitGame.prototype.spawnAtRandom = function () {
+    var p = this.pickCell();
+    if (!p) return;
+    var v = (window.Assist && window.Assist.get() !== "off")
+      ? window.Assist.pickValue(window.Assist.strength(window.Assist.get()))
+      : (Math.random() < 0.9 ? 2 : 4);
+    this.board[p.r][p.c] = v;
   };
 
   OrbitGame.prototype.tilt = function (dv) {
@@ -207,11 +221,13 @@
   };
 
   OrbitGame.prototype.spawnFalling = function () {
-    var cells = emptyCells(this.board);
-    if (!cells.length) return;
-    var p = cells[Math.floor(Math.random() * cells.length)];
-    this.board[p[0]][p[1]] = Math.random() < 0.9 ? 2 : 4;
-    this.lastDrop.push({ fromRow: 0, toRow: p[0], toCol: p[1], isNew: true });
+    var p = this.pickCell();
+    if (!p) return;
+    var v = (window.Assist && window.Assist.get() !== "off")
+      ? window.Assist.pickValue(window.Assist.strength(window.Assist.get()))
+      : (Math.random() < 0.9 ? 2 : 4);
+    this.board[p.r][p.c] = v;
+    this.lastDrop.push({ fromRow: 0, toRow: p.r, toCol: p.c, isNew: true });
   };
 
   OrbitGame.prototype.settled = function () {

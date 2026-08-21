@@ -1,82 +1,95 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>2048 · 任务清单</title>
-  <link rel="shortcut icon" href="favicon.ico">
-  <link href="style/home.css" rel="stylesheet" type="text/css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#F5F0E6">
+<title>2048 肉鸽 · 数字宇宙</title>
+<link rel="stylesheet" href="style/spa.css">
 </head>
 <body>
-  <div class="manifest">
 
-    <header class="console-head">
-      <span class="ch-log">LOG 2048 // MISSION MANIFEST</span>
-      <span class="ch-id">Nº-04</span>
-    </header>
+  <!-- 顶栏：FPS + 胶囊控制 -->
+  <div class="app-topbar" aria-hidden="true">
+    <div class="app-fps">60 FPS</div>
+    <div class="app-pill" role="presentation">
+      <span class="pill-dots"><i></i><i></i><i></i></span>
+      <span class="pill-divider"></span>
+      <span class="pill-circle"><span class="pill-dot"></span></span>
+    </div>
+  </div>
 
-    <section class="lead">
-      <div class="lead-num" aria-hidden="true">2048</div>
-      <p class="lead-txt">五条<br>合数<br>航线</p>
-      <p class="lead-sub">数字相撞则合体，合出 <b>2048</b> 即抵达。<br>每一条都是一种走法。</p>
+  <!-- 应用主容器：三视图切换 -->
+  <div id="app" class="app">
+
+    <!-- ====== 视图 1：首页 ====== -->
+    <section class="view view-home is-active" data-view="home">
+      <div class="stage">
+        <div class="brand">
+          <h1 class="logo-2048" aria-label="2048 肉鸽">2048</h1>
+          <p class="brand-sub">肉鸽</p>
+        </div>
+        <nav class="btn-stack">
+          <button class="btn-3d" data-go="modes" data-ripple>开始游戏</button>
+          <button class="btn-3d" data-go="settings" data-ripple>排行榜</button>
+          <button class="btn-3d" data-go="settings" data-ripple>设置</button>
+          <button class="btn-3d" data-go="quit" data-ripple>退出游戏</button>
+        </nav>
+      </div>
     </section>
 
-    <ol class="manifest-list">
+    <!-- ====== 视图 2：模式选择 ====== -->
+    <section class="view view-modes" data-view="modes" aria-hidden="true">
+      <div class="stage">
+        <div class="brand">
+          <h1 class="logo-2048">2048</h1>
+          <p class="brand-sub">肉鸽</p>
+        </div>
+        <nav class="btn-stack">
+          <button class="btn-3d" data-play="classic" data-ripple>经典模式</button>
+          <button class="btn-3d" data-play="gravity" data-ripple>星落模式</button>
+          <button class="btn-3d" data-play="growth"  data-ripple>生长模式</button>
+          <button class="btn-3d" data-play="hex"     data-ripple>六边模式</button>
+          <button class="btn-3d" data-play="ai"      data-ripple>对抗模式</button>
+          <button class="btn-3d btn-3d-muted" data-back="home" data-ripple>返回菜单</button>
+        </nav>
+      </div>
+    </section>
 
-      <li class="op">
-        <a href="game.html">
-          <span class="op-code">LN·00</span>
-          <span class="op-name">款经典 <em>CLASSIC</em></span>
-          <span class="op-desc">方向键/滑动，相同数字相撞合成 2048</span>
-          <span class="op-key">WASD · ←↑↓→ · 滑动</span>
-          <span class="op-cta">→</span>
-        </a>
-      </li>
-
-      <li class="op">
-        <a href="game_gravity.html">
-          <span class="op-code">LN·01</span>
-          <span class="op-name">星落 <em>STARFALL</em></span>
-          <span class="op-desc">转动星球让重力替你坠，同数一路连锁合体</span>
-          <span class="op-key">←→ 转向 · SPACE 坠落</span>
-          <span class="op-cta">→</span>
-        </a>
-      </li>
-
-      <li class="op">
-        <a href="game_growth.html">
-          <span class="op-code">LN·02</span>
-          <span class="op-name">生长 <em>GROWTH</em></span>
-          <span class="op-desc">棋盘会活：每步破土种子并成熟，久不合体春日加发</span>
-          <span class="op-key">方向键 / 滑动</span>
-          <span class="op-cta">→</span>
-        </a>
-      </li>
-
-      <li class="op">
-        <a href="game_hex.html">
-          <span class="op-code">LN·03</span>
-          <span class="op-name">六边 <em>HEX</em></span>
-          <span class="op-desc">六边形棋盘、六个方向滑动，蜂窝里旋转合体</span>
-          <span class="op-key">方向键 · Q/E · 滑动（含斜向）</span>
-          <span class="op-cta">→</span>
-        </a>
-      </li>
-
-      <li class="op">
-        <a href="game_ai.html">
-          <span class="op-code">LN·04</span>
-          <span class="op-name">对抗 <em>VS·AI</em></span>
-          <span class="op-desc">与机器人轮流走子（深度前瞻），谁先合成谁赢</span>
-          <span class="op-key">方向键 / 滑动</span>
-          <span class="op-cta">→</span>
-        </a>
-      </li>
-
-    </ol>
-
-    <footer class="console-foot">全天候合体 · 全部玩法均可触摸滑动 ✦ 经典始终可用</footer>
+    <!-- ====== 视图 3：子菜单（新游戏 / 继续游戏） ====== -->
+    <section class="view view-play" data-view="play" aria-hidden="true">
+      <div class="stage">
+        <div class="brand">
+          <h1 class="logo-2048">2048</h1>
+          <p class="brand-sub">肉鸽</p>
+        </div>
+        <div class="mode-chip" id="modeChip">经典模式</div>
+        <nav class="btn-stack">
+          <button class="btn-3d" id="btnNewGame" data-ripple>新游戏</button>
+          <button class="btn-3d" id="btnContinue" data-ripple>继续游戏</button>
+          <button class="btn-3d btn-3d-muted" data-back="modes" data-ripple>返回</button>
+        </nav>
+      </div>
+    </section>
 
   </div>
+
+  <!-- 底部版本号 -->
+  <div class="app-foot" aria-hidden="true">V1.0.0</div>
+
+  <!-- ====== 确认框：覆盖层 ====== -->
+  <div class="modal" id="confirmModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close-confirm></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <h2 class="modal-title" id="confirmTitle">覆盖存档？</h2>
+      <p class="modal-text">当前已有存档，开始新游戏会将其覆盖，是否继续？</p>
+      <div class="modal-actions">
+        <button class="btn-3d modal-cancel" data-close-confirm data-ripple>取消</button>
+        <button class="btn-3d modal-ok"     id="confirmOk"    data-ripple>确认新游戏</button>
+      </div>
+    </div>
+  </div>
+
+<script src="js/spa.js"></script>
 </body>
 </html>

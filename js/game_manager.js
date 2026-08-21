@@ -121,14 +121,42 @@ GameManager.prototype.addStartTiles = function () {
   }
 };
 
-// Adds a tile in a random position
+// Adds a tile in a position chosen by the active difficulty/assist (default off = random)
 GameManager.prototype.addRandomTile = function () {
-  if (this.grid.cellsAvailable()) {
-    var value = Math.random() < 0.9 ? 2 : 4;
-    var tile = new Tile(this.grid.randomAvailableCell(), value);
+  if (!this.grid.cellsAvailable()) return;
 
-    this.grid.insertTile(tile);
+  var cell, value;
+  if (window.Assist && window.Assist.get() !== "off") {
+    // 后台即时推算"此时需要的方块与位置"，按难度调整援助力度（只扫一遍空位，性能开销可忽略）
+    var strengthS = window.Assist.strength(window.Assist.get());
+    var b = this.gridToBoard();
+    var pick = window.Assist.pick4(b, strengthS);
+    if (pick) {
+      cell = { x: pick.c, y: pick.r };
+      value = window.Assist.pickValue(strengthS);
+    }
   }
+  if (!cell) {
+    value = Math.random() < 0.9 ? 2 : 4;
+    cell = this.grid.randomAvailableCell();
+  }
+
+  var tile = new Tile(cell, value);
+  this.grid.insertTile(tile);
+};
+
+// 导出当前棋盘数值矩阵，供援助打分用（0 表示空格）
+GameManager.prototype.gridToBoard = function () {
+  var b = [];
+  for (var y = 0; y < this.size; y++) {
+    var row = [];
+    for (var x = 0; x < this.size; x++) {
+      var t = this.grid.cellContent({ x: x, y: y });
+      row.push(t ? t.value : 0);
+    }
+    b.push(row);
+  }
+  return b;
 };
 
 // Sends the updated grid to the actuator

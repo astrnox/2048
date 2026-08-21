@@ -88,11 +88,16 @@
     this.bind();
   }
 
-  // 播种
+  // 播种：开启援助时，把种子播在"此刻最需要"的位置（默认随机）
   SeedGame.prototype.plant = function () {
     var cells = emptyCells(this.board);
     if (!cells.length) return false;
-    var p = cells[Math.floor(Math.random() * cells.length)];
+    var p;
+    if (window.Assist && window.Assist.get() !== "off") {
+      var pd = window.Assist.pick4(this.board, window.Assist.strength(window.Assist.get()));
+      if (pd) p = [pd.r, pd.c];
+    }
+    if (!p) p = cells[Math.floor(Math.random() * cells.length)];
     this.board[p[0]][p[1]] = 2;
     this.seeds[k(p[0], p[1])] = true;
     return true;

@@ -18,12 +18,14 @@
     <div class="heading">
       <h1 class="title">2048</h1>
       <div class="scores-container">
-        <div class="score-container" data-label="得分">0</div>
-        <div class="best-container" data-label="最佳">0</div>
+        <div class="score-container" id="hex-score" data-label="得分">0</div>
+        <div class="best-container" id="hex-best" data-label="最佳">0</div>
       </div>
     </div>
 
     <p class="hex-hint">六边形棋盘 · 六个方向滑动，数字在蜂窝里旋转合体</p>
+
+    <div id="diff-slot" class="diff-slot"></div>
 
     <div class="hex-board" id="hex-board"></div>
 
@@ -36,9 +38,11 @@
   </div>
 
   <script src="js/swipe.js"></script>
+  <script src="js/assist.js"></script>
   <script src="js/hex2048.js"></script>
   <script>
     var game = new window.HexGame(document.getElementById("hex-board"));
+    window.Assist && Assist.mount('diff-slot', { label: '援助 / 难度', key: '2048-diff', def: 'off' });
     document.getElementById("restart").addEventListener("click", function () { game.restart(); });
     document.addEventListener("click", function (e) {
       if (e.target && (e.target.id === "restart2" || e.target.id === "keep")) {

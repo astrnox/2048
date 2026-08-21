@@ -1,105 +1,133 @@
 /* ===========================================================
-   蜂窝·六边形 2048 — Hive console 皮肤
-   引入 ui.css（深空基座/共用顶栏/共用按钮），仅保留棋盘
-   特有的蜂窝尺寸与动画。整体与其他玩法一致。
+   蜂窝·六边形 2048 — 暖陶 Warm Clay
+   依赖 ui.css。hex-board 是 nudge() 目标，
+   不可挂载入场动画（nu0~nu3 反复增删会导致动画重播）。
+   瓦片颜色由 JS 内联 fill 提供（经典色阶），
+   本文件负责棋盘质感、滑动/浮现/合体动画与 HUD。
    =========================================================== */
 @import url("ui.css");
 
 .container {
-  max-width: 440px;
+  max-width: 460px;
   margin: 0 auto;
   padding: 22px 16px 48px;
 }
 
-.heading { text-align: center; }
+/* ---------- 标题 + 读数 ---------- */
+.heading { text-align: center; animation: cli-rise 0.5s var(--ease-pop) both; }
 .heading .title {
-  font-size: 64px;
+  font-size: clamp(48px, 11vw, 62px);
   font-weight: 800;
   margin: 8px 0 4px;
   color: var(--ink);
   letter-spacing: 2px;
+  line-height: 0.95;
 }
 .heading .title::after {
   content: "HEX";
   display: block;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 6px;
-  color: var(--signal);
-  opacity: 0.8;
-  margin-top: 2px;
+  color: var(--accent);
+  margin-top: 4px;
 }
 
-/* 读数：任务台 chip */
-.scores-container { display: flex; justify-content: center; gap: 10px; margin-top: 6px; }
+.scores-container { display: flex; justify-content: center; gap: 10px; margin-top: 12px; }
 .score-container, .best-container {
   position: relative;
-  background: rgba(12, 15, 22, 0.7);
-  border: 1px solid var(--line);
-  padding: 12px 20px 8px;
-  font-size: 22px;
+  min-width: 100px;
+  padding: 22px 18px 9px;
+  font-size: 24px;
   font-weight: 700;
-  border-radius: var(--radius);
-  color: var(--signal);
+  text-align: center;
+  color: #fff;
+  background: linear-gradient(180deg, var(--board-hi), var(--board));
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-chip);
   font-variant-numeric: tabular-nums;
 }
-.best-container::before, .score-container::before {
+.score-container::before, .best-container::before {
   content: attr(data-label);
   position: absolute;
-  top: 4px; left: 0; right: 0;
-  font-size: 10px;
+  top: 7px; left: 0; right: 0;
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 2px;
   text-align: center;
-  color: var(--dim);
+  color: rgba(249, 246, 242, 0.92);
 }
 
 .hex-hint {
   text-align: center;
   font-size: 12.5px;
   letter-spacing: 1px;
-  margin: 14px 0 10px;
+  line-height: 1.9;
+  margin: 16px 0 14px;
   color: var(--dim);
+  animation: cli-rise 0.5s var(--ease-pop) 0.06s both;
 }
 
+/* ---------- 蜂窝棋盘：陶土底 ---------- */
 .hex-board {
   position: relative;
   display: flex;
   justify-content: center;
-  padding: 6px;
-  background: #0b0e15;
-  border: 1px solid var(--line);
-  border-radius: 4px;
+  padding: 14px;
+  margin: 0 auto;
+  width: fit-content;
+  max-width: 100%;
+  background: linear-gradient(180deg, var(--board-hi), var(--board));
+  border-radius: 14px;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.16), 0 2px 0 rgba(93, 71, 48, 0.14), 0 16px 36px rgba(93, 71, 48, 0.18);
   touch-action: none;
   -webkit-user-select: none; user-select: none;
 }
 
-/* 底格：深空蜂窝（cellsGroup 是 svg 第一个 g） */
+/* 底格：暖色蜂窝凹槽 */
 .hex-board svg > g:first-child polygon {
-  fill: rgba(122, 214, 164, 0.05);
-  stroke: var(--line);
+  fill: rgba(238, 228, 218, 0.35);
+  stroke: rgba(93, 71, 48, 0.16);
   stroke-width: 1;
 }
-.hex-board svg > g polygon {
-  stroke: rgba(255, 255, 255, 0.12);
+
+/* ---------- 瓦片：丝滑滑动 + 物理厚度 ---------- */
+.hex-tile {
+  transition: transform 0.18s cubic-bezier(0.3, 0.9, 0.3, 1);
+  filter: drop-shadow(0 2px 2px rgba(93, 71, 48, 0.18));
+}
+.hex-tile polygon { stroke: rgba(93, 71, 48, 0.12); stroke-width: 1.5; }
+.hex-tile .hex-text {
+  font-family: var(--mono);
+  font-weight: 700;
+  pointer-events: none;
 }
 
-/* tiles */
-.hex-tile { transition: transform 0.18s cubic-bezier(0.3, 0.9, 0.3, 1); }
-.hex-tile polygon { stroke: rgba(255, 255, 255, 0.12); stroke-width: 1.5; }
-.hex-tile .hex-text { font-weight: 700; pointer-events: none; }
+/* 抽搐缩放都作用在内部 polygon 上，绝不碰 <g> 的位移 transform */
+.hex-tile polygon {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
 
-/* 新落的方块：淡入浮现 */
-.hex-tile.hex-new { animation: hex-fade 0.28s ease both; }
-@keyframes hex-fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+/* 新方块：<g> 只淡入，polygon 从中心浮起 */
+.hex-tile.hex-new { animation: hex-fade 0.22s ease both; }
+@keyframes hex-fade { from { opacity: 0; } to { opacity: 1; } }
+.hex-tile.hex-new polygon { animation: hex-appear 0.26s var(--ease-pop) both; }
+@keyframes hex-appear {
+  0%   { transform: scale(0.35); opacity: 0; }
+  60%  { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
 
-/* 合并瞬间的回弹 */
-.hex-merged polygon { animation: hex-pop 0.2s ease; }
+/* 合并瞬间的弹跳（内部 polygon） */
+.hex-tile.hex-merged polygon { animation: hex-pop 0.2s var(--ease-pop); }
 @keyframes hex-pop {
-  0% { transform: scale(0.6); }
-  60% { transform: scale(1.1); }
+  0%   { transform: scale(0.6); }
+  60%  { transform: scale(1.12); }
   100% { transform: scale(1); }
 }
 
-/* 滑动跟随的推力动画（棋盘容器） */
+/* ---------- 滑动回弹（棋盘容器） ---------- */
 .hex-board.nu0 { animation: hex-nu0 0.24s ease; }
 .hex-board.nu1 { animation: hex-nu1 0.24s ease; }
 .hex-board.nu2 { animation: hex-nu2 0.24s ease; }
@@ -109,51 +137,61 @@
 @keyframes hex-nu2 { 0% { transform: translateY(-6px); } 100% { transform: translateY(0); } }
 @keyframes hex-nu3 { 0% { transform: translateX(6px); } 100% { transform: translateX(0); } }
 
+/* ---------- 消息卡（陶土） ---------- */
 .hex-message {
   display: none;
   text-align: center;
-  margin: 12px auto 0;
-  padding: 14px 18px;
+  margin: 16px auto 0;
+  padding: 16px 18px;
   max-width: 340px;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
-  color: #07120c;
-  background: var(--signal);
+  line-height: 1.8;
+  color: #fff;
+  background: linear-gradient(180deg, var(--board-hi), var(--board));
   border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  animation: cli-rise 0.4s var(--ease-pop) both;
 }
+.hex-message b { color: var(--gold); }
 .hex-message button {
   margin: 4px 6px;
-  padding: 6px 14px;
+  padding: 8px 20px;
   font-family: inherit;
+  font-size: 13px;
   font-weight: 700;
-  border: 1px solid rgba(0, 0, 0, 0.35);
-  border-radius: var(--radius);
+  letter-spacing: 1px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--radius-pill);
+  color: #fff;
   background: transparent;
-  color: #07120c;
   cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
-.hex-message button:hover { background: rgba(0, 0, 0, 0.1); }
+.hex-message button:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.8); }
 
+/* ---------- 操作说明 ---------- */
 .hex-keys {
   text-align: center;
-  font-size: 13px;
-  line-height: 1.8;
+  font-size: 12.5px;
+  line-height: 2.2;
   color: var(--dim);
-  margin-top: 18px;
+  margin-top: 20px;
+  animation: cli-rise 0.5s var(--ease-pop) 0.12s both;
 }
 .hex-keys b {
   display: inline-block;
-  min-width: 26px;
-  padding: 2px 7px;
-  margin: 2px;
+  min-width: 28px;
+  padding: 3px 9px;
+  margin: 2px 3px;
+  background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 2px;
-  color: var(--signal);
-  font-weight: normal;
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  color: var(--ink);
+  font-weight: 700;
   font-size: 12px;
   letter-spacing: 1px;
+  box-shadow: 0 1px 0 rgba(93, 71, 48, 0.05);
 }
-
-@media (max-width: 380px) {
-  .heading .title { font-size: 52px; }
-}
+.hex-keys .btn { margin-top: 10px; }

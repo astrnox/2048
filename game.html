@@ -6,7 +6,7 @@
   <title>2048 · 经典</title>
   <link href="style/ui.css" rel="stylesheet" type="text/css">
   <link href="style/main.css" rel="stylesheet" type="text/css">
-  <link href="style/classic-console.css" rel="stylesheet" type="text/css">
+  <link href="style/classic.css" rel="stylesheet" type="text/css">
   <link rel="shortcut icon" href="favicon.ico">
 </head>
 <body>
@@ -17,7 +17,7 @@
       <span class="cli-sys">MODE.2048 // CLASSIC</span>
     </header>
 
-    <div class="heading classic-head">
+    <div class="heading classic-head rise-in">
       <h1 class="title">2048</h1>
       <div class="scores-container">
         <div class="score-container">0</div>
@@ -40,6 +40,8 @@
       <p class="game-intro" id="mode-hint">同数相撞即合体，合出 <strong>2048</strong> 获胜。</p>
       <a class="restart-button">重开</a>
     </div>
+
+    <div id="diff-slot" class="diff-slot"></div>
 
     <div class="game-container">
       <div class="game-message">
@@ -75,6 +77,10 @@
   <script src="js/local_storage_manager.js"></script>
   <script src="js/game_manager.js"></script>
   <script src="js/modes.js"></script>
+  <script src="js/assist.js"></script>
   <script src="js/application.js"></script>
+  <script>
+    window.Assist && Assist.mount('diff-slot', { label: '援助 / 难度', key: '2048-diff', def: 'off' });
+  </script>
 </body>
 </html>

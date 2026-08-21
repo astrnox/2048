@@ -1,102 +1,108 @@
 /* =============================================================
-   2048 · AI 对抗模式 — 统一任务台肤色后的地方样式
+   2048 · AI 对抗 — 暖陶 Warm Clay
+   依赖 ui.css。双棋盘竞技场：你 vs 机器人。
+   瓦片颜色由 JS 内联样式提供（经典色阶）。
+   .board 是 nudge() 目标，不可挂载入场动画。
    ============================================================= */
 @import url("ui.css");
 
-:root {
-  --ink: #776e65;
-  --ink-deep: #5c5348;
-  --board-bg: #bbada0;
-  --bg: #faf8ef;
-  --gold: #edc22e;
-  --you: #f59563;
-  --bot: #6b60a0;
-}
+.container { max-width: 1060px; margin: 0 auto; padding: 22px 16px 52px; }
 
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: "ClearSans", "PingFang SC", "Microsoft YaHei", sans-serif;
-}
-
-.container { max-width: 1080px; margin: 0 auto; padding: 22px 16px 52px; }
-
-.topbar { margin-bottom: 6px; }
-.home-link {
-  display: inline-block; font-size: 13px; font-weight: bold; color: var(--ink);
-  background: rgba(187, 173, 160, 0.20); padding: 6px 12px; border-radius: 20px;
-  text-decoration: none; transition: background 0.15s ease;
-}
-.home-link:hover { background: rgba(187, 173, 160, 0.4); }
-
-.stage-head { text-align: center; margin-top: 8px; }
+/* ---------- 标题 ---------- */
+.stage-head { text-align: center; margin-top: 12px; animation: cli-rise 0.5s var(--ease-pop) both; }
 .stage-head .title {
-  font-size: clamp(40px, 7vw, 60px); font-weight: 700; margin: 0 0 4px;
-  color: var(--ink-deep); letter-spacing: 2px;
+  font-size: clamp(40px, 8vw, 60px); font-weight: 800; margin: 0 0 6px;
+  color: var(--ink); letter-spacing: 3px; line-height: 0.95;
 }
-.stage-head .subtitle { margin: 0; font-size: 14px; color: #998d82; }
-.stage-head .subtitle b { color: var(--gold); }
+.stage-head .title::first-letter { color: var(--accent); }
+.stage-head .subtitle { margin: 0; font-size: 13.5px; color: var(--dim); line-height: 1.8; }
+.stage-head .subtitle b { color: var(--accent); font-weight: 700; }
 
-/* race info strip */
+/* ---------- 竞速信息条 ---------- */
 .race-info {
   display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
-  gap: 14px; margin: 18px 0 20px; font-size: 13px; color: #998d82;
+  gap: 14px; margin: 20px 0 22px; font-size: 13px; color: var(--dim);
+  animation: cli-rise 0.5s var(--ease-pop) 0.06s both;
 }
-.rate-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
-.rate-dot.you { background: var(--you); box-shadow: 0 0 0 3px rgba(245,149,99,0.25); }
-.rate-dot.bot { background: var(--bot); box-shadow: 0 0 0 3px rgba(107,96,160,0.25); }
+.effort { display: inline-flex; align-items: center; }
+.rate-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+.rate-dot.you { background: var(--accent); box-shadow: 0 0 0 3px rgba(224, 120, 74, 0.2); }
+.rate-dot.bot { background: var(--button); box-shadow: 0 0 0 3px rgba(143, 122, 102, 0.22); }
 
 .clock {
   display: flex; align-items: baseline; gap: 8px;
-  background: #fff; border: 1px solid #e0dad4; border-radius: 12px;
-  padding: 8px 16px; box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+  background: linear-gradient(180deg, var(--board-hi), var(--board));
+  border-radius: var(--radius-sm);
+  padding: 7px 16px;
+  box-shadow: var(--shadow-chip);
 }
-.clock-label { font-size: 12px; color: #a89f92; }
-.clock-main { font-size: 26px; font-weight: 700; color: var(--ink-deep); font-variant-numeric: tabular-nums; }
+.clock-label { font-size: 11px; letter-spacing: 1.5px; font-weight: 700; color: rgba(249, 246, 242, 0.92); }
+.clock-main { font-size: 24px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
 
-/* arena */
+/* ---------- 竞技场 ---------- */
 .arena {
   display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start;
   gap: 18px;
 }
 .side {
-  flex: 1 1 340px; max-width: 460px; min-width: 280px;
-  background: linear-gradient(180deg, #ffffff, #f7f4ef);
-  border: 1px solid #e6dfd6; border-radius: 16px; padding: 16px;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.08);
+  flex: 1 1 340px; max-width: 460px; min-width: 300px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  padding: 16px;
+  animation: cli-rise 0.5s var(--ease-pop) 0.12s both;
 }
-.side-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.side.bot { animation-delay: 0.18s; }
+.side-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px; }
 .side-badge {
-  font-weight: 700; font-size: 15px; color: #fff; border-radius: 8px;
-  padding: 4px 14px; letter-spacing: 1px; background: var(--you);
+  font-weight: 700; font-size: 14px; color: #fff;
+  padding: 6px 18px; letter-spacing: 2px;
+  background: linear-gradient(180deg, var(--accent-hi), var(--accent));
+  border-radius: var(--radius-pill);
+  box-shadow: 0 2px 0 var(--accent-deep), 0 6px 14px rgba(224, 120, 74, 0.35);
 }
-.side-badge.bot { background: var(--bot); }
-.side-stats { display: flex; gap: 12px; }
+.side-badge.bot {
+  background: linear-gradient(180deg, var(--board-hi), var(--board));
+  box-shadow: var(--shadow-chip);
+}
+.side-stats { display: flex; gap: 8px; }
 .side-stats.right { order: 2; }
-.stat { background: var(--board-bg); color: #fff; border-radius: 6px; padding: 4px 12px; text-align: center; }
-.stat-num { display: block; font-size: 20px; font-weight: 700; line-height: 1.2; }
+.stat {
+  background: linear-gradient(180deg, var(--board-hi), var(--board));
+  color: #fff; border-radius: var(--radius-sm);
+  padding: 5px 14px; text-align: center;
+  box-shadow: var(--shadow-chip);
+}
+.stat-num { display: block; font-size: 20px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .stat-num.golden { color: var(--gold); }
-.stat-label { font-size: 10px; letter-spacing: 1px; opacity: 0.85; }
+.stat-label { font-size: 10px; letter-spacing: 1.5px; font-weight: 700; color: rgba(249, 246, 242, 0.92); }
 
+/* ---------- 棋盘：陶土底（瓦片色由 JS 内联提供） ---------- */
 .board {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-  background: var(--board-bg); border-radius: 6px; padding: 8px; width: 100%;
+  background: linear-gradient(180deg, var(--board-hi), var(--board));
+  border-radius: 12px; padding: 8px; width: 100%;
   aspect-ratio: 1 / 1;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.16), 0 2px 0 rgba(93, 71, 48, 0.14), 0 12px 26px rgba(93, 71, 48, 0.16);
   touch-action: none;
   -webkit-user-select: none; user-select: none;
 }
 .board .cell {
-  position: relative; border-radius: 4px; background: rgba(238, 228, 218, 0.35);
-  display: flex; align-items: center; justify-content: center; font-weight: 700;
+  position: relative; border-radius: 6px;
+  background: rgba(238, 228, 218, 0.35);
+  box-shadow: inset 0 1px 2px rgba(93, 71, 48, 0.10);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-variant-numeric: tabular-nums;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.board { -webkit-user-select: none; user-select: none; }
-.board .cell.has-tile { animation: pop 0.12s ease; }
+.board .cell.has-tile {
+  box-shadow: var(--shadow-tile);
+  animation: pop 0.12s ease;
+}
 @keyframes pop { from { transform: scale(0.85); opacity: 0.5; } to { transform: scale(1); opacity: 1; } }
 
-/* 滑动跟随的推力动画（己方棋盘） */
+/* ---------- 滑动回弹（玩家棋盘） ---------- */
 .board.nu0 { animation: ai-nu0 0.2s ease; }
 .board.nu1 { animation: ai-nu1 0.2s ease; }
 .board.nu2 { animation: ai-nu2 0.2s ease; }
@@ -106,37 +112,40 @@ body {
 @keyframes ai-nu2 { 0% { transform: translateY(-7px); } 100% { transform: translateY(0); } }
 @keyframes ai-nu3 { 0% { transform: translateX(7px); } 100% { transform: translateX(0); } }
 
-.side-key { text-align: center; font-size: 12px; color: #a89f92; margin: 12px 0 0; }
+.side-key { text-align: center; font-size: 12px; color: var(--dim); margin: 12px 0 0; }
 
+/* ---------- VS 徽章 ---------- */
 .vs {
-  align-self: center; font-size: 40px; font-weight: 700; color: var(--gold);
-  text-shadow: 0 2px 0 rgba(237, 194, 46, 0.35); letter-spacing: 2px;
-  padding: 6px 2px;
+  align-self: center;
+  display: flex; align-items: center; justify-content: center;
+  width: 58px; height: 58px; border-radius: 50%;
+  font-size: 19px; font-weight: 800; letter-spacing: 1px; color: #fff;
+  background: linear-gradient(180deg, var(--accent-hi), var(--accent));
+  box-shadow: 0 2px 0 var(--accent-deep), 0 10px 22px rgba(224, 120, 74, 0.4);
+  animation: vs-in 0.6s var(--ease-pop) 0.24s both;
+}
+@keyframes vs-in {
+  from { opacity: 0; transform: scale(0) rotate(-16deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0); }
 }
 
-/* result banner */
+/* ---------- 结果横幅（陶土卡） ---------- */
 .banner {
-  display: none; flex-direction: column; align-items: center; gap: 12px;
-  margin: 26px auto 0; padding: 22px; max-width: 460px; text-align: center;
-  background: linear-gradient(150deg, #3c3a32, #2b2931); border-radius: 14px;
-  color: #f9f6f2; box-shadow: 0 20px 46px rgba(0,0,0,0.3);
-  animation: rise 0.4s ease both;
+  display: none; flex-direction: column; align-items: center; gap: 14px;
+  margin: 26px auto 0; padding: 24px; max-width: 460px; text-align: center;
+  background: linear-gradient(180deg, var(--board-hi), var(--board));
+  border-radius: 16px;
+  color: #fff; box-shadow: var(--shadow-card);
+  animation: cli-rise 0.4s var(--ease-pop) both;
 }
-@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-.banner-text { font-size: 20px; font-weight: 700; }
-.replay {
-  padding: 10px 26px; font-family: inherit; font-size: 15px; font-weight: 700;
-  color: #f9f6f2; background: var(--you); border: 0; border-radius: 8px; cursor: pointer;
-  transition: transform 0.15s ease;
-}
-.replay:hover { transform: translateY(-2px); }
+.banner-text { font-size: 20px; font-weight: 700; letter-spacing: 1px; }
 
-.game-note { text-align: center; font-size: 12px; color: #b3a89b; margin-top: 22px; }
+.game-note { text-align: center; font-size: 12px; color: var(--dim); margin-top: 24px; line-height: 1.9; animation: cli-rise 0.5s var(--ease-pop) 0.3s both; }
 
-/* responsive */
+/* ---------- 响应式 ---------- */
 @media (max-width: 720px) {
   .arena { flex-wrap: wrap; }
-  .side { flex: 1 1 100%; max-width: 460px; margin: 0 auto; }
-  .vs { font-size: 30px; padding: 2px 0; }
+  .side { flex: 1 1 100%; max-width: 460px; margin: 0 auto; animation-delay: 0.1s; }
+  .vs { width: 48px; height: 48px; font-size: 16px; }
   .race-info { gap: 10px; }
 }

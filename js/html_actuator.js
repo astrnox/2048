@@ -13,9 +13,9 @@ HTMLActuator.prototype.setMode = function (mode) {
   document.body.className = "mode-" + (mode || "classic");
 
   var hints = {
-    classic: 'Join the numbers and get to the <strong>2048 tile!</strong>',
-    time:    'Score as many points as you can before the <strong>clock runs out!</strong>',
-    endless: 'No final tile here &mdash; how far can you build <strong>this time?</strong>'
+    classic: '相同数字相撞即合体，合成 <strong>2048</strong> 获胜！',
+    time:    '限时 <strong>60 秒</strong>，尽可能多地得分！',
+    endless: '没有终点——这一次你能合到多大？'
   };
 
   this.timerElement.classList.toggle("hidden", mode !== "time");
@@ -56,7 +56,7 @@ HTMLActuator.prototype.actuate = function (grid, metadata) {
     if (metadata.terminated) {
       if (metadata.over) {
         var timeUp = metadata.mode === "time" ?
-          "Time's up! Your score: " + metadata.score : null;
+          "时间到！你的得分：" + metadata.score : null;
         self.message(false, timeUp); // You lose
       } else if (metadata.won) {
         self.message(true); // You win!
@@ -157,7 +157,7 @@ HTMLActuator.prototype.updateBestScore = function (bestScore) {
 
 HTMLActuator.prototype.message = function (won, text) {
   var type    = won ? "game-won" : "game-over";
-  var message = text || (won ? "You win!" : "Game over!");
+  var message = text || (won ? "合成 2048！" : "棋盘满了！");
 
   this.messageContainer.classList.add(type);
   this.messageContainer.getElementsByTagName("p")[0].textContent = message;

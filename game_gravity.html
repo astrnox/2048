@@ -46,6 +46,8 @@
       <span class="readout-arrow" id="compass">重力 ↓</span>
     </div>
 
+    <div id="diff-slot" class="diff-slot"></div>
+
     <div class="msg" id="grav-msg"></div>
 
     <p class="manual">
@@ -71,9 +73,11 @@
   </div>
 
   <script src="js/swipe.js"></script>
+  <script src="js/assist.js"></script>
   <script src="js/gravity2048.js"></script>
   <script>
     window.OrbitGame && window.OrbitGame();
+    window.Assist && Assist.mount('diff-slot', { label: '援助 / 难度', key: '2048-diff', def: 'off' });
   </script>
 </body>
 </html>
