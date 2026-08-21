@@ -80,7 +80,7 @@
 
 /* ---------- 棋盘：陶土底（瓦片色由 JS 内联提供） ---------- */
 .board {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  position: relative;
   background: linear-gradient(180deg, var(--board-hi), var(--board));
   border-radius: 12px; padding: 8px; width: 100%;
   aspect-ratio: 1 / 1;
@@ -89,7 +89,7 @@
   -webkit-user-select: none; user-select: none;
 }
 .board .cell {
-  position: relative; border-radius: 6px;
+  position: absolute; border-radius: 6px;
   background: rgba(238, 228, 218, 0.35);
   box-shadow: inset 0 1px 2px rgba(93, 71, 48, 0.10);
   display: flex; align-items: center; justify-content: center;
@@ -98,9 +98,16 @@
 }
 .board .cell.has-tile {
   box-shadow: var(--shadow-tile);
-  animation: pop 0.12s ease;
+  z-index: 2;
 }
-@keyframes pop { from { transform: scale(0.85); opacity: 0.5; } to { transform: scale(1); opacity: 1; } }
+/* 滑动：平移过渡（参照经典模式） */
+.board .a-tile { transition: transform 0.2s cubic-bezier(0.3, 0.9, 0.3, 1); will-change: transform; }
+/* 合体弹跳 */
+.board .a-merged { animation: ai-pop 0.22s var(--ease-pop); }
+@keyframes ai-pop { 0% { transform: scale(0.4); } 55% { transform: scale(1.18); } 100% { transform: scale(1); } }
+/* 新方块浮现 */
+.board .a-new { animation: ai-grow 0.24s var(--ease-pop); }
+@keyframes ai-grow { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
 
 /* ---------- 滑动回弹（玩家棋盘） ---------- */
 .board.nu0 { animation: ai-nu0 0.2s ease; }

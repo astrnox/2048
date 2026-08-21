@@ -97,46 +97,50 @@
 }
 .gcell {
   position: absolute;
-  border-radius: 6px;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: clamp(17px, 5.2vw, 24px); line-height: 1; color: var(--ink);
-  font-variant-numeric: tabular-nums;
   transition: background 0.25s ease, color 0.25s ease, transform 0.3s var(--ease-pop);
   will-change: transform;
+}
+/* 内层面：数值与颜色，负责合体弹跳 */
+.gface {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  font-weight: 700; font-size: clamp(17px, 5.2vw, 24px); line-height: 1; color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
 /* —— 受重力下坠：加速落下后轻轻落定 —— */
 .gcell.g-fall {
   transition: transform 0.4s cubic-bezier(0.5, 0.05, 0.85, 0.35);
 }
-.gcell.g-merge { animation: g-chain 0.3s var(--ease-pop); }
+.gface.g-pop { animation: g-chain 0.3s var(--ease-pop); }
 @keyframes g-chain {
   0%   { transform: scale(0.4); }
   55%  { transform: scale(1.18); }
   100% { transform: scale(1); }
 }
 
-/* ---------- 经典瓦片色阶 + 物理厚度 ---------- */
-.gcell.t2   { background: var(--t2);   color: #776e65; box-shadow: var(--shadow-tile); }
-.gcell.t4   { background: var(--t4);   color: #776e65; box-shadow: var(--shadow-tile); }
-.gcell.t8   { background: var(--t8);   color: #f9f6f2; box-shadow: var(--shadow-tile); }
-.gcell.t16  { background: var(--t16);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
-.gcell.t32  { background: var(--t32);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
-.gcell.t64  { background: var(--t64);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
-.gcell.t128 { background: var(--t128); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 18px rgba(243, 215, 116, 0.35); }
-.gcell.t256 { background: var(--t256); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 20px rgba(243, 215, 116, 0.42); }
-.gcell.t512 { background: var(--t512); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 22px rgba(243, 215, 116, 0.5); }
-.gcell.t1024{ background: var(--t1024); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 24px rgba(243, 215, 116, 0.55); }
-.gcell.t2048, .gcell.star {
+/* ---------- 经典瓦片色阶 + 物理厚度 (+)内层面 ---------- */
+.gface.t2   { background: var(--t2);   color: #776e65; box-shadow: var(--shadow-tile); }
+.gface.t4   { background: var(--t4);   color: #776e65; box-shadow: var(--shadow-tile); }
+.gface.t8   { background: var(--t8);   color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.gface.t16  { background: var(--t16);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.gface.t32  { background: var(--t32);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.gface.t64  { background: var(--t64);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.gface.t128 { background: var(--t128); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 18px rgba(243, 215, 116, 0.35); }
+.gface.t256 { background: var(--t256); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 20px rgba(243, 215, 116, 0.42); }
+.gface.t512 { background: var(--t512); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 22px rgba(243, 215, 116, 0.5); }
+.gface.t1024{ background: var(--t1024); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 24px rgba(243, 215, 116, 0.55); }
+.gface.t2048, .gface.star {
   background: var(--t2048); color: #f9f6f2;
   box-shadow: var(--shadow-tile), 0 0 26px rgba(237, 194, 46, 0.6);
 }
-.gcell.t4096 { background: var(--tsuper); color: #f9f6f2; box-shadow: var(--shadow-tile); }
-.gcell.t8192 { background: #5bca57; color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.gface.t4096 { background: var(--tsuper); color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.gface.t8192 { background: #5bca57; color: #f9f6f2; box-shadow: var(--shadow-tile); }
 
 /* 四位数以上缩小字号，防溢出 */
-.gcell.t1024, .gcell.t2048 { font-size: clamp(13px, 4.1vw, 18px); }
-.gcell.t4096, .gcell.t8192 { font-size: clamp(11px, 3.5vw, 15px); }
+.gface.t1024, .gface.t2048 { font-size: clamp(13px, 4.1vw, 18px); }
+.gface.t4096, .gface.t8192 { font-size: clamp(11px, 3.5vw, 15px); }
 
 .core {
   position: absolute; z-index: 1; width: 14px; height: 14px; border-radius: 50%;

@@ -25,12 +25,61 @@
     return out;
   }
 
-  function spawn(b) {
+  // 出块偏向：难度越高，给机器人的落子越好、给玩家的越差
+  // (数值 = 出现 4 的概率，p4 越小越容易，越偏向机器人)
+  var SPAWN = {
+    easy:   { bot: 0.16, human: 0.04 },
+    normal: { bot: 0.10, human: 0.10 },
+    hard:   { bot: 0.02, human: 0.26 }
+  };
+  function spawn(b, p4) {
     var cells = emptyCells(b);
     if (!cells.length) return false;
     var p = cells[Math.floor(Math.random() * cells.length)];
-    b[p[0]][p[1]] = Math.random() < 0.9 ? 2 : 4;
+    b[p[0]][p[1]] = Math.random() < (p4 == null ? 0.1 : p4) ? 4 : 2;
     return true;
+  }
+  // 把难度档位映射为当前对局的出块偏向
+  function spawnBias(botDiff) {
+    var d = botDiff === "easy" ? "easy" : (botDiff === "hard" ? "hard" : "normal");
+    return SPAWN[d];
+  }
+
+  // 棋盘几何（与 ai.css 一致：padding=8, gap=8）
+  var PAD = 8, GAP = 8;
+
+  // 追踪一次滑动的每个瓦片“来自”哪格（只用于渲染动画，不参与搜索）
+  function slideTrack(board, dir) {
+    var axis = (dir === 0 || dir === 2) ? 1 : 0;
+    var forward = (dir === 1 || dir === 2) ? -1 : 1;
+    var cells = [];
+    for (var lane = 0; lane < 4; lane++) {
+      var lane0 = [];
+      for (var i = 0; i < 4; i++) {
+        var rr = axis === 1 ? (forward === 1 ? i : 3 - i) : lane;
+        var cc = axis === 1 ? lane : (forward === 1 ? i : 3 - i);
+        var v = board[rr][cc];
+        if (v) lane0.push({ v: v, r: rr, c: cc });
+      }
+      var out = [], j = 0;
+      while (j < lane0.length) {
+        if (j + 1 < lane0.length && lane0[j].v === lane0[j + 1].v) {
+          out.push({ v: lane0[j].v * 2, r: lane0[j].r, c: lane0[j].c, fromR: lane0[j].r, fromC: lane0[j].c, merged: true });
+          j += 2;
+        } else {
+          var t = lane0[j];
+          out.push({ v: t.v, r: t.r, c: t.c, fromR: t.r, fromC: t.c, merged: false });
+          j++;
+        }
+      }
+      for (var k = 0; k < out.length; k++) {
+        var r2 = axis === 1 ? (forward === 1 ? k : 3 - k) : lane;
+        var c2 = axis === 1 ? lane : (forward === 1 ? k : 3 - k);
+        out[k].r = r2; out[k].c = c2;
+        cells.push(out[k]);
+      }
+    }
+    return cells;
   }
 
   // Move board towards dir. dir: 0 up,1 right,2 down,3 left.
@@ -268,10 +317,16 @@
     this.b = emptyBoard(); this.bs = 0; this.bMerge = 0;
     this.winner = null;
 
+    // 按“机器人难度”锁定本局出块偏向
+    var diff = (window.Assist && window.Assist.get("2048-botdiff")) || "normal";
+    var bias = spawnBias(diff);
+    this.humanP4 = bias.human;
+    this.botP4 = bias.bot;
+
     if (this.el.combo) this.el.combo.classList.remove("on");
 
-    spawn(this.p); spawn(this.p); spawn(this.p);
-    spawn(this.b); spawn(this.b); spawn(this.b);
+    spawn(this.p, this.humanP4); spawn(this.p, this.humanP4); spawn(this.p, this.humanP4);
+    spawn(this.b, this.botP4); spawn(this.b, this.botP4); spawn(this.b, this.botP4);
 
     this.t0 = Date.now();
     this.el.banner.style.display = "none";
@@ -310,14 +365,16 @@
     var diff = (window.Assist && window.Assist.get("2048-botdiff")) || "med";
     var depth = window.Assist ? window.Assist.botDepth(diff) : 4;
     var d = bestMove(this.b, depth);
-    if (d === null) { this.checkWin(); this.renderB(); this.setStatus(this.winner ? "" : "机器入局停止"); return; }
+    if (d === null) { this.checkWin(); this.renderB(null); this.setStatus(this.winner ? "" : "机器入局停止"); return; }
+    var old = this.b;
     var res = tryMove(this.b, d);
+    var sc = slideTrack(old, d);
     this.bs += res.gained;
     this.b = res.board;
     this.bMerge += res.gained;
-    spawn(this.b);
+    spawn(this.b, this.botP4);
     this.checkWin();
-    this.renderB();
+    this.renderB(sc);
     this.setStatus(this.winner ? "" : "你的回合");
   };
 
@@ -327,17 +384,19 @@
 
   Duel.prototype.playerMove = function (dir) {
     if (this.winner) return;
+    var old = this.p;
     var res = tryMove(this.p, dir);
     if (!res.moved) return;
     this.p = res.board;
+    var sc = slideTrack(old, dir);
     this.ps += res.gained;
     this.pMerge += res.gained;
     this.pCombo = res.merges; // 2048+ 本步连击
-    spawn(this.p);
+    spawn(this.p, this.humanP4);
     if (window.Sound) { window.Sound.drop(); if (res.merges > 0) window.Sound.merge(); }
     this.checkWin();
     if (window.nudge) window.nudge(this.el.pBoard, dir); // 滑动跟随的推力
-    this.renderP();
+    this.renderP(sc);
     this.flashCombo();
     if (!this.winner) this.think(); // 你动一步 → 机器人想一步
   };
@@ -368,11 +427,11 @@
 
   Duel.prototype.render = function () {
     this.renderStats();
-    renderBoard(this.el.pBoard, this.p);
-    renderBoard(this.el.bBoard, this.b);
+    renderBoard(this.el.pBoard, this.p, null);
+    renderBoard(this.el.bBoard, this.b, null);
   };
-  Duel.prototype.renderP = function () { this.renderStats(); renderBoard(this.el.pBoard, this.p); };
-  Duel.prototype.renderB = function () { this.renderStats(); renderBoard(this.el.bBoard, this.b); };
+  Duel.prototype.renderP = function (sc) { this.renderStats(); renderBoard(this.el.pBoard, this.p, sc || null); };
+  Duel.prototype.renderB = function (sc) { this.renderStats(); renderBoard(this.el.bBoard, this.b, sc || null); };
   Duel.prototype.renderStats = function () {
     this.el.pScore.textContent = this.ps;
     this.el.bScore.textContent = this.bs;
@@ -382,24 +441,60 @@
     this.el.timer.textContent = Math.floor(secs / 60) + ":" + ("0" + (secs % 60)).slice(-2);
   };
 
-  function renderBoard(container, board) {
+  // 带滑动/合体/新生动画的棋盘渲染（绝对定位 + transform 过渡，参照经典模式）
+  function renderBoard(container, board, slideCells) {
     container.innerHTML = "";
-    for (var r = 0; r < 4; r++) {
-      for (var c = 0; c < 4; c++) {
-        var cell = document.createElement("div");
-        cell.className = "cell";
-        var v = board[r][c];
-        if (v) {
-          cell.className += " has-tile";
-          cell.style.background = TILE_COLOR[v] || "#3c3a32";
-          cell.style.color = (v === 2 || v === 4) ? "#776e65" : "#f9f6f2";
-          cell.textContent = v;
-          var fs = v < 100 ? 26 : (v < 1000 ? 22 : (v < 10000 ? 15 : 12));
-          cell.style.fontSize = fs + "px";
-        }
-        container.appendChild(cell);
-      }
+    var size = container.clientWidth || 260;
+    var cw = (size - 2 * PAD - 3 * GAP) / 4, ch = cw;
+    var start = {};
+    if (slideCells) slideCells.forEach(function (s) { start[s.r + "," + s.c] = s; });
+    var i, r, c;
+
+    // 空槽底格
+    for (i = 0; i < 16; i++) {
+      var bg = document.createElement("div");
+      bg.className = "cell";
+      bg.style.left = (PAD + (i % 4) * (cw + GAP)) + "px";
+      bg.style.top = (PAD + Math.floor(i / 4) * (ch + GAP)) + "px";
+      bg.style.width = cw + "px";
+      bg.style.height = ch + "px";
+      container.appendChild(bg);
     }
+
+    for (r = 0; r < 4; r++) for (c = 0; c < 4; c++) {
+      var v = board[r][c];
+      if (!v) continue;
+      var st = start[r + "," + c];
+      var cell = document.createElement("div");
+      cell.className = "cell a-tile has-tile";
+      cell.style.left = (PAD + c * (cw + GAP)) + "px";
+      cell.style.top = (PAD + r * (ch + GAP)) + "px";
+      cell.style.width = cw + "px";
+      cell.style.height = ch + "px";
+      cell.style.background = TILE_COLOR[v] || "#3c3a32";
+      cell.style.color = (v === 2 || v === 4) ? "#776e65" : "#f9f6f2";
+      cell.textContent = v;
+      cell.style.fontSize = (v < 100 ? 26 : (v < 1000 ? 22 : (v < 10000 ? 15 : 12))) + "px";
+
+      if (st && st.merged) {
+        cell.className += " a-merged";                       // 合体原地弹跳
+      } else if (!st) {
+        cell.className += " a-new";                          // 新生成的方块浮现
+      } else {
+        var dx = (st.fromC - c) * cw, dy = (st.fromR - r) * ch;
+        if (dx !== 0 || dy !== 0) {                          // 滑动
+          cell.className += " a-slide";
+          cell.style.transform = "translate(" + dx + "px," + dy + "px)";
+        }
+      }
+      container.appendChild(cell);
+    }
+
+    // 下一帧让滑动位移归零 → 触发平滑过渡
+    window.requestAnimationFrame(function () {
+      var els = container.querySelectorAll(".a-slide");
+      for (var k = 0; k < els.length; k++) els[k].style.transform = "translate(0,0)";
+    });
   }
 
   // ---------------- input ----------------

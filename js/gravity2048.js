@@ -71,12 +71,13 @@
     while (i < list.length) {
       if (i + 1 < list.length && list[i].v === list[i + 1].v) {
         var v = list[i].v * 2;
+        // 结果瓦片落在靠重力一端(list[i])，但从这一组最远处(list[j-1])落下 → 可见“下落再合体”
         var fr = list[i].r, fc = list[i].c;
         var here = 1, g = v;
         var j = i + 2;
         while (j < list.length && list[j].v === v) { v *= 2; here++; g += v; j++; }
         merges += here; gained += g;
-        out.push({ v: v, r: fr, c: fc, fromR: fr, fromC: fc, merge: true });
+        out.push({ v: v, r: fr, c: fc, fromR: list[j - 1].r, fromC: list[j - 1].c, merge: true });
         i = j;
       } else {
         var t = list[i];
@@ -319,20 +320,30 @@ OrbitGame.prototype.spawnAtRandom = function () {
       var v = this.board[r][c];
       if (!v) continue;
       var cell = document.createElement("div");
-      cell.className = "gcell t" + v;
-      if (v >= 2048) cell.className += " star";
-      cell.textContent = v;
+      cell.className = "gcell";
       var st = start[r + "," + c] || { fromR: r, fromC: c };
       cell.style.left = (PAD + c * (this.cellW + GAP)) + "px";
       cell.style.top = (PAD + r * (this.cellH + GAP)) + "px";
       cell.style.width = this.cellW + "px";
       cell.style.height = this.cellH + "px";
+
+      // 内层面：承载数值颜色与合体弹跳，外层负责位移/下坠（避免 transform 冲突）
+      var face = document.createElement("div");
+      face.className = "gface t" + v;
+      if (v >= 2048) face.className += " star";
+      face.textContent = v;
+      cell.appendChild(face);
+
       var dx = (st.fromC - c) * this.cellW;
       var dy = (st.fromR - r) * this.cellH;
       if (st.merge) {
-        cell.className += " g-merge"; // 原地合体弹跳
+        // 合体：外层照常受重力落下，内层同时弹跳
+        var mdur = Math.min(0.66, 0.24 + Math.abs(st.fromR - r) * 0.12);
+        face.className += " g-pop";
+        cell.className += " g-fall";
+        cell.style.transitionDuration = mdur + "s";
+        cell.style.transform = "translate(" + dx + "px," + dy + "px)";
       } else if (st.fresh || dx !== 0 || dy !== 0) {
-        // 受重力下坠：从起始位加速落到位（先给位移，下帧归零触发过渡）
         cell.className += " g-fall";
         var dur = Math.min(0.72, 0.26 + Math.abs(st.fromR - r) * 0.13);
         cell.style.transitionDuration = dur + "s";
