@@ -1,111 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <title>2048</title>
-
-  <link href="style/main.css" rel="stylesheet" type="text/css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2048 · 选择你的玩法</title>
   <link rel="shortcut icon" href="favicon.ico">
-  <link rel="apple-touch-icon" href="meta/apple-touch-icon.png">
-  <link rel="apple-touch-startup-image" href="meta/apple-touch-startup-image-640x1096.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)"> <!-- iPhone 5+ -->
-  <link rel="apple-touch-startup-image" href="meta/apple-touch-startup-image-640x920.png"  media="(device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 2)"> <!-- iPhone, retina -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0, maximum-scale=1, user-scalable=no, minimal-ui">
+  <link href="style/home.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-  <div class="container">
-    <div class="heading">
-      <h1 class="title">2048</h1>
-      <div class="scores-container">
-        <div class="score-container">0</div>
-        <div class="best-container">0</div>
+  <div class="stage">
+
+    <header class="hero">
+      <div class="logo" aria-hidden="true">
+        <span class="logo-tile t2">2</span><span class="logo-tile t4">4</span><span class="logo-tile t2">0</span><span class="logo-tile t2048 floater">2048</span>
       </div>
-    </div>
+      <h1 class="hero-title">数字合体<span class="dot">·</span>三种玩法任你挑</h1>
+      <p class="hero-sub">滑动的方向盘、跳动的数字。选一种模式，点卡片直接开玩 —— 当然，也可以直接用方向键。</p>
+    </header>
 
-    <div class="mode-selector">
-      <a class="mode-button" data-mode="classic">经典模式</a>
-      <a class="mode-button" data-mode="time">限时挑战</a>
-      <a class="mode-button" data-mode="endless">无尽模式</a>
-    </div>
+    <nav class="cards" aria-label="游戏模式">
+      <a class="card card-classic" href="game.html?mode=classic">
+        <span class="card-num">2048</span>
+        <span class="card-title">经典模式</span>
+        <span class="card-desc">原汁原味的合成玩法，合并到 <b>2048</b> 即获胜。</span>
+        <span class="card-cta">开始游戏 →</span>
+      </a>
 
-    <div class="timer-container">
-      <span class="timer-label">剩余时间</span>
-      <div class="timer">1:00</div>
-    </div>
+      <a class="card card-time" href="game.html?mode=time">
+        <span class="card-chip">60s</span>
+        <span class="card-title">限时挑战</span>
+        <span class="card-desc"><b>60 秒</b>倒计时冲刺，最后 10 秒红灯警告，得分越高越刺激。</span>
+        <span class="card-cta">开始游戏 →</span>
+      </a>
 
-    <div class="above-game">
-      <p class="game-intro" id="mode-hint">Join the numbers and get to the <strong>2048 tile!</strong></p>
-      <a class="restart-button">New Game</a>
-    </div>
+      <a class="card card-endless" href="game.html?mode=endless">
+        <span class="card-chip">∞</span>
+        <span class="card-title">无尽模式</span>
+        <span class="card-desc">没有终点的棋盘，一路合成到 <b>4096 / 8192…</b> 挑战你的极限。</span>
+        <span class="card-cta">开始游戏 →</span>
+      </a>
+    </nav>
 
-    <div class="game-container">
-      <div class="game-message">
-        <p></p>
-        <div class="lower">
-	        <a class="keep-playing-button">Keep going</a>
-          <a class="retry-button">Try again</a>
-        </div>
-      </div>
+    <p class="home-keys">方向键 / WASD 移动 · 相同数字相撞合成 · 在手机上也可以直接滑动 ✦</p>
 
-      <div class="grid-container">
-        <div class="grid-row">
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-        </div>
-      </div>
-
-      <div class="tile-container">
-
-      </div>
-    </div>
-
-    <p class="game-explanation">
-      <strong class="important">How to play:</strong> Use your <strong>arrow keys</strong> to move the tiles. When two tiles with the same number touch, they <strong>merge into one!</strong>
-    </p>
-    <hr>
-    <p>
-    <strong class="important">Note:</strong> This site is the official version of 2048. You can play it on your phone via <a href="http://git.io/2048">http://git.io/2048.</a> All other apps or sites are derivatives or fakes, and should be used with caution.
-    </p>
-    <hr>
-    <p>
-    Created by <a href="http://gabrielecirulli.com" target="_blank">Gabriele Cirulli.</a> Based on <a href="https://itunes.apple.com/us/app/1024!/id823499224" target="_blank">1024 by Veewo Studio</a> and conceptually similar to <a href="http://asherv.com/threes/" target="_blank">Threes by Asher Vollmer.</a>
-    </p>
   </div>
-
-  <script src="js/bind_polyfill.js"></script>
-  <script src="js/classlist_polyfill.js"></script>
-  <script src="js/animframe_polyfill.js"></script>
-  <script src="js/keyboard_input_manager.js"></script>
-  <script src="js/html_actuator.js"></script>
-  <script src="js/grid.js"></script>
-  <script src="js/tile.js"></script>
-  <script src="js/local_storage_manager.js"></script>
-  <script src="js/game_manager.js"></script>
-  <script src="js/modes.js"></script>
-  <script src="js/application.js"></script>
 </body>
 </html>

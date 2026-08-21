@@ -809,3 +809,24 @@ body.mode-time .timer-container {
     padding: 7px 12px;
     font-size: 13px;
     margin-right: 4px; } }
+
+/* Back-to-home link on the game page */
+.container {
+  position: relative; }
+.home-link {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  font-size: 13px;
+  font-weight: bold;
+  color: #776e65;
+  background: rgba(187, 173, 160, 0.20);
+  padding: 6px 12px;
+  border-radius: 20px;
+  text-decoration: none;
+  -webkit-transition: background 150ms ease;
+  -moz-transition: background 150ms ease;
+  transition: background 150ms ease;
+  z-index: 10; }
+  .home-link:hover {
+    background: rgba(187, 173, 160, 0.38); }
