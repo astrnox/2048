@@ -212,6 +212,8 @@
       e.preventDefault();
       self.move(d);
     });
+    // 手机滑动：右/左/下/上 → 1/3/2/0
+    if (window.bindSwipe) window.bindSwipe(this.elBoard, function (d) { self.move(d); });
   };
 
   window.SeedGame = function () { return new SeedGame(); };

@@ -317,6 +317,8 @@
       e.preventDefault();
       game.playerMove(d);
     });
+    // 手机滑动：在己方棋盘上滑动控制左边的棋盘
+    if (window.bindSwipe) window.bindSwipe(document.getElementById("board-p"), function (d) { game.playerMove(d); });
     document.getElementById("replay").addEventListener("click", function () { game.newRound(); });
     return game;
   };

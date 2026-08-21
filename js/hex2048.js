@@ -152,6 +152,11 @@
       e.preventDefault();
       self.move(DIRS[idx]);
     });
+    // 手机滑动：四向手势映射到六边网格最接近的方向（上=NW 右=E 下=SE 左=W）
+    var SWIPE_TO = { 1: 0, 3: 3, 2: 1, 0: 4 };
+    if (window.bindSwipe) {
+      window.bindSwipe(this.container, function (d) { self.move(DIRS[SWIPE_TO[d]]); });
+    }
   };
 
   HexGame.prototype.emptyCells = function () {

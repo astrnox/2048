@@ -2,25 +2,30 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: #faf8ef;
+  background:
+    radial-gradient(720px 420px at 50% -8%, rgba(237, 194, 46, 0.05), transparent 60%),
+    #faf8ef;
   color: #776e65;
   font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif;
   font-size: 18px; }
 
 body {
-  margin: 80px 0; }
+  margin: 80px 0 60px; }
 
-.heading:after {
-  content: "";
-  display: block;
-  clear: both; }
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px; }
+  .heading:after { content: ""; display: block; clear: both; }
 
 h1.title {
   font-size: 80px;
   font-weight: bold;
   margin: 0;
-  display: block;
-  float: left; }
+  line-height: 0.9;
+  letter-spacing: 2px;
+  color: #776e65; }
 
 @-webkit-keyframes move-up {
   0% {
@@ -47,7 +52,6 @@ h1.title {
     top: -50px;
     opacity: 0; } }
 .scores-container {
-  float: right;
   text-align: right; }
 
 .score-container, .best-container {
@@ -834,3 +838,32 @@ body.mode-time .timer-container {
   transition: background 150ms ease; }
   .home-link:hover {
     background: rgba(187, 173, 160, 0.38); }
+
+/* ------------------------------------------------------------------
+   Classic page refinement (keeps gameplay intact)
+-------------------------------------------------------------------- */
+a:focus-visible, button:focus-visible {
+  outline: 3px solid #f2b179;
+  outline-offset: 2px; }
+.restart-button:active, .mode-selector .mode-button:active {
+  -webkit-transform: translateY(1px);
+  -moz-transform: translateY(1px);
+  transform: translateY(1px); }
+
+/* 略圆润的瓦片与网格，观感更利落 */
+.grid-cell { border-radius: 6px; }
+.tile .tile-inner { border-radius: 6px; }
+.game-container { border-radius: 8px; }
+
+/* 平板中档：标题略收，布局更从容 */
+@media screen and (max-width: 640px) and (min-width: 521px) {
+  h1.title { font-size: 56px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    -webkit-animation-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    -webkit-transition-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important; }
+}

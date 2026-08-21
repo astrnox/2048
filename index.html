@@ -3,77 +3,92 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>2048 · 探索手记</title>
+  <title>2048 · 玩法索引</title>
   <link rel="shortcut icon" href="favicon.ico">
   <link href="style/home.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-  <div class="stage">
+  <div class="page">
 
-    <header class="masthead">
-      <span class="no">Nº 2048</span>
-      <span class="tag">把数字种进方块 · 玩家图鉴</span>
+    <header class="letterhead">
+      <span class="lh-no">Nº 2048 — 玩法索引</span>
+      <span class="lh-tag">经典不变 · 另立四则</span>
     </header>
 
-    <div class="hero">
-      <span class="eyebrow">一方方块，五种走法</span>
-      <h1>最终之数与<span class="amp">新</span>玩法</h1>
-      <p class="lede">经典不变，另立四则新玩法：倾斜引力、会生长的棋盘、六向蜂窝，和一局人机竞速。</p>
-    </div>
+    <section class="specimen">
+      <div class="spec-tiles" aria-hidden="true">
+        <span>2</span><span>0</span><span>4</span><span>8</span>
+      </div>
+      <p class="spec-note">把数字合起来，直到剩下 <em>2048</em>。<br>这张纸背面，还印着另外四种走法。</p>
+    </section>
 
-    <div class="section-title">
-      经典 · 原样 <span class="en">CLASSIC</span>
-    </div>
+    <ol class="index">
 
-    <div class="desk">
-      <a class="card" href="game.html">
-        <span class="card-title">经典 2048</span>
-        <span class="card-desc">保持原汁原味：方向键滑动，相同数字相撞即合体，合成 <b>2048</b> 获胜。</span>
-        <span class="card-cta">开始 →</span>
-      </a>
-    </div>
+      <li class="row row-classic">
+        <a href="game.html">
+          <span class="idx">00</span>
+          <span class="body">
+            <span class="name">经典</span>
+            <span class="desc">方向键滑动 · 相同数字相撞合成 · 合出 <b>2048</b></span>
+            <span class="keys">WASD / ←↑↓→ · 手机直接滑动</span>
+          </span>
+          <span class="go">进入 →</span>
+        </a>
+      </li>
 
-    <div class="section-title">
-      新玩法 · 图鉴 <span class="en">THE FIELD BOOK</span>
-    </div>
+      <li class="row">
+        <a href="game_gravity.html">
+          <span class="idx">01</span>
+          <span class="body">
+            <span class="name">星球引力</span>
+            <span class="desc">你不推，你倾斜。转动星体让重力替你坠，熔合数字</span>
+            <span class="keys">←→ 转动 · Space / 轻点 坠落</span>
+          </span>
+          <span class="go">进入 →</span>
+        </a>
+      </li>
 
-    <div class="gallery">
+      <li class="row">
+        <a href="game_growth.html">
+          <span class="idx">02</span>
+          <span class="body">
+            <span class="name">万物生长</span>
+            <span class="desc">棋盘自己会长：每步破土种子并熟成，久不合体便春日加发</span>
+            <span class="keys">方向键 / 滑动 移动合体</span>
+          </span>
+          <span class="go">进入 →</span>
+        </a>
+      </li>
 
-      <a class="card gcard-gravity" href="game_gravity.html">
-        <span class="glyph">✦</span>
-        <span class="card-flag">NEW</span>
-        <span class="card-title">星球引力</span>
-        <span class="card-desc"><em>你不推，你倾斜。</em><b>← →</b> 转动星球，<b>Space</b> 让瓦片坠落合体，直到抵达 2048 星心。</span>
-        <span class="card-cta">踏进观测台 →</span>
-      </a>
+      <li class="row">
+        <a href="game_hex.html">
+          <span class="idx">03</span>
+          <span class="body">
+            <span class="name">蜂窝六边形</span>
+            <span class="desc">六边形棋盘，<b>六个方向</b>滑动，数字在蜂窝里合体</span>
+            <span class="keys">方向键+WASD · Q/E 斜向 · 手机滑动</span>
+          </span>
+          <span class="go">进入 →</span>
+        </a>
+      </li>
 
-      <a class="card gcard-growth" href="game_growth.html">
-        <span class="glyph">芽</span>
-        <span class="card-flag">NEW</span>
-        <span class="card-title">万物生长</span>
-        <span class="card-desc"><em>会自己活的棋盘。</em>每步空位长出种子并熟成 <b>4</b>，久不合体便春日加发。</span>
-        <span class="card-cta">翻开园丁手记 →</span>
-      </a>
+      <li class="row">
+        <a href="game_ai.html">
+          <span class="idx">04</span>
+          <span class="body">
+            <span class="name">AI 对抗</span>
+            <span class="desc">双棋盘人机竞速，谁先合成 <b>2048</b> 谁赢</span>
+            <span class="keys">玩家方 方向键 / 滑动</span>
+          </span>
+          <span class="go">进入 →</span>
+        </a>
+      </li>
 
-      <a class="card gcard-hex" href="game_hex.html">
-        <span class="glyph">⬡</span>
-        <span class="card-title">蜂窝六边形</span>
-        <span class="card-desc">六边形棋盘、<b>六个方向</b>滑动，数字在蜂窝里旋转合体。</span>
-        <span class="card-cta">开始 →</span>
-      </a>
+    </ol>
 
-      <a class="card gcard-ai" href="game_ai.html">
-        <span class="glyph">对</span>
-        <span class="card-title">AI 对抗</span>
-        <span class="card-desc">双棋盘人机竞速，谁先合成 <b>2048</b> 谁赢。</span>
-        <span class="card-cta">开始 →</span>
-      </a>
-
-    </div>
-
-    <p class="home-keys">
-      方向键 / <b>WASD</b> 移动 · 手机可直接滑动 · 经典模式始终可用 ✦
-    </p>
+    <footer class="colophon">
+      方向键 / WASD 移动 · 手机上直接滑动即可 · 全部模式均可触摸
+    </footer>
 
   </div>
 </body>

@@ -109,18 +109,19 @@
 
   OrbitGame.prototype.setCompass = function () {
     if (!this.elCompass) return;
-    // rot=0 时重力指向屏幕正下；顺时针倾斜后重力的屏幕朝向随之改变
-    var arrow = ["↓", "←", "↑", "→"][this.rot];
-    this.elCompass.textContent = "重力 " + arrow;
+    // 重力永远朝向屏幕正下；转动的是这颗星，而不是重力
+    this.elCompass.textContent = "重力 ↓";
     var a = document.getElementById("compass-arrow");
-    if (a) a.style.transform = "rotate(" + (this.rot * 90) + "deg)";
+    if (a) a.style.transform = "rotate(0deg)";
   };
 
-  // 落：重力即“屏幕正下”，所有瓦片顺着当前旋转后的世界坠落合并
+  // 落：重力永远指向屏幕正下；转动的是星球本身，
+  // 屏幕正下对应的棋盘方向随旋转变化（顺时针 0/1/2/3 → 下/右/上/左）
   OrbitGame.prototype.drop = function () {
     if (this.over || (this.won && !this.keep)) return;
     this.lastDrop = [];
-    var res = tryMove(this.board, 2); // 屏幕正下
+    var dir = [2, 1, 0, 3][this.rot];
+    var res = tryMove(this.board, dir); // 屏幕正下
     if (!res.moved) return;
     this.board = res.board;
     this.score += res.gained;
@@ -208,6 +209,8 @@
 
   OrbitGame.prototype.bind = function () {
     var self = this;
+
+    // 键盘
     window.addEventListener("keydown", function (e) {
       var k = e.code;
       if (k === "ArrowLeft" || k === "KeyA") { e.preventDefault(); self.tilt(-1); return; }
@@ -216,8 +219,36 @@
         e.preventDefault(); self.drop(); return;
       }
     });
-    // 点按棋盘 = 落
-    this.elBoard.addEventListener("pointerdown", function () { self.drop(); });
+
+    // 统一 指针(鼠标/触摸)：轻点 = 坠落；左右拖动 = 转动；向下拖动 = 坠落
+    var downX = 0, downY = 0, startT = 0, dragging = false;
+    var board = this.elBoard;
+    board.addEventListener("pointerdown", function (e) {
+      downX = e.clientX; downY = e.clientY; startT = Date.now(); dragging = false;
+    });
+    board.addEventListener("pointermove", function (e) {
+      if (Math.abs(e.clientX - downX) > 14 || Math.abs(e.clientY - downY) > 14) dragging = true;
+    });
+    board.addEventListener("pointerup", function (e) {
+      var dx = e.clientX - downX, dy = e.clientY - downY;
+      var adx = Math.abs(dx), ady = Math.abs(dy);
+      if (!dragging && (Date.now() - startT) < 600) { self.drop(); return; } // 轻点
+      if (adx >= ady && adx > 20) { self.tilt(dx > 0 ? 1 : -1); return; } // 左右转
+      if (ady > adx && dy > 20) { self.drop(); return; } // 向下坠落
+    });
+
+    // 首次进入：字幕引导
+    var overlay = document.getElementById("howto");
+    if (overlay) {
+      var seen = localStorage.getItem("gravity-howto") === "1";
+      if (!seen) overlay.classList.add("show");
+      window.addEventListener("pointerdown", function () { dismiss(); }, { once: true });
+      function dismiss() { overlay.classList.remove("show"); localStorage.setItem("gravity-howto", "1"); }
+      var btn = document.getElementById("howto-ok");
+      if (btn) btn.addEventListener("click", function (e) { e.stopPropagation(); dismiss(); });
+    }
+    var help = document.getElementById("how-link");
+    if (help) help.addEventListener("click", function (e) { e.preventDefault(); document.getElementById("howto").classList.add("show"); });
   };
 
   window.OrbitGame = function (el) { return new OrbitGame(el); };

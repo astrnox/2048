@@ -129,7 +129,10 @@ body::before {
   display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr);
   gap: 7px;
   transition: transform 0.4s cubic-bezier(0.3, 1.2, 0.4, 1);
+  touch-action: none;
+  cursor: pointer;
 }
+.board:active .gcell { transform: scale(0.97); }
 .gcell {
   position: relative;
   border: 1px solid var(--line);
@@ -192,7 +195,33 @@ body::before {
   border: 1px solid var(--line); border-radius: 2px; color: var(--gold);
   font-weight: normal; font-size: 12px;
 }
+.how-link { color: var(--dim); font-size: 12px; text-decoration: underline dotted; letter-spacing: 1px; }
+.how-link:hover { color: var(--gold-2); }
 .manual .fine { font-size: 11px; opacity: 0.7; }
+
+/* 首次进入的引导遮罩 */
+.howto {
+  position: fixed; inset: 0; z-index: 50;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(6, 8, 13, 0.74); backdrop-filter: blur(3px); padding: 20px;
+}
+.howto.show { display: flex; }
+.howto-card {
+  max-width: 360px; width: 100%; padding: 26px 24px; text-align: left;
+  background: linear-gradient(165deg, #1a2130, #141926); border: 1px solid var(--line);
+  border-radius: 4px; box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  color: var(--cream);
+}
+.howto-card h2 { margin: 0 0 10px; font-size: 24px; letter-spacing: 3px; color: var(--gold); }
+.howto-card p { margin: 0 0 12px; font-size: 13.5px; line-height: 1.8; color: var(--dim); }
+.howto-card p b { color: var(--cream); }
+.howto-card ul { margin: 0 0 16px; padding: 0 0 0 18px; font-size: 13px; line-height: 2; color: var(--cream); }
+.howto-card li b { color: var(--gold); font-weight: normal; }
+.howto-ok {
+  width: 100%; padding: 12px; font-family: inherit; font-size: 15px; font-weight: 700;
+  letter-spacing: 2px; color: var(--night); background: var(--gold); border: 0; border-radius: 3px; cursor: pointer;
+}
+.howto-ok:hover { background: #f2d38a; }
 
 @media (max-width: 420px) {
   .headline { font-size: 46px; letter-spacing: 4px; }

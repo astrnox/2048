@@ -1,8 +1,8 @@
 /* =============================================================
-   2048 · 探索手记 — 首页
-   燕麦纸底、墨与苔绿、一点覆木红。
-   把新玩法当作一册"玩家图鉴"来陈列：刻印题眉、细织纹网格、
-   每种玩法各有一条自己的手绘彩带。经典模式保持素净。
+   2048 · 玩法索引
+   一张被折皱过的纸：印刷感十足的四则玩法索引。
+   燕麦纸地、墨与苔绿、一点覆木红。衬线中文 + 等宽标号，
+   行间用细发丝线分隔——像目录/扉页，而不是“卡片堆”。
    ============================================================= */
 @font-face {
   font-family: "ClearSans";
@@ -17,19 +17,13 @@
 
 :root {
   --paper:   #efe7d6;
-  --paper-2: #e7ddc6;
-  --ink:     #353b30;
-  --ink-soft:#797a68;
+  --paper-2: #e6dcc3;
+  --ink:     #38392f;
+  --ink-soft:#7a7564;
   --moss:    #5b7d53;
   --rust:    #a85c3a;
-  --gold:    #c99a3c;
-  --line:    rgba(53, 59, 48, 0.18);
-  /* 各玩法专属彩带 */
-  --ca-classic: #c94f2d;
-  --ca-hex:     #5b6ea8;
-  --ca-ai:      #2f9e8f;
-  --ca-gravity: #20303f;
-  --ca-growth:  #5b7d53;
+  --gold:    #b48a3c;
+  --line:    rgba(56, 57, 47, 0.22);
 }
 
 * { box-sizing: border-box; }
@@ -41,118 +35,110 @@ body {
   color: var(--ink);
   font-family: Georgia, "Songti SC", "Noto Serif SC", serif;
   background:
-    radial-gradient(760px 460px at 90% -8%, rgba(168, 92, 58, 0.10), transparent 60%),
-    radial-gradient(820px 500px at -6% 100%, rgba(91, 125, 83, 0.12), transparent 60%),
-    linear-gradient(160deg, var(--paper), var(--paper-2));
+    radial-gradient(820px 520px at 92% -8%, rgba(168, 92, 58, 0.10), transparent 62%),
+    radial-gradient(800px 480px at -6% 102%, rgba(91, 125, 83, 0.12), transparent 62%),
+    linear-gradient(164deg, var(--paper), var(--paper-2));
   background-attachment: fixed;
   overflow-x: hidden;
 }
 
-/* 细织纹 + 纸上的点子 */
+/* 织纹 + 折痕边的点子 */
 body::before {
   content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
-    linear-gradient(rgba(53,59,48,0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(53,59,48,0.045) 1px, transparent 1px);
-  background-size: 46px 46px;
+    linear-gradient(rgba(56,57,47,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56,57,47,0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
 }
 body::after {
   content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
-    radial-gradient(1.5px 1.5px at 12% 16%, rgba(97,77,51,0.35), transparent 60%),
-    radial-gradient(1.5px 1.5px at 86% 74%, rgba(97,77,51,0.3), transparent 60%),
-    radial-gradient(1px 1px at 70% 24%, rgba(97,77,51,0.3), transparent 60%);
+    radial-gradient(1.4px 1.4px at 12% 18%, rgba(97,77,51,0.35), transparent 60%),
+    radial-gradient(1.4px 1.4px at 88% 72%, rgba(97,77,51,0.3), transparent 60%),
+    radial-gradient(1px 1px at 66% 26%, rgba(97,77,51,0.3), transparent 60%);
 }
 
-.stage { position: relative; z-index: 1; max-width: 980px; margin: 0 auto; padding: 30px 22px 64px; }
-
-/* 题眉 */
-.masthead {
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 13px; letter-spacing: 2px; color: var(--ink-soft);
-  border-bottom: 1px solid var(--line); padding-bottom: 10px;
+.page {
+  position: relative; z-index: 1;
+  max-width: 620px; margin: 0 auto; padding: 26px 22px 56px;
 }
-.masthead .no { color: var(--rust); }
-.masthead .tag { color: var(--moss); }
 
-/* hero */
-.hero { text-align: center; margin: 46px 0 12px; }
-.hero .eyebrow {
-  display: inline-block; font-size: 12px; letter-spacing: 3px; color: var(--ink-soft);
-  border: 1px solid var(--line); border-radius: 30px; padding: 4px 14px; margin-bottom: 18px;
+/* 信头 */
+.letterhead {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding-bottom: 10px; border-bottom: 2px solid var(--ink);
+  font-size: 12px; letter-spacing: 2px; color: var(--ink-soft);
 }
-.hero h1 {
-  margin: 0 0 10px; font-size: clamp(34px, 6vw, 56px); font-weight: 700;
-  line-height: 1.05; letter-spacing: 3px; color: var(--ink);
+.letterhead .lh-no { color: var(--rust); }
+.letterhead .lh-tag { color: var(--moss); }
+
+/* 标本：2048 大字 */
+.specimen { padding: 40px 0 26px; text-align: center; }
+.spec-tiles {
+  display: inline-flex; gap: 8px; perspective: 600px;
 }
-.hero h1 .amp { color: var(--rust); font-style: italic; }
-.hero .lede { margin: 0 auto; max-width: 540px; font-size: 15px; line-height: 1.9; color: var(--ink-soft); }
-
-/* 分区标题 */
-.section-title {
-  display: flex; align-items: center; gap: 12px;
-  margin: 46px 0 18px; font-size: 15px; letter-spacing: 3px; color: var(--ink);
+.spec-tiles span {
+  width: 58px; height: 58px; border-radius: 8px;
+  display: grid; place-items: center;
+  font-family: Georgia, serif; font-size: 30px; font-weight: 700; letter-spacing: 1px;
+  box-shadow: 0 10px 22px rgba(90, 74, 46, 0.22);
 }
-.section-title::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-.section-title .en { font-size: 11px; color: var(--ink-soft); letter-spacing: 2px; }
+.spec-tiles span:nth-child(1) { background: #eee4da; color: var(--ink); }
+.spec-tiles span:nth-child(2) { background: #ede0c8; color: var(--ink); }
+.spec-tiles span:nth-child(3) { background: #eee4da; color: var(--ink); }
+.spec-tiles span:nth-child(4) { background: linear-gradient(160deg, #e7c56b, var(--gold)); color: #fff; width: 66px; height: 66px; font-size: 26px; }
 
-/* ---------- 经典（保持素净） ---------- */
-.desk { display: flex; justify-content: center; }
-.desk .card { max-width: 400px; width: 100%; }
+.spec-note { margin: 22px 0 0; font-size: 14px; line-height: 1.9; color: var(--ink-soft); }
+.spec-note em { font-style: normal; color: var(--rust); }
 
-.card {
-  position: relative;
-  display: flex; flex-direction: column; gap: 9px;
-  padding: 26px 24px 24px; text-decoration: none; color: var(--ink);
-  background: rgba(255, 251, 242, 0.78);
-  border: 1px solid var(--line); border-radius: 3px;
-  box-shadow: 0 18px 40px rgba(70, 60, 44, 0.12);
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
-  overflow: hidden;
+/* 索引 */
+.index { list-style: none; margin: 0; padding: 0; }
+
+.row { border-top: 1px solid var(--line); }
+.row:last-child { border-bottom: 1px solid var(--line); }
+.row > a {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center; gap: 10px;
+  padding: 18px 6px; text-decoration: none; color: var(--ink);
+  transition: none;
 }
-.card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px; }
-.card:hover { transform: translateY(-6px) rotate(-0.4deg); box-shadow: 0 26px 52px rgba(70, 60, 44, 0.2); }
-.card:focus-visible { outline: 3px solid var(--moss); outline-offset: 3px; }
+.row > a:hover { background: rgba(255, 251, 242, 0.4); }
+.row:hover .idx { color: var(--rust); }
+.row:hover .name { color: var(--moss); }
 
-.card-flag {
-  position: absolute; top: 14px; right: 14px;
-  font-size: 10px; letter-spacing: 1px; padding: 2px 8px; border-radius: 20px;
-  color: #fff; background: var(--rust);
+.idx {
+  font-family: Georgia, serif; font-size: 20px; color: var(--ink-soft);
+  letter-spacing: 1px; transition: color 0.15s ease;
 }
-.card-title { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
-.card-desc { font-size: 13.5px; line-height: 1.7; color: var(--ink-soft); flex: 1; }
-.card-desc b { color: var(--ink); }
-.card-cta { margin-top: 6px; font-size: 13px; font-weight: 700; letter-spacing: 1px; color: var(--rust); }
-.card:hover .card-cta { color: var(--moss); }
 
-/* ---------- 新玩法 · 图鉴 ---------- */
-.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
-.gallery .card { padding-top: 22px; }
-/* 每种玩法一条专属彩带 */
-.gcard-hex::before     { background: var(--ca-hex); }
-.gcard-ai::before      { background: var(--ca-ai); }
-.gcard-gravity::before { background: var(--ca-gravity); }
-.gcard-growth::before  { background: var(--ca-growth); }
-
-/* 玩法行首的小徽记：手绘感字符 */
-.glyph {
-  width: 34px; height: 34px; border-radius: 3px;
-  display: grid; place-items: center; margin-bottom: 6px;
-  font-family: Georgia, serif; font-size: 17px; color: #fff; line-height: 1;
+.body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.name { font-size: 21px; font-weight: 700; letter-spacing: 1px; transition: color 0.15s ease; }
+.desc { font-size: 13px; line-height: 1.6; color: var(--ink-soft); }
+.desc b { color: var(--ink); }
+.keys {
+  display: inline-block; align-self: flex-start; margin-top: 4px;
+  font-size: 11px; letter-spacing: 1px; color: var(--ink-soft);
+  border: 1px solid var(--line); border-radius: 2px; padding: 2px 7px;
 }
-.gcard-hex .glyph     { background: var(--ca-hex); }
-.gcard-ai .glyph      { background: var(--ca-ai); }
-.gcard-gravity .glyph { background: var(--ca-gravity); }
-.gcard-growth .glyph  { background: var(--ca-growth); }
 
-.card-desc em { font-style: normal; color: var(--moss); }
+.go { font-size: 14px; color: var(--rust); font-family: Georgia, serif; letter-spacing: 1px; }
+.row > a:hover .go { color: var(--ink); }
 
-/* 首页底部 note */
-.home-keys { margin-top: 54px; text-align: center; font-size: 13px; letter-spacing: 1px; color: var(--ink-soft); line-height: 1.9; }
-.home-keys b { color: var(--ink); }
+/* 扉页感：经典行做一点强调 */
+.row-classic .idx { color: var(--ink); font-weight: 700; }
+.row-classic .name::before { content: "◆ "; color: var(--rust); font-size: 13px; vertical-align: 2px; }
 
-@media (max-width: 560px) {
-  .gallery { grid-template-columns: 1fr; }
-  .stage { padding-top: 18px; }
-  .hero { margin-top: 34px; }
+.colophon {
+  margin-top: 34px; padding-top: 14px; border-top: 1px solid var(--line);
+  text-align: center; font-size: 12px; letter-spacing: 1px; color: var(--ink-soft);
+}
+
+@media (max-width: 460px) {
+  .page { padding: 20px 14px 44px; }
+  .spec-tiles span { width: 46px; height: 46px; font-size: 24px; }
+  .spec-tiles span:nth-child(4) { width: 54px; height: 54px; }
+  .row > a { grid-template-columns: 34px 1fr; }
+  .go { display: none; }
+  .name { font-size: 18px; }
 }
