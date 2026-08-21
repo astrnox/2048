@@ -104,13 +104,17 @@ body {
   letter-spacing: clamp(1px, 0.5vw, 4px);
   color: var(--ink);
 }
-/* 金色 "+" 强调品牌 */
+/* 金色高亮 "+" 徽标，更醒目 */
 .logo-2048 .logo-plus {
-  color: var(--gold);
-  font-size: 0.62em;
-  margin-left: 0.12em;
-  font-weight: 400;
-  vertical-align: 0.1em;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 0.64em; height: 0.64em;
+  background: linear-gradient(180deg, #E3B365, var(--gold));
+  color: #fff;
+  border-radius: 0.16em;
+  font-size: 0.6em; font-weight: 800; line-height: 1;
+  margin-left: 0.16em;
+  vertical-align: 0.18em;
+  box-shadow: 0 3px 12px rgba(201, 154, 74, 0.42);
 }
 
 /* 底部细金线，更显大气收束 */
