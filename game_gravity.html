@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>观星台 · 星球引力</title>
+  <link rel="shortcut icon" href="favicon.ico">
+  <link href="style/gravity.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+  <div class="scope">
+
+    <header class="rise-head">
+      <a class="home-link" href="index.html">← 回首页</a>
+      <span class="latin">ORBIT ✦ 2048</span>
+    </header>
+
+    <div class="plate">
+      <h1 class="headline">星·落</h1>
+      <p class="lede">你不推它，你倾斜它。<br>拖拽重力，让瓦片坠落、合体。</p>
+
+      <div class="compass">
+        <span class="compass-arrow" id="compass-arrow">↓</span>
+        <span class="compass-txt" id="compass">重力 ↓</span>
+      </div>
+
+      <!-- 星球罗盘：轨道圈内嵌 4×4 落体场 -->
+      <div class="planet">
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="board" id="board-grav"></div>
+        <div class="core" aria-hidden="true"></div>
+      </div>
+
+      <div class="readout">
+        <div class="meter"><span class="label">分数</span><span class="num" id="grav-score">0</span></div>
+        <div class="meter best"><span class="label">星等最佳</span><span class="num" id="grav-best">0</span></div>
+      </div>
+
+      <div class="msg" id="grav-msg"></div>
+
+      <p class="manual">
+        <b>← →</b> 转动这颗星 · <b>Space</b> 让它坠落<br>
+        <span class="fine">点按棋盘也可以落下 · 落到底才会合体</span>
+      </p>
+    </div>
+
+  </div>
+
+  <script src="js/gravity2048.js"></script>
+  <script>
+    window.OrbitGame && window.OrbitGame();
+  </script>
+</body>
+</html>

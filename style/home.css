@@ -1,31 +1,35 @@
 /* =============================================================
-   2048 · 模式选择首页
-   Retro-arcade take on the classic wood-tile palette.
+   2048 · 探索手记 — 首页
+   燕麦纸底、墨与苔绿、一点覆木红。
+   把新玩法当作一册"玩家图鉴"来陈列：刻印题眉、细织纹网格、
+   每种玩法各有一条自己的手绘彩带。经典模式保持素净。
    ============================================================= */
-
-/* --- Fonts (ClearSans ships with the 2048 project) --- */
 @font-face {
   font-family: "ClearSans";
   src: url("fonts/ClearSans-Regular-webfont.woff") format("woff");
   font-weight: 400;
-  font-display: swap;
 }
 @font-face {
   font-family: "ClearSans";
   src: url("fonts/ClearSans-Bold-webfont.woff") format("woff");
   font-weight: 700;
-  font-display: swap;
 }
 
 :root {
-  --ink:      #776e65;
-  --ink-deep: #5c5348;
-  --paper:    #faf8ef;
-  --jumbo:    #edc22e;         /* classic 2048 gold        */
-  --classic:  #f59563;         /* 1xx orange               */
-  --time:     #f65e3b;         /* vivid red / urgency      */
-  --endless:  #8f7a66;         /* soft wood brown          */
-  --shadow:   rgba(0, 0, 0, 0.35);
+  --paper:   #efe7d6;
+  --paper-2: #e7ddc6;
+  --ink:     #353b30;
+  --ink-soft:#797a68;
+  --moss:    #5b7d53;
+  --rust:    #a85c3a;
+  --gold:    #c99a3c;
+  --line:    rgba(53, 59, 48, 0.18);
+  /* 各玩法专属彩带 */
+  --ca-classic: #c94f2d;
+  --ca-hex:     #5b6ea8;
+  --ca-ai:      #2f9e8f;
+  --ca-gravity: #20303f;
+  --ca-growth:  #5b7d53;
 }
 
 * { box-sizing: border-box; }
@@ -35,217 +39,120 @@ html, body { height: 100%; }
 body {
   margin: 0;
   color: var(--ink);
-  font-family: "ClearSans", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: Georgia, "Songti SC", "Noto Serif SC", serif;
   background:
-    radial-gradient(1200px 600px at 20% -10%, rgba(237, 194, 46, 0.10), transparent 60%),
-    radial-gradient(900px 500px at 100% 0%, rgba(246, 94, 59, 0.08), transparent 55%),
-    linear-gradient(160deg, #302c3a 0%, #211e29 55%, #181521 100%);
-  background-blend-mode: screen;
-  min-height: 100vh;
+    radial-gradient(760px 460px at 90% -8%, rgba(168, 92, 58, 0.10), transparent 60%),
+    radial-gradient(820px 500px at -6% 100%, rgba(91, 125, 83, 0.12), transparent 60%),
+    linear-gradient(160deg, var(--paper), var(--paper-2));
+  background-attachment: fixed;
   overflow-x: hidden;
 }
 
-/* faint board grid overlay */
+/* 细织纹 + 纸上的点子 */
 body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 48px 48px;
-  pointer-events: none;
-  z-index: 0;
+    linear-gradient(rgba(53,59,48,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(53,59,48,0.045) 1px, transparent 1px);
+  background-size: 46px 46px;
+}
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 16%, rgba(97,77,51,0.35), transparent 60%),
+    radial-gradient(1.5px 1.5px at 86% 74%, rgba(97,77,51,0.3), transparent 60%),
+    radial-gradient(1px 1px at 70% 24%, rgba(97,77,51,0.3), transparent 60%);
 }
 
-.stage {
-  position: relative;
-  z-index: 1;
-  max-width: 1040px;
-  margin: 0 auto;
-  padding: 56px 24px 64px;
-}
+.stage { position: relative; z-index: 1; max-width: 980px; margin: 0 auto; padding: 30px 22px 64px; }
 
-/* ---------- Hero ---------- */
-.hero { text-align: center; margin-bottom: 48px; }
-
-.logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 26px;
-  perspective: 600px;
+/* 题眉 */
+.masthead {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; letter-spacing: 2px; color: var(--ink-soft);
+  border-bottom: 1px solid var(--line); padding-bottom: 10px;
 }
+.masthead .no { color: var(--rust); }
+.masthead .tag { color: var(--moss); }
 
-.logo-tile {
-  display: grid;
-  place-items: center;
-  width: 64px;
-  height: 64px;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 38px;
-  color: #f9f6f2;
-  box-shadow: 0 10px 22px var(--shadow);
-  animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+/* hero */
+.hero { text-align: center; margin: 46px 0 12px; }
+.hero .eyebrow {
+  display: inline-block; font-size: 12px; letter-spacing: 3px; color: var(--ink-soft);
+  border: 1px solid var(--line); border-radius: 30px; padding: 4px 14px; margin-bottom: 18px;
 }
-.logo-tile.t2 { background: #eee4da; color: var(--ink); animation-delay: 0.05s; }
-.logo-tile.t4 { background: #ede0c8; color: var(--ink); animation-delay: 0.15s; }
-.logo-tile.t2:nth-of-type(3) { background: #eee4da; color: var(--ink); animation-delay: 0.25s; }
+.hero h1 {
+  margin: 0 0 10px; font-size: clamp(34px, 6vw, 56px); font-weight: 700;
+  line-height: 1.05; letter-spacing: 3px; color: var(--ink);
+}
+.hero h1 .amp { color: var(--rust); font-style: italic; }
+.hero .lede { margin: 0 auto; max-width: 540px; font-size: 15px; line-height: 1.9; color: var(--ink-soft); }
 
-.logo-tile.t2048 {
-  background: linear-gradient(160deg, #f9d858 0%, var(--jumbo) 100%);
-  font-size: 22px;
-  width: 72px;
-  height: 72px;
-  letter-spacing: 1px;
+/* 分区标题 */
+.section-title {
+  display: flex; align-items: center; gap: 12px;
+  margin: 46px 0 18px; font-size: 15px; letter-spacing: 3px; color: var(--ink);
 }
+.section-title::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.section-title .en { font-size: 11px; color: var(--ink-soft); letter-spacing: 2px; }
 
-.floater { animation: float 4s ease-in-out infinite, rise 0.7s both; animation-delay: 0.35s, 0.35s; }
-
-@keyframes rise {
-  from { opacity: 0; transform: translateY(18px) rotateX(40deg); }
-  to   { opacity: 1; transform: translateY(0) rotateX(0); }
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-8px); }
-}
-
-.hero-title {
-  margin: 0 0 12px;
-  font-size: clamp(26px, 4vw, 40px);
-  font-weight: 700;
-  color: #f5efe6;
-  letter-spacing: 2px;
-}
-.hero-title .dot { color: var(--jumbo); margin: 0 6px; }
-
-.hero-sub {
-  margin: 0 auto;
-  max-width: 480px;
-  font-size: 15px;
-  line-height: 1.8;
-  color: #cfc6ba;
-}
-
-/* ---------- Cards ---------- */
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 22px;
-}
+/* ---------- 经典（保持素净） ---------- */
+.desk { display: flex; justify-content: center; }
+.desk .card { max-width: 400px; width: 100%; }
 
 .card {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 30px 24px 26px;
-  text-decoration: none;
-  color: var(--ink);
-  background: var(--paper);
-  border-radius: 16px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex; flex-direction: column; gap: 9px;
+  padding: 26px 24px 24px; text-decoration: none; color: var(--ink);
+  background: rgba(255, 251, 242, 0.78);
+  border: 1px solid var(--line); border-radius: 3px;
+  box-shadow: 0 18px 40px rgba(70, 60, 44, 0.12);
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
   overflow: hidden;
-  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease;
-  animation: rise 0.6s both;
 }
-.card:nth-child(1) { animation-delay: 0.15s; }
-.card:nth-child(2) { animation-delay: 0.30s; }
-.card:nth-child(3) { animation-delay: 0.45s; }
+.card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px; }
+.card:hover { transform: translateY(-6px) rotate(-0.4deg); box-shadow: 0 26px 52px rgba(70, 60, 44, 0.2); }
+.card:focus-visible { outline: 3px solid var(--moss); outline-offset: 3px; }
 
-.card::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 6px;
+.card-flag {
+  position: absolute; top: 14px; right: 14px;
+  font-size: 10px; letter-spacing: 1px; padding: 2px 8px; border-radius: 20px;
+  color: #fff; background: var(--rust);
 }
-.card.card-classic::before { background: linear-gradient(90deg, var(--classic), var(--jumbo)); }
-.card.card-time::before    { background: linear-gradient(90deg, var(--time), #ff8a50); }
-.card.card-endless::before { background: linear-gradient(90deg, var(--endless), #b39a83); }
-.card.card-hex::before     { background: linear-gradient(90deg, #6b60a0, #4f7dc9); }
-.card.card-ai::before      { background: linear-gradient(90deg, var(--bot, #6b60a0), #2f9e8f); }
+.card-title { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+.card-desc { font-size: 13.5px; line-height: 1.7; color: var(--ink-soft); flex: 1; }
+.card-desc b { color: var(--ink); }
+.card-cta { margin-top: 6px; font-size: 13px; font-weight: 700; letter-spacing: 1px; color: var(--rust); }
+.card:hover .card-cta { color: var(--moss); }
 
-.card:hover {
-  transform: translateY(-8px) rotate(-0.6deg);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
-}
-.card:focus-visible {
-  outline: 3px solid var(--jumbo);
-  outline-offset: 4px;
-}
+/* ---------- 新玩法 · 图鉴 ---------- */
+.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.gallery .card { padding-top: 22px; }
+/* 每种玩法一条专属彩带 */
+.gcard-hex::before     { background: var(--ca-hex); }
+.gcard-ai::before      { background: var(--ca-ai); }
+.gcard-gravity::before { background: var(--ca-gravity); }
+.gcard-growth::before  { background: var(--ca-growth); }
 
-.card-num, .card-chip {
-  font-weight: 700;
-  font-size: 40px;
-  line-height: 1;
+/* 玩法行首的小徽记：手绘感字符 */
+.glyph {
+  width: 34px; height: 34px; border-radius: 3px;
+  display: grid; place-items: center; margin-bottom: 6px;
+  font-family: Georgia, serif; font-size: 17px; color: #fff; line-height: 1;
 }
-.card-num { color: var(--jumbo); font-size: 46px; }
+.gcard-hex .glyph     { background: var(--ca-hex); }
+.gcard-ai .glyph      { background: var(--ca-ai); }
+.gcard-gravity .glyph { background: var(--ca-gravity); }
+.gcard-growth .glyph  { background: var(--ca-growth); }
 
-.card-chip {
-  width: 56px;
-  height: 56px;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  color: #f9f6f2;
-  font-size: 30px;
-  margin-top: 2px;
-}
-.card-time .card-chip    { background: var(--time); }
-.card-endless .card-chip { background: var(--endless); }
-.card-hex .card-chip     { background: linear-gradient(160deg, #6b60a0, #4f7dc9); }
-.card-ai .card-chip      { background: linear-gradient(160deg, #2f9e8f, #2579b5); font-size: 26px; }
+.card-desc em { font-style: normal; color: var(--moss); }
 
-.card-new {
-  position: absolute; top: 12px; right: 12px;
-  background: var(--time); color: #fff; font-size: 11px; font-weight: 700;
-  padding: 3px 9px; border-radius: 20px; letter-spacing: 1px;
-  box-shadow: 0 4px 10px rgba(246, 94, 59, 0.4);
-  animation: pulse 1.8s ease-in-out infinite;
-}
-@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+/* 首页底部 note */
+.home-keys { margin-top: 54px; text-align: center; font-size: 13px; letter-spacing: 1px; color: var(--ink-soft); line-height: 1.9; }
+.home-keys b { color: var(--ink); }
 
-.card-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--ink-deep);
-}
-
-.card-desc {
-  font-size: 14px;
-  line-height: 1.6;
-  color: #998d82;
-  flex: 1;
-}
-.card-desc b { color: var(--ink-deep); }
-
-.card-cta {
-  margin-top: 8px;
-  font-size: 14px;
-  font-weight: 700;
-  color: #5c5348;
-  letter-spacing: 1px;
-  transition: transform 0.2s ease;
-}
-.card:hover .card-cta { transform: translateX(4px); }
-
-/* ---------- Footer note ---------- */
-.home-keys {
-  margin: 44px auto 0;
-  text-align: center;
-  font-size: 13px;
-  letter-spacing: 1px;
-  color: #a89f92;
-}
-
-/* ---------- Responsive ---------- */
-@media (max-width: 820px) {
-  .cards { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
-  .logo-tile { width: 52px; height: 52px; font-size: 30px; }
-  .logo-tile.t2048 { width: 62px; height: 62px; font-size: 18px; }
-  .stage { padding-top: 36px; }
+@media (max-width: 560px) {
+  .gallery { grid-template-columns: 1fr; }
+  .stage { padding-top: 18px; }
+  .hero { margin-top: 34px; }
 }

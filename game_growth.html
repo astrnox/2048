@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>种子 · 万物生长</title>
+  <link rel="shortcut icon" href="favicon.ico">
+  <link href="style/growth.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+  <div class="grove">
+
+    <header class="leaves-head">
+      <a class="home-link" href="index.html">← 回首页</a>
+      <span class="latin">BOTANIC ✦ 2048</span>
+    </header>
+
+    <div class="sheet">
+      <p class="stamp" aria-hidden="true">园丁手记 · Nº 2048</p>
+
+      <h1 class="headline">生长</h1>
+      <p class="lede">这块棋盘自己会活：每次移动，空位<br>就长出一粒<b>种子</b>，下一回合它便熟成 <b>4</b>。</p>
+
+      <!-- 季节：久不合体，春天就发芽 -->
+      <div class="season">
+        <span class="season-label">离春天还有</span>
+        <span class="season-dots" id="season-marker"></span>
+        <span class="season-note">久不合体，便额外发芽</span>
+      </div>
+
+      <div class="garden" id="board-seed"></div>
+
+      <div class="harvest-row">
+        <div class="basket"><span class="label">收成</span><span class="num" id="seed-score">0</span></div>
+        <div class="basket best"><span class="label">园史最佳</span><span class="num" id="seed-best">0</span></div>
+      </div>
+
+      <div class="msg" id="seed-msg"></div>
+
+      <p class="manual">
+        <b>方向键</b> / <b>WASD</b> 移动合体 · 种子每回合破土而出<br>
+        <span class="fine">2 要快合，否则它就长成 4</span>
+      </p>
+    </div>
+
+  </div>
+
+  <script src="js/growth2048.js"></script>
+  <script>
+    window.SeedGame && window.SeedGame();
+  </script>
+</body>
+</html>
