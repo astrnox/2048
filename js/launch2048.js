@@ -52,9 +52,13 @@
     }
     return { out: out, gain: gain, merges: merges };
   }
+  // 候选牌：加权随机 2/4/8/16，让选择存在风险与取舍
   function genTray() {
     var t = [];
-    for (var i = 0; i < 3; i++) t.push(Math.random() < 0.72 ? 2 : 4);
+    for (var i = 0; i < 3; i++) {
+      var r = Math.random();
+      t.push(r < 0.5 ? 2 : (r < 0.8 ? 4 : (r < 0.94 ? 8 : 16)));
+    }
     return t;
   }
 
@@ -75,6 +79,7 @@
     this.elBest  = document.getElementById("launch-best");
     this.elMsg   = document.getElementById("launch-msg");
     this.elCombo = document.getElementById("launch-combo");
+    this.elCols  = document.getElementById("cols-launch");
 
     this.measure();
     this.buildBg();
@@ -222,6 +227,17 @@
     return null;
   };
 
+  // 满列的发射键禁用
+  LaunchGame.prototype.refreshCols = function () {
+    var cols = this.elCols;
+    if (!cols) return;
+    var self = this;
+    cols.querySelectorAll("[data-col]").forEach(function (el) {
+      var c = parseInt(el.getAttribute("data-col"), 10);
+      el.classList.toggle("full", colFull(self.grid, c));
+    });
+  };
+
   LaunchGame.prototype.render = function () {
     this.elScore.textContent = this.score;
     this.elBest.textContent = this.best;
@@ -249,7 +265,8 @@
       if (!(id in wanted)) { self.elBoard.removeChild(self.nodes[id].outer); delete self.nodes[id]; }
     });
 
-    this.lastNewId = -1; // 只对当次发射生效
+    this.refreshCols();   // 满列禁用
+    this.lastNewId = -1;  // 只对当次发射生效
   };
 
   // ---------- 候选牌 ----------
@@ -257,7 +274,9 @@
     var wrap = document.getElementById("tray-launch");
     if (wrap) {
       var h = "";
-      for (var i = 0; i < 3; i++) h += '<span class="pick' + (i === this.armed ? " on" : "") + '" data-i="' + i + '">' + this.tray[i] + '</span>';
+      for (var i = 0; i < 3; i++) {
+        h += '<span class="pick v' + this.tray[i] + (i === this.armed ? " on" : "") + '" data-i="' + i + '">' + this.tray[i] + '</span>';
+      }
       wrap.innerHTML = h;
       var self = this;
       wrap.querySelectorAll(".pick").forEach(function (el) {

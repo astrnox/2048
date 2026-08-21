@@ -101,12 +101,12 @@
 .ltile-inner.t4096 { background: var(--tsuper); color: #f9f6f2; box-shadow: var(--shadow-tile); }
 .ltile-inner.t1024, .ltile-inner.t2048 { font-size: clamp(12px, 3.8vw, 18px); }
 
-/* 发射飞行：从发射台自下而上，到顶后下坠回落 */
-.ltile-inner.fly { animation: lt-fly 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+/* 发射飞行：从预选框向上弹出 → 升到棋盘顶部上方 → 由上而下坠落到位 */
+.ltile-inner.fly { animation: lt-fly 0.72s cubic-bezier(0.25, 1, 0.3, 1) both; }
 @keyframes lt-fly {
-  0%   { transform: translateY(560%) translateX(0) scale(0.5); opacity: 0.7; }
-  42%  { transform: translateY(-190%) translateX(0) scale(1.05); opacity: 1; }
-  72%  { transform: translateY(9%) translateX(0) scale(0.96); }
+  0%   { transform: translateY(560%) translateX(0) scale(0.45); opacity: 0.7; }
+  40%  { transform: translateY(-430%) translateX(0) scale(1.06); opacity: 1; }
+  72%  { transform: translateY(14%) translateX(0) scale(0.95); }
   100% { transform: translateY(0) translateX(0) scale(1); }
 }
 
@@ -125,11 +125,17 @@
   background: var(--card); border: 1px solid var(--line); border-radius: 10px;
   padding: 10px 0; font-size: 15px; font-weight: 700; color: var(--ink);
   box-shadow: var(--shadow-press); cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease, opacity 0.2s ease;
   user-select: none; -webkit-user-select: none;
 }
 .col-pick:active { transform: translateY(2px); }
 .col-pick:hover { border-color: rgba(224, 120, 74, 0.45); }
+/* 满列：不可发射 */
+.col-pick.full {
+  opacity: 0.35; pointer-events: none; cursor: default;
+  border-color: var(--line); box-shadow: none;
+  text-decoration: line-through;
+}
 .bed-label { display: block; margin-top: 8px; font-size: 11px; letter-spacing: 3px; color: var(--dim); font-weight: 700; }
 
 /* ---------- 候选牌 ---------- */
@@ -149,7 +155,10 @@
   transition: transform 0.12s var(--ease-pop), box-shadow 0.15s ease;
   user-select: none; -webkit-user-select: none;
 }
-.pick:nth-child(2) { background: var(--t4); }
+.pick.v4   { background: var(--t4); }
+.pick.v8   { background: var(--t8);   color: #fff; }
+.pick.v16  { background: var(--t16);  color: #fff; }
+.pick.v32  { background: var(--t32);  color: #fff; }
 .pick:hover { transform: translateY(-3px); }
 .pick.on {
   transform: translateY(-5px) scale(1.08);
