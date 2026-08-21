@@ -58,6 +58,7 @@ body {
     var(--bg);
   background-attachment: fixed;
   overflow-x: hidden;
+  overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
 }
 

@@ -1,0 +1,158 @@
+/* =============================================================
+   发射 LAUNCH · 暖陶 Warm Clay
+   依赖 ui.css。棋盘 + 发射床 + 候选牌 + 连击徽标。
+   ============================================================= */
+@import url("ui.css");
+
+.console { position: relative; z-index: 1; max-width: 460px; margin: 0 auto; padding: 22px 16px 56px; }
+
+/* ---------- 标题牌 ---------- */
+.callout { margin: 30px 0 6px; animation: cli-rise 0.5s var(--ease-pop) both; }
+.tag {
+  margin: 0; font-size: clamp(40px, 9vw, 60px); font-weight: 800;
+  letter-spacing: 2px; line-height: 0.95; color: var(--ink);
+}
+.tag .cn { color: var(--accent); letter-spacing: 4px; font-weight: 700; }
+.lede { margin: 12px 0 0; font-size: 13.5px; line-height: 1.8; color: var(--dim); }
+.lede b { color: var(--accent); font-weight: 700; }
+
+/* ---------- 遥测读数 ---------- */
+.telemetry {
+  display: flex; align-items: stretch; justify-content: center;
+  gap: 10px; margin: 22px 0 6px;
+  animation: cli-rise 0.5s var(--ease-pop) 0.06s both;
+}
+.gauge {
+  flex: 1; min-width: 0; padding: 9px 12px;
+  background: linear-gradient(180deg, var(--board-hi), var(--board));
+  border-radius: var(--radius-sm); text-align: center;
+  box-shadow: var(--shadow-chip);
+}
+.gauge-label { display: block; font-size: 11px; letter-spacing: 1.5px; color: rgba(249, 246, 242, 0.92); font-weight: 700; }
+.gauge-num { display: block; font-size: 25px; font-weight: 700; line-height: 1.15; color: #fff; font-variant-numeric: tabular-nums; }
+.combo-wrap { display: flex; align-items: center; min-width: 64px; justify-content: center; }
+.combo {
+  color: var(--accent-deep); font-size: 14px; font-weight: 700; letter-spacing: 1px;
+  opacity: 0; transform: translateY(6px);
+}
+.combo.on { animation: combo-pop 0.6s var(--ease-pop); opacity: 1; }
+@keyframes combo-pop {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.8); }
+  30%  { opacity: 1; transform: translateY(0) scale(1.15); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---------- 棋盘（顶上落下，底端为重力方向） ---------- */
+.board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 6px; padding: 7px;
+  width: min(320px, 88vw); margin: 18px auto 0;
+  aspect-ratio: 4 / 5;
+  background: linear-gradient(180deg, var(--board-hi), var(--board));
+  border-radius: 12px;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.16), 0 2px 0 rgba(93, 71, 48, 0.14), 0 14px 30px rgba(93, 71, 48, 0.16);
+  touch-action: none;
+  -webkit-user-select: none; user-select: none;
+  animation: board-in 0.5s ease 0.1s both;
+}
+@keyframes board-in { from { opacity: 0; } }
+
+.lcell {
+  position: relative;
+  background: rgba(238, 228, 218, 0.35);
+  border-radius: 6px;
+  box-shadow: inset 0 1px 2px rgba(93, 71, 48, 0.10);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: clamp(17px, 5vw, 24px); line-height: 1; color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  animation: cell-in 0.18s var(--ease-pop) both;
+}
+@keyframes cell-in { from { transform: scale(0.82); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.lcell.t2    { background: var(--t2);   color: #776e65; box-shadow: var(--shadow-tile); }
+.lcell.t4    { background: var(--t4);   color: #776e65; box-shadow: var(--shadow-tile); }
+.lcell.t8    { background: var(--t8);   color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.lcell.t16   { background: var(--t16);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.lcell.t32   { background: var(--t32);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.lcell.t64   { background: var(--t64);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.lcell.t128  { background: var(--t128); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 18px rgba(243, 215, 116, 0.35); }
+.lcell.t256  { background: var(--t256); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 20px rgba(243, 215, 116, 0.42); }
+.lcell.t512  { background: var(--t512); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 22px rgba(243, 215, 116, 0.5); }
+.lcell.t1024 { background: var(--t1024); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 24px rgba(243, 215, 116, 0.55); }
+.lcell.t2048, .lcell.star {
+  background: var(--t2048); color: #f9f6f2;
+  box-shadow: var(--shadow-tile), 0 0 26px rgba(237, 194, 46, 0.6);
+}
+.lcell.t4096 { background: var(--tsuper); color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.lcell.t1024, .lcell.t2048 { font-size: clamp(12px, 3.8vw, 18px); }
+
+/* ---------- 发射床 ---------- */
+.launch-bed { width: min(320px, 88vw); margin: 12px auto 0; text-align: center; animation: cli-rise 0.4s var(--ease-pop) 0.12s both; }
+.cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.col-pick {
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 0; font-size: 15px; font-weight: 700; color: var(--ink);
+  box-shadow: var(--shadow-press); cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  user-select: none; -webkit-user-select: none;
+}
+.col-pick:active { transform: translateY(2px); }
+.col-pick:hover { border-color: rgba(224, 120, 74, 0.45); }
+.bed-label { display: block; margin-top: 8px; font-size: 11px; letter-spacing: 3px; color: var(--dim); font-weight: 700; }
+
+/* ---------- 候选牌 ---------- */
+.tray-box {
+  margin: 22px auto 0; padding: 14px 16px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  box-shadow: var(--shadow-card); text-align: center;
+  animation: cli-rise 0.5s var(--ease-pop) 0.18s both;
+}
+.tray-label { font-size: 11px; letter-spacing: 3px; color: var(--dim); font-weight: 700; display: block; margin-bottom: 10px; }
+.tray { display: flex; justify-content: center; gap: 14px; }
+.pick {
+  width: 64px; height: 64px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 800; color: #776e65;
+  background: var(--t2); box-shadow: var(--shadow-tile); cursor: pointer;
+  transition: transform 0.12s var(--ease-pop), box-shadow 0.15s ease;
+  user-select: none; -webkit-user-select: none;
+}
+.pick:nth-child(2) { background: var(--t4); }
+.pick:hover { transform: translateY(-3px); }
+.pick.on {
+  transform: translateY(-5px) scale(1.08);
+  box-shadow: 0 0 0 3px var(--accent), 0 8px 18px rgba(224, 120, 74, 0.35);
+}
+.next-label { display: block; margin-top: 10px; font-size: 11px; letter-spacing: 1px; color: var(--dim); }
+.next-label span { color: var(--accent); font-weight: 700; }
+
+/* ---------- 消息卡（陶土） ---------- */
+.msg {
+  display: none; margin: 16px auto 0; max-width: 360px; padding: 16px 18px;
+  font-size: 15px; line-height: 1.8; color: #fff; text-align: center;
+  background: linear-gradient(180deg, var(--board-hi), var(--board));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  animation: cli-rise 0.4s var(--ease-pop) both;
+}
+.msg b { color: var(--gold); }
+.msg .l-act {
+  margin-top: 10px; padding: 8px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.55); border-radius: var(--radius-pill);
+  background: transparent; font-family: inherit; font-size: 13px; font-weight: 700;
+  letter-spacing: 1px; cursor: pointer; color: #fff;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.msg .l-act:hover { background: rgba(255, 255, 255, 0.16); border-color: rgba(255, 255, 255, 0.8); }
+
+/* ---------- 操作说明 ---------- */
+.manual { margin-top: 20px; text-align: center; font-size: 12.5px; line-height: 2.2; color: var(--dim); animation: cli-rise 0.5s var(--ease-pop) 0.24s both; }
+.manual b {
+  display: inline-block; min-width: 30px; padding: 3px 9px; margin: 0 3px;
+  background: var(--card); border: 1px solid var(--line); border-bottom-width: 2px;
+  border-radius: 6px; color: var(--ink); font-weight: 700; font-size: 12px;
+  letter-spacing: 1px; box-shadow: 0 1px 0 rgba(93, 71, 48, 0.05);
+}
+.manual .btn { margin-top: 12px; }

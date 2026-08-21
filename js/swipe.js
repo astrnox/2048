@@ -18,6 +18,11 @@
       started = true;
     }, { passive: true });
 
+    // 阻止原生滚动 / 下拉刷新 / 左右返回手势，否则一滑动页面就刷新
+    el.addEventListener("touchmove", function (e) {
+      e.preventDefault();
+    }, { passive: false });
+
     el.addEventListener("touchend", function (e) {
       if (!started || e.changedTouches.length < 1) { started = false; return; }
       started = false;

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>2048＋ · 发射</title>
+  <link rel="shortcut icon" href="favicon.ico">
+  <link href="style/ui.css" rel="stylesheet" type="text/css">
+  <link href="style/launch.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+  <div class="console">
+
+    <header class="cli-bar">
+      <a class="back-link" href="index.html">← 返回</a>
+      <span class="cli-sys">MODE.2048 // LAUNCH</span>
+    </header>
+
+    <header class="callout">
+      <h1 class="tag">发射<span class="cn">LAUNCH</span></h1>
+      <p class="lede">选一张<b>牌</b> → 选一<b>列</b>发射，方块打下后按经典规则向下合体。合成 <b>2048</b> 抵达顶点。</p>
+    </header>
+
+    <div class="telemetry">
+      <div class="gauge"><span class="gauge-label">得分</span><span class="gauge-num" id="launch-score">0</span></div>
+      <div class="gauge"><span class="gauge-label">最佳</span><span class="gauge-num" id="launch-best">0</span></div>
+      <div class="combo-wrap"><span class="combo" id="launch-combo"></span></div>
+    </div>
+
+    <div class="board" id="board-launch" aria-hidden="true"></div>
+
+    <!-- 列发射条 -->
+    <div class="launch-bed">
+      <div class="cols" id="cols-launch">
+        <span class="col-pick" data-col="0">①</span>
+        <span class="col-pick" data-col="1">②</span>
+        <span class="col-pick" data-col="2">③</span>
+        <span class="col-pick" data-col="3">④</span>
+      </div>
+      <span class="bed-label">发射到位</span>
+    </div>
+
+    <!-- 候选牌 -->
+    <div class="tray-box">
+      <span class="tray-label">选一张牌</span>
+      <div class="tray" id="tray-launch"></div>
+      <span class="next-label">下一组 · <span id="next-launch"></span></span>
+    </div>
+
+    <div class="msg" id="launch-msg"></div>
+
+    <div class="manual">
+      <b>点选</b>一张牌再<b>点选</b>列发射 · 键盘 <b>1/2/3</b> 选牌，<b>Q/W/E/R</b> 发射，<b>空格</b> 射向最空列<br>
+      <button class="btn btn-primary" id="launch-restart">重新开始</button>
+    </div>
+
+  </div>
+
+  <script src="js/launch2048.js"></script>
+  <script>
+    var lg = new window.LaunchGame();
+  </script>
+</body>
+</html>

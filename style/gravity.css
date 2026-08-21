@@ -102,19 +102,20 @@
 }
 
 /* —— 下落动画：浮现 / 落定 / 连锁 —— */
-.gcell.t-new { animation: g-emerge 0.34s var(--ease-pop) both; }
+.gcell.t-new { animation: g-emerge 0.5s cubic-bezier(0.33, 0, 0.2, 1) both; }
 @keyframes g-emerge {
-  from { opacity: 0; transform: translateY(-40%) scale(0.2); }
-  60%  { transform: translateY(0) scale(1.06); }
+  from { opacity: 0; transform: translateY(-55%) scale(0.55); }
+  70%  { transform: translateY(-4%) scale(1.04); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
-.gcell.g-settle { animation: g-settle 0.28s var(--ease-pop); }
+/* 落定 = 顺着重力平滑下坠到位 */
+.gcell.g-settle { animation: g-settle 0.55s cubic-bezier(0.33, 0, 0.25, 1) both; }
 @keyframes g-settle {
-  from { transform: translateY(-60%); opacity: 0; }
-  70%  { transform: translateY(0) scale(1.03); opacity: 1; }
-  to   { transform: translateY(0) scale(1); }
+  0%   { transform: translateY(-68%); opacity: 0; }
+  75%  { transform: translateY(2%); opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
 }
-.gcell.g-chain { animation: g-chain 0.26s var(--ease-pop); }
+.gcell.g-chain { animation: g-chain 0.28s var(--ease-pop); }
 @keyframes g-chain {
   0%   { transform: scale(0.4); }
   55%  { transform: scale(1.18); }
