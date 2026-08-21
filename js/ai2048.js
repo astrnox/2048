@@ -7,8 +7,6 @@
   "use strict";
 
   var WIN_VAL = 2048;
-  var BOT_INTERVAL = 500; // ms，机器人每步思考节奏
-
   var DIRS4 = [0, 1, 2, 3]; // up / right / down / left
 
   function emptyBoard() {
@@ -174,6 +172,27 @@
     return best;
   }
 
+  // 深一层回溯：先选出眼前最好的走法，再"再想一步"（minmax 式前瞻）
+  function bestMoveSmart(board) {
+    var best = null, bestScore = -Infinity;
+    for (var d = 0; d < 4; d++) {
+      var res = tryMove(board, d);
+      if (!res.moved) continue;
+      var h = evaluate(res.board, res.gained);
+      var sub = -Infinity;
+      for (var d2 = 0; d2 < 4; d2++) {
+        var r2 = tryMove(res.board, d2);
+        if (r2.moved) {
+          var s2 = evaluate(r2.board, r2.gained);
+          if (s2 > sub) sub = s2;
+        }
+      }
+      var v = (sub === -Infinity) ? h : h + sub * 0.4;
+      if (v > bestScore) { bestScore = v; best = d; }
+    }
+    return best;
+  }
+
   // ---------------- Rendering ----------------
   var TILE_COLOR = {
     2: "#eee4da", 4: "#ede0c8", 8: "#f2b179", 16: "#f59563",
@@ -188,7 +207,8 @@
     this.winner = null;
     this.round = 0;
     this.t0 = 0;
-    this.botTimer = null;
+    this.aiTimer = null;
+    this.thinking = false;
 
     this.el = {
       pBoard: document.getElementById("board-p"),
@@ -199,7 +219,8 @@
       bMerges: document.getElementById("merges-b"),
       timer: document.getElementById("race-timer"),
       banner: document.getElementById("banner"),
-      bannerText: document.getElementById("banner-text")
+      bannerText: document.getElementById("banner-text"),
+      aiStatus: document.getElementById("ai-status")
     };
     this.pMerge = 0; this.bMerge = 0;
 
@@ -218,24 +239,37 @@
 
     this.t0 = Date.now();
     this.el.banner.style.display = "none";
+    if (this.aiTimer) window.clearTimeout(this.aiTimer);
 
-    if (this.botTimer) window.clearInterval(this.botTimer);
-    this.botTimer = window.setInterval(function () { self.botTick(); }, BOT_INTERVAL);
-
+    this.setStatus("你的回合");
     this.render();
   };
 
-  Duel.prototype.botTick = function () {
+  // 你的落子触发机器人：先"思考"，再走一步，然后停下来等你
+  Duel.prototype.think = function () {
+    var self = this;
     if (this.winner) return;
-    var d = bestMove(this.b);
-    if (d === null) { this.resolve(); this.render(); return; }
+    this.setStatus("机器人思考中…");
+    if (this.aiTimer) window.clearTimeout(this.aiTimer);
+    this.aiTimer = window.setTimeout(function () { self.aiAct(); }, 420);
+  };
+
+  Duel.prototype.aiAct = function () {
+    if (this.winner) return;
+    var d = bestMoveSmart(this.b);
+    if (d === null) { this.checkWin(); this.renderB(); this.setStatus(this.winner ? "" : "机器入局停止"); return; }
     var res = tryMove(this.b, d);
     this.bs += res.gained;
     this.b = res.board;
     this.bMerge += res.gained;
     spawn(this.b);
     this.checkWin();
-    this.render();
+    this.renderB();
+    this.setStatus(this.winner ? "" : "你的回合");
+  };
+
+  Duel.prototype.setStatus = function (txt) {
+    if (this.el.aiStatus) this.el.aiStatus.textContent = txt;
   };
 
   Duel.prototype.playerMove = function (dir) {
@@ -248,7 +282,8 @@
     spawn(this.p);
     this.checkWin();
     if (window.nudge) window.nudge(this.el.pBoard, dir); // 滑动跟随的推力
-    this.render();
+    this.renderP();
+    if (!this.winner) this.think(); // 你动一步 → 机器人想一步
   };
 
   Duel.prototype.checkWin = function () {
@@ -270,21 +305,25 @@
 
   Duel.prototype.actuateBanner = function () {
     this.el.banner.style.display = "flex";
-    if (this.winner === "p") this.el.bannerText.textContent = "🎉 你赢啦！抢先合成 2048";
-    else if (this.winner === "b") this.el.bannerText.textContent = "🤖 机器人赢了，再来一局？";
-    else this.el.bannerText.textContent = "🤝 平局！势均力敌";
+    if (this.winner === "p") this.el.bannerText.textContent = "你赢了 · 抢先合成 2048";
+    else if (this.winner === "b") this.el.bannerText.textContent = "机器人赢了 · 再战一局？";
+    else this.el.bannerText.textContent = "平局 · 势均力敌";
   };
 
   Duel.prototype.render = function () {
+    this.renderStats();
+    renderBoard(this.el.pBoard, this.p);
+    renderBoard(this.el.bBoard, this.b);
+  };
+  Duel.prototype.renderP = function () { this.renderStats(); renderBoard(this.el.pBoard, this.p); };
+  Duel.prototype.renderB = function () { this.renderStats(); renderBoard(this.el.bBoard, this.b); };
+  Duel.prototype.renderStats = function () {
     this.el.pScore.textContent = this.ps;
     this.el.bScore.textContent = this.bs;
     this.el.pMerges.textContent = "+" + this.pMerge;
     this.el.bMerges.textContent = "+" + this.bMerge;
     var secs = Math.floor((Date.now() - this.t0) / 1000);
     this.el.timer.textContent = Math.floor(secs / 60) + ":" + ("0" + (secs % 60)).slice(-2);
-
-    renderBoard(this.el.pBoard, this.p);
-    renderBoard(this.el.bBoard, this.b);
   };
 
   function renderBoard(container, board) {

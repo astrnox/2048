@@ -3,92 +3,79 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>2048 · 玩法索引</title>
+  <title>2048 · 任务清单</title>
   <link rel="shortcut icon" href="favicon.ico">
   <link href="style/home.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-  <div class="page">
+  <div class="manifest">
 
-    <header class="letterhead">
-      <span class="lh-no">Nº 2048 — 玩法索引</span>
-      <span class="lh-tag">经典不变 · 另立四则</span>
+    <header class="console-head">
+      <span class="ch-log">LOG 2048 // MISSION MANIFEST</span>
+      <span class="ch-id">Nº-04</span>
     </header>
 
-    <section class="specimen">
-      <div class="spec-tiles" aria-hidden="true">
-        <span>2</span><span>0</span><span>4</span><span>8</span>
-      </div>
-      <p class="spec-note">把数字合起来，直到剩下 <em>2048</em>。<br>这张纸背面，还印着另外四种走法。</p>
+    <section class="lead">
+      <div class="lead-num" aria-hidden="true">2048</div>
+      <p class="lead-txt">五条<br>合数<br>航线</p>
+      <p class="lead-sub">数字相撞则合体，合出 <b>2048</b> 即抵达。<br>每一条都是一种走法。</p>
     </section>
 
-    <ol class="index">
+    <ol class="manifest-list">
 
-      <li class="row row-classic">
+      <li class="op">
         <a href="game.html">
-          <span class="idx">00</span>
-          <span class="body">
-            <span class="name">经典</span>
-            <span class="desc">方向键滑动 · 相同数字相撞合成 · 合出 <b>2048</b></span>
-            <span class="keys">WASD / ←↑↓→ · 手机直接滑动</span>
-          </span>
-          <span class="go">进入 →</span>
+          <span class="op-code">LN·00</span>
+          <span class="op-name">款经典 <em>CLASSIC</em></span>
+          <span class="op-desc">方向键/滑动，相同数字相撞合成 2048</span>
+          <span class="op-key">WASD · ←↑↓→ · 滑动</span>
+          <span class="op-cta">→</span>
         </a>
       </li>
 
-      <li class="row">
+      <li class="op">
         <a href="game_gravity.html">
-          <span class="idx">01</span>
-          <span class="body">
-            <span class="name">星球引力</span>
-            <span class="desc">你不推，你倾斜。转动星体让重力替你坠，熔合数字</span>
-            <span class="keys">←→ 转动 · Space / 轻点 坠落</span>
-          </span>
-          <span class="go">进入 →</span>
+          <span class="op-code">LN·01</span>
+          <span class="op-name">星落 <em>STARFALL</em></span>
+          <span class="op-desc">转动星球让重力替你坠，同数一路连锁合体</span>
+          <span class="op-key">←→ 转向 · SPACE 坠落</span>
+          <span class="op-cta">→</span>
         </a>
       </li>
 
-      <li class="row">
+      <li class="op">
         <a href="game_growth.html">
-          <span class="idx">02</span>
-          <span class="body">
-            <span class="name">万物生长</span>
-            <span class="desc">棋盘自己会长：每步破土种子并熟成，久不合体便春日加发</span>
-            <span class="keys">方向键 / 滑动 移动合体</span>
-          </span>
-          <span class="go">进入 →</span>
+          <span class="op-code">LN·02</span>
+          <span class="op-name">生长 <em>GROWTH</em></span>
+          <span class="op-desc">棋盘会活：每步破土种子并成熟，久不合体春日加发</span>
+          <span class="op-key">方向键 / 滑动</span>
+          <span class="op-cta">→</span>
         </a>
       </li>
 
-      <li class="row">
+      <li class="op">
         <a href="game_hex.html">
-          <span class="idx">03</span>
-          <span class="body">
-            <span class="name">蜂窝六边形</span>
-            <span class="desc">六边形棋盘，<b>六个方向</b>滑动，数字在蜂窝里合体</span>
-            <span class="keys">方向键+WASD · Q/E 斜向 · 手机滑动</span>
-          </span>
-          <span class="go">进入 →</span>
+          <span class="op-code">LN·03</span>
+          <span class="op-name">六边 <em>HEX</em></span>
+          <span class="op-desc">六边形棋盘、六个方向滑动，蜂窝里旋转合体</span>
+          <span class="op-key">方向键 · Q/E · 滑动（含斜向）</span>
+          <span class="op-cta">→</span>
         </a>
       </li>
 
-      <li class="row">
+      <li class="op">
         <a href="game_ai.html">
-          <span class="idx">04</span>
-          <span class="body">
-            <span class="name">AI 对抗</span>
-            <span class="desc">双棋盘人机竞速，谁先合成 <b>2048</b> 谁赢</span>
-            <span class="keys">玩家方 方向键 / 滑动</span>
-          </span>
-          <span class="go">进入 →</span>
+          <span class="op-code">LN·04</span>
+          <span class="op-name">对抗 <em>VS·AI</em></span>
+          <span class="op-desc">与机器人轮流走子（深度前瞻），谁先合成谁赢</span>
+          <span class="op-key">方向键 / 滑动</span>
+          <span class="op-cta">→</span>
         </a>
       </li>
 
     </ol>
 
-    <footer class="colophon">
-      方向键 / WASD 移动 · 手机上直接滑动即可 · 全部模式均可触摸
-    </footer>
+    <footer class="console-foot">全天候合体 · 全部玩法均可触摸滑动 ✦ 经典始终可用</footer>
 
   </div>
 </body>

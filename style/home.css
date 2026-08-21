@@ -1,29 +1,20 @@
 /* =============================================================
-   2048 · 玩法索引
-   一张被折皱过的纸：印刷感十足的四则玩法索引。
-   燕麦纸地、墨与苔绿、一点覆木红。衬线中文 + 等宽标号，
-   行间用细发丝线分隔——像目录/扉页，而不是“卡片堆”。
+   2048 · 任务清单（MISSION MANIFEST）
+   与星落同一套"任务台"语言：深空 + 信号绿 + 等宽标号。
+   五条航线用编号、发丝线、文字操作键罗列——像机场离港牌，
+   不是"卡片堆"。经典=LN·00，自然优先，不额外打扮。
    ============================================================= */
-@font-face {
-  font-family: "ClearSans";
-  src: url("fonts/ClearSans-Regular-webfont.woff") format("woff");
-  font-weight: 400;
-}
-@font-face {
-  font-family: "ClearSans";
-  src: url("fonts/ClearSans-Bold-webfont.woff") format("woff");
-  font-weight: 700;
-}
+@import url("fonts/clear-sans.css");
 
 :root {
-  --paper:   #efe7d6;
-  --paper-2: #e6dcc3;
-  --ink:     #38392f;
-  --ink-soft:#7a7564;
-  --moss:    #5b7d53;
-  --rust:    #a85c3a;
-  --gold:    #b48a3c;
-  --line:    rgba(56, 57, 47, 0.22);
+  --void:   #07080d;
+  --panel:  #0c0f16;
+  --line:   rgba(122, 214, 164, 0.16);
+  --signal: #7ad6a4;
+  --signal-2:#48b883;
+  --amber:  #e8b64c;
+  --ink:    #dfe6dd;
+  --dim:    #7a8b82;
 }
 
 * { box-sizing: border-box; }
@@ -33,112 +24,103 @@ html, body { height: 100%; }
 body {
   margin: 0;
   color: var(--ink);
-  font-family: Georgia, "Songti SC", "Noto Serif SC", serif;
+  font-family: "ClearSans", "PingFang SC", "Microsoft YaHei", sans-serif;
   background:
-    radial-gradient(820px 520px at 92% -8%, rgba(168, 92, 58, 0.10), transparent 62%),
-    radial-gradient(800px 480px at -6% 102%, rgba(91, 125, 83, 0.12), transparent 62%),
-    linear-gradient(164deg, var(--paper), var(--paper-2));
+    radial-gradient(900px 600px at 50% -12%, rgba(72, 184, 131, 0.10), transparent 60%),
+    radial-gradient(1000px 640px at 120% 120%, rgba(30, 60, 80, 0.5), transparent 62%),
+    linear-gradient(165deg, var(--void) 0%, var(--panel) 55%, #050609 100%);
   background-attachment: fixed;
   overflow-x: hidden;
 }
-
-/* 织纹 + 折痕边的点子 */
 body::before {
   content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
-    linear-gradient(rgba(56,57,47,0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(56,57,47,0.05) 1px, transparent 1px);
-  background-size: 44px 44px;
+    radial-gradient(1px 1px at 12% 22%, rgba(255,255,255,0.7), transparent 60%),
+    radial-gradient(1px 1px at 68% 12%, rgba(255,255,255,0.5), transparent 60%),
+    radial-gradient(1.4px 1.4px at 84% 66%, rgba(122,214,164,0.5), transparent 60%),
+    radial-gradient(1px 1px at 40% 84%, rgba(255,255,255,0.4), transparent 60%),
+    radial-gradient(1px 1px at 22% 60%, rgba(122,214,164,0.3), transparent 60%);
 }
 body::after {
   content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
-    radial-gradient(1.4px 1.4px at 12% 18%, rgba(97,77,51,0.35), transparent 60%),
-    radial-gradient(1.4px 1.4px at 88% 72%, rgba(97,77,51,0.3), transparent 60%),
-    radial-gradient(1px 1px at 66% 26%, rgba(97,77,51,0.3), transparent 60%);
+    linear-gradient(rgba(122,214,164,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122,214,164,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
-.page {
+.manifest {
   position: relative; z-index: 1;
-  max-width: 620px; margin: 0 auto; padding: 26px 22px 56px;
+  max-width: 700px; margin: 0 auto; padding: 22px 20px 56px;
 }
 
-/* 信头 */
-.letterhead {
+/* 顶栏 */
+.console-head {
   display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
-  padding-bottom: 10px; border-bottom: 2px solid var(--ink);
-  font-size: 12px; letter-spacing: 2px; color: var(--ink-soft);
+  padding-bottom: 10px; border-bottom: 1px solid var(--line);
+  font-size: 12px; letter-spacing: 2px; color: var(--dim);
 }
-.letterhead .lh-no { color: var(--rust); }
-.letterhead .lh-tag { color: var(--moss); }
+.ch-log { color: var(--signal); opacity: 0.85; }
+.ch-id { color: var(--dim); }
 
-/* 标本：2048 大字 */
-.specimen { padding: 40px 0 26px; text-align: center; }
-.spec-tiles {
-  display: inline-flex; gap: 8px; perspective: 600px;
+/* 大标题区：不对称的航线牌 */
+.lead {
+  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto;
+  gap: 0 22px; align-items: end;
+  margin: 44px 0 8px;
 }
-.spec-tiles span {
-  width: 58px; height: 58px; border-radius: 8px;
-  display: grid; place-items: center;
-  font-family: Georgia, serif; font-size: 30px; font-weight: 700; letter-spacing: 1px;
-  box-shadow: 0 10px 22px rgba(90, 74, 46, 0.22);
+.lead-num {
+  grid-row: 1 / 3; align-self: center;
+  font-size: clamp(120px, 22vw, 190px); font-weight: 800; line-height: 0.8;
+  color: rgba(122, 214, 164, 0.14); letter-spacing: -6px; font-family: "ClearSans", sans-serif;
+  font-variant-numeric: tabular-nums;
 }
-.spec-tiles span:nth-child(1) { background: #eee4da; color: var(--ink); }
-.spec-tiles span:nth-child(2) { background: #ede0c8; color: var(--ink); }
-.spec-tiles span:nth-child(3) { background: #eee4da; color: var(--ink); }
-.spec-tiles span:nth-child(4) { background: linear-gradient(160deg, #e7c56b, var(--gold)); color: #fff; width: 66px; height: 66px; font-size: 26px; }
+.lead-txt {
+  grid-column: 2; margin: 0;
+  font-size: clamp(24px, 4.5vw, 38px); font-weight: 700; line-height: 1.15;
+  letter-spacing: 2px; color: var(--ink);
+}
+.lead-sub {
+  grid-column: 2; margin: 6px 0 0; font-size: 13px; line-height: 1.8; color: var(--dim);
+}
+.lead-sub b { color: var(--signal); font-weight: normal; }
 
-.spec-note { margin: 22px 0 0; font-size: 14px; line-height: 1.9; color: var(--ink-soft); }
-.spec-note em { font-style: normal; color: var(--rust); }
+/* 航线清单 */
+.manifest-list { list-style: none; margin: 34px 0 0; padding: 0; }
 
-/* 索引 */
-.index { list-style: none; margin: 0; padding: 0; }
-
-.row { border-top: 1px solid var(--line); }
-.row:last-child { border-bottom: 1px solid var(--line); }
-.row > a {
+.op { border-top: 1px solid var(--line); }
+.op:last-child { border-bottom: 1px solid var(--line); }
+.op > a {
   display: grid;
-  grid-template-columns: 44px 1fr auto;
-  align-items: center; gap: 10px;
-  padding: 18px 6px; text-decoration: none; color: var(--ink);
-  transition: none;
+  grid-template-columns: 70px 1fr auto;
+  grid-template-areas: "code name cta" "code desc cta" "code key cta";
+  gap: 2px 12px; align-items: center;
+  padding: 16px 6px; text-decoration: none; color: var(--ink);
 }
-.row > a:hover { background: rgba(255, 251, 242, 0.4); }
-.row:hover .idx { color: var(--rust); }
-.row:hover .name { color: var(--moss); }
+.op > a:hover { background: rgba(122, 214, 164, 0.06); }
+.op > a:hover .op-cta { color: var(--signal); transform: translateX(3px); }
 
-.idx {
-  font-family: Georgia, serif; font-size: 20px; color: var(--ink-soft);
-  letter-spacing: 1px; transition: color 0.15s ease;
+.op-code {
+  grid-area: code; align-self: center;
+  font-size: 14px; letter-spacing: 1px; color: var(--dim); font-variant-numeric: tabular-nums;
 }
+.op-name { grid-area: name; font-size: 20px; font-weight: 700; letter-spacing: 1px; }
+.op-name em { font-style: normal; font-size: 11px; letter-spacing: 2px; color: var(--signal); margin-left: 6px; }
+.op-desc { grid-area: desc; font-size: 13px; color: var(--dim); line-height: 1.5; }
+.op-key { grid-area: key; font-size: 11px; letter-spacing: 1px; color: var(--dim); opacity: 0.8; }
+.op-cta { grid-area: cta; font-size: 18px; color: var(--dim); transition: transform 0.15s ease, color 0.15s ease; }
 
-.body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.name { font-size: 21px; font-weight: 700; letter-spacing: 1px; transition: color 0.15s ease; }
-.desc { font-size: 13px; line-height: 1.6; color: var(--ink-soft); }
-.desc b { color: var(--ink); }
-.keys {
-  display: inline-block; align-self: flex-start; margin-top: 4px;
-  font-size: 11px; letter-spacing: 1px; color: var(--ink-soft);
-  border: 1px solid var(--line); border-radius: 2px; padding: 2px 7px;
-}
+/* 首条（经典）不特别打扮；但可用一个淡淡记号提示最稳 */
+.op:first-child .op-code { color: var(--signal); }
 
-.go { font-size: 14px; color: var(--rust); font-family: Georgia, serif; letter-spacing: 1px; }
-.row > a:hover .go { color: var(--ink); }
-
-/* 扉页感：经典行做一点强调 */
-.row-classic .idx { color: var(--ink); font-weight: 700; }
-.row-classic .name::before { content: "◆ "; color: var(--rust); font-size: 13px; vertical-align: 2px; }
-
-.colophon {
-  margin-top: 34px; padding-top: 14px; border-top: 1px solid var(--line);
-  text-align: center; font-size: 12px; letter-spacing: 1px; color: var(--ink-soft);
+.console-foot {
+  margin-top: 36px; text-align: center;
+  font-size: 12px; letter-spacing: 1px; color: var(--dim);
 }
 
 @media (max-width: 460px) {
-  .page { padding: 20px 14px 44px; }
-  .spec-tiles span { width: 46px; height: 46px; font-size: 24px; }
-  .spec-tiles span:nth-child(4) { width: 54px; height: 54px; }
-  .row > a { grid-template-columns: 34px 1fr; }
-  .go { display: none; }
-  .name { font-size: 18px; }
+  .lead { grid-template-columns: auto 1fr; margin-top: 34px; }
+  .lead-num { font-size: 120px; letter-spacing: -4px; }
+  .op > a { grid-template-columns: 56px 1fr; grid-template-areas: "code name" "code desc" "code key"; }
+  .op-cta { display: none; }
 }

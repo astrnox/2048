@@ -1,19 +1,20 @@
 /* =============================================================
-   观星台 · 星球引力
-   夜空打底，暖金为唯一的星芒。衬线雕板数字，
-   轨道用细细的虚线圆圈。克制、专注、像一台老天文望远镜。
+   星落 STARFALL — mission-console 视觉
+   深空 + 信号绿 + 等宽读数。角标、发丝刻度、
+   轨道虚线环。克制的印刷感，去“高级卡片”味的腻味。
    ============================================================= */
 @import url("fonts/clear-sans.css");
 
 :root {
-  --night:   #0c0f16;
-  --night-2: #121722;
-  --panel:   #181f2c;
-  --line:    rgba(233, 214, 168, 0.16);
-  --gold:    #e9c46a;
-  --gold-2:  #c99a3c;
-  --cream:   #f2ead9;
-  --dim:     #8b90a0;
+  --void:   #07080d;
+  --panel:  #0c0f16;
+  --panel-2:#12161f;
+  --line:   rgba(122, 214, 164, 0.16);
+  --signal: #7ad6a4;
+  --signal-2:#48b883;
+  --amber:  #e8b64c;
+  --ink:    #dfe6dd;
+  --dim:    #7a8b82;
 }
 
 * { box-sizing: border-box; }
@@ -22,104 +23,93 @@ html, body { height: 100%; }
 
 body {
   margin: 0;
-  color: var(--cream);
-  font-family: Georgia, "Songti SC", "Noto Serif SC", serif;
+  color: var(--ink);
+  font-family: "ClearSans", "PingFang SC", "Microsoft YaHei", sans-serif;
   background:
-    radial-gradient(720px 480px at 50% -8%, rgba(233, 196, 106, 0.10), transparent 60%),
-    radial-gradient(1100px 700px at 120% 120%, rgba(30, 52, 90, 0.55), transparent 60%),
-    linear-gradient(160deg, var(--night) 0%, var(--night-2) 60%, #0a0d13 100%);
+    radial-gradient(900px 620px at 50% -12%, rgba(72, 184, 131, 0.10), transparent 60%),
+    radial-gradient(1000px 640px at 120% 120%, rgba(30, 60, 80, 0.5), transparent 62%),
+    linear-gradient(165deg, var(--void) 0%, var(--panel) 55%, #050609 100%);
   background-attachment: fixed;
   overflow-x: hidden;
 }
 
-/* 夜空噪点：稀疏的小星 */
+/* 星尘 */
 body::before {
-  content: "";
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
     radial-gradient(1px 1px at 12% 22%, rgba(255,255,255,0.7), transparent 60%),
     radial-gradient(1px 1px at 68% 12%, rgba(255,255,255,0.5), transparent 60%),
-    radial-gradient(1.5px 1.5px at 84% 64%, rgba(233,196,106,0.45), transparent 60%),
-    radial-gradient(1px 1px at 40% 82%, rgba(255,255,255,0.4), transparent 60%),
-    radial-gradient(1px 1px at 22% 58%, rgba(255,255,255,0.35), transparent 60%),
-    radial-gradient(1px 1px at 90% 34%, rgba(255,255,255,0.55), transparent 60%);
+    radial-gradient(1.4px 1.4px at 84% 66%, rgba(122,214,164,0.5), transparent 60%),
+    radial-gradient(1px 1px at 40% 84%, rgba(255,255,255,0.4), transparent 60%),
+    radial-gradient(1px 1px at 22% 60%, rgba(122,214,164,0.3), transparent 60%);
+}
+/* 极细网格，增加工具感 */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(122,214,164,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122,214,164,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
-.scope { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; padding: 24px 18px 56px; }
+.console { position: relative; z-index: 1; max-width: 540px; margin: 0 auto; padding: 22px 18px 56px; }
 
-.rise-head {
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 13px; letter-spacing: 2px;
+.rail {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding-bottom: 10px; border-bottom: 1px solid var(--line);
+  font-size: 12px; letter-spacing: 2px; color: var(--dim);
 }
-.home-link {
-  color: var(--dim); text-decoration: none; font-size: 13px; letter-spacing: 1px;
-  border-bottom: 1px dotted var(--line); padding-bottom: 2px;
-}
-.home-link:hover { color: var(--gold-2); }
-.latin { color: var(--gold); opacity: 0.85; font-size: 12px; letter-spacing: 3px; }
+.home-link { color: var(--dim); text-decoration: none; letter-spacing: 1px; }
+.home-link:hover { color: var(--signal); }
+.sys { color: var(--signal); opacity: 0.8; font-size: 11px; letter-spacing: 2px; }
 
-.plate {
-  position: relative;
-  margin-top: 18px;
-  padding: 26px 22px 28px;
-  background: rgba(24, 31, 44, 0.55);
-  border: 1px solid var(--line);
-  border-radius: 2px;
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+/* 标题牌 */
+.callout { margin: 30px 0 6px; }
+.tag {
+  margin: 0; font-size: clamp(40px, 9vw, 64px); font-weight: 800;
+  letter-spacing: 2px; line-height: 0.95; color: var(--ink);
+}
+.tag .cn { color: var(--signal); letter-spacing: 4px; font-weight: 700; }
+.lede { margin: 12px 0 0; font-size: 13.5px; line-height: 1.8; color: var(--dim); }
+.lede b { color: var(--signal); font-weight: normal; }
+
+/* 遥测读数 */
+.telemetry {
+  display: flex; align-items: stretch; justify-content: center;
+  gap: 10px; margin: 22px 0 6px;
+}
+.gauge {
+  flex: 1; min-width: 0; padding: 8px 12px;
+  border: 1px solid var(--line); background: rgba(12, 15, 22, 0.7);
   text-align: center;
-  backdrop-filter: blur(2px);
 }
-/* 胶带：左上角两小块横杠，像贴在本子上 */
-.plate::before, .plate::after {
-  content: ""; position: absolute; width: 54px; height: 10px; top: -5px;
-  background: rgba(24,31,44,0.9); border: 1px solid var(--line);
-  opacity: 0.8;
+.gauge.dim { opacity: 0.85; }
+.gauge-label { display: block; font-size: 10px; letter-spacing: 2px; color: var(--dim); }
+.gauge-num {
+  display: block; font-size: 26px; font-weight: 700; line-height: 1.1;
+  color: var(--signal); font-variant-numeric: tabular-nums;
 }
-.plate::before { left: 8px; transform: rotate(-2deg); }
-.plate::after  { right: 8px; transform: rotate(2deg); }
+.gauge.dim .gauge-num { color: var(--ink); }
+.combo-wrap { display: flex; align-items: center; min-width: 64px; justify-content: center; }
+.combo {
+  color: var(--amber); font-size: 14px; font-weight: 700; letter-spacing: 1px;
+  opacity: 0; transform: translateY(6px);
+}
+.combo.on { animation: combo-pop 0.6s cubic-bezier(0.2, 1.2, 0.4, 1); opacity: 1; }
+@keyframes combo-pop { 0% { opacity: 0; transform: translateY(6px) scale(0.8); } 30% { opacity: 1; transform: translateY(0) scale(1.15); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
 
-.headline {
-  margin: 6px 0 2px;
-  font-size: 58px; font-weight: 700; line-height: 1;
-  letter-spacing: 6px;
-  color: var(--cream);
-  text-shadow: 0 0 22px rgba(233, 196, 106, 0.35);
-}
-.headline::first-letter { color: var(--gold); }
-
-.lede {
-  margin: 10px 0 0; font-size: 13.5px; line-height: 1.9; color: var(--dim);
-}
-.lede b { color: var(--cream); font-weight: normal; }
-
-/* 罗盘 */
-.compass {
-  display: inline-flex; align-items: center; gap: 8px;
-  margin-top: 16px; padding: 5px 12px;
-  border: 1px solid var(--line); border-radius: 20px;
-  font-size: 13px; color: var(--gold); letter-spacing: 2px;
-}
-.compass-arrow {
-  display: inline-block; font-size: 15px;
-  transition: transform 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
-}
-
-/* 星球罗盘场 */
-.planet {
-  position: relative;
-  width: min(320px, 78vw);
-  margin: 22px auto 0;
-  aspect-ratio: 1 / 1;
+/* 星坑：轨道 + 4x4 坠场 */
+.starpit {
+  position: relative; width: min(320px, 78vw); margin: 10px auto 0; aspect-ratio: 1/1;
   display: grid; place-items: center;
 }
 .ring { position: absolute; inset: 0; border-radius: 50%; border: 1px dashed var(--line); }
 .ring.r1 { inset: -14px; opacity: 0.5; }
-.ring.r2 { inset: -28px; opacity: 0.25; }
-.planet::after {
-  content: ""; position: absolute; inset: 6%;
-  border-radius: 50%;
-  box-shadow: 0 0 60px rgba(233, 196, 106, 0.18), inset 0 0 40px rgba(0,0,0,0.7);
-  background: radial-gradient(circle at 34% 30%, #171d29, #0c0f16 70%);
+.ring.r2 { inset: -28px; opacity: 0.22; }
+.starpit::after {
+  content: ""; position: absolute; inset: 6%; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #10141d, #05070b 72%);
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 0 60px rgba(72,184,131,0.12);
   pointer-events: none;
 }
 
@@ -127,114 +117,107 @@ body::before {
   position: relative; z-index: 2;
   width: 78%; height: 78%;
   display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr);
-  gap: 7px;
+  gap: 6px;
   transition: transform 0.4s cubic-bezier(0.3, 1.2, 0.4, 1);
-  touch-action: none;
-  cursor: pointer;
+  touch-action: none; cursor: pointer;
+  -webkit-user-select: none; user-select: none;
 }
 .board:active .gcell { transform: scale(0.97); }
 .gcell {
   position: relative;
-  border: 1px solid var(--line);
-  background: rgba(34, 42, 58, 0.55);
+  border: 1px solid var(--line); border-radius: 2px;
+  background: rgba(30, 36, 48, 0.6);
   display: flex; align-items: center; justify-content: center;
-  border-radius: 3px;
-  font-weight: 700; font-size: 26px; line-height: 1;
-  color: var(--cream);
+  font-weight: 700; font-size: 25px; line-height: 1; color: var(--ink);
   font-variant-numeric: tabular-nums;
   transition: background 0.25s ease, color 0.25s ease, transform 0.15s ease;
 }
-/* 落体入场：从顶部落下 */
 .gcell.t-new { animation: fall 0.4s cubic-bezier(0.2, 0.8, 0.3, 1.05) both; }
 @keyframes fall { from { transform: translateY(-46px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.gcell.g-chain { animation: g-chain 0.24s ease; }
+@keyframes g-chain { 0% { transform: scale(0.5); } 55% { transform: scale(1.16); } 100% { transform: scale(1); } }
 
-.gcell.t2   { background: #3c4658; color: #e9c6a0; }
-.gcell.t4   { background: #46526a; color: #eccf9e; }
-.gcell.t8   { background: #56543e; color: #f2ead9; }
-.gcell.t16  { background: #6a5a34; color: #f7efdd; }
-.gcell.t32  { background: #775a2c; color: #fff6e6; }
-.gcell.t64  { background: #8a6427; color: #fff6e6; }
-.gcell.t128 { background: #a57725; color: #fff6e6; }
-.gcell.t256 { background: #b98a22; color: #fff6e6; }
-.gcell.t512 { background: #c99c1f; color: #2a241a; }
-.gcell.t1024{ background: #d9ad1c; color: #2a241a; }
-.gcell.t2048, .gcell.star { background: #e9c46a; color: #241f14; box-shadow: 0 0 26px rgba(233,196,106,0.55); }
-.gcell.t4096 { background: #f2ead9; color: #233040; }
-.gcell.t8192 { background: #f7f1e4; color: #241f14; }
+.gcell.t2   { background: #1e2a26; color: #8be0b4; }
+.gcell.t4   { background: #22302a; color: #9ce8bf; }
+.gcell.t8   { background: #26382f; color: #c4f0d4; }
+.gcell.t16  { background: #2c3e3a; color: #dfe6dd; }
+.gcell.t32  { background: #33474a; color: #eef4ec; }
+.gcell.t64  { background: #3a4b55; color: #f2f7f1; }
+.gcell.t128 { background: #4a5d48; color: #f7faf6; }
+.gcell.t256 { background: #5c6e43; color: #f7faf6; }
+.gcell.t512 { background: #72803f; color: #f8fbf7; }
+.gcell.t1024{ background: #8a8f3c; color: #fafcf8; }
+.gcell.t2048, .gcell.star { background: var(--signal); color: #07120c; box-shadow: 0 0 24px rgba(122,214,164,0.5); }
+.gcell.t4096 { background: var(--ink); color: #0a0d11; }
+.gcell.t8192 { background: #e8f2ea; color: #0a0d11; }
 
 .core {
-  position: absolute; z-index: 1;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: var(--gold); box-shadow: 0 0 30px 8px rgba(233,196,106,0.35);
+  position: absolute; z-index: 1; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--signal); box-shadow: 0 0 28px 8px rgba(122,214,164,0.35);
 }
 
-/* 读数 */
-.readout { display: flex; justify-content: center; gap: 14px; margin-top: 22px; }
-.meter {
-  min-width: 96px; padding: 8px 12px;
+/* 重力读表 */
+.readout { text-align: center; margin: 14px 0 0; }
+.readout-arrow {
+  display: inline-block; padding: 4px 14px;
+  font-size: 13px; letter-spacing: 2px; color: var(--signal);
   border: 1px solid var(--line); border-radius: 2px;
-  background: rgba(12, 15, 22, 0.6);
 }
-.meter .label { display: block; font-size: 11px; letter-spacing: 2px; color: var(--dim); }
-.meter .num { display: block; font-size: 26px; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
 
 .msg {
   display: none; margin: 16px auto 0; max-width: 320px; padding: 12px 14px;
-  font-size: 16px; line-height: 1.8; color: var(--night);
-  background: var(--gold); border-radius: 2px;
+  font-size: 15px; line-height: 1.8; color: #07120c; background: var(--signal); border-radius: 2px; text-align: center;
 }
 .msg .grv-act {
-  margin: 4px 5px; padding: 4px 12px; border: 1px solid rgba(0,0,0,0.3);
-  background: transparent; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; color: var(--night);
+  margin: 4px 5px; padding: 4px 12px; border: 1px solid rgba(0,0,0,0.35);
+  background: transparent; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; color: #07120c;
 }
-.msg .grv-act:hover { background: rgba(0,0,0,0.08); }
+.msg .grv-act:hover { background: rgba(0,0,0,0.1); }
 
-.manual { margin-top: 18px; font-size: 13px; line-height: 2; color: var(--dim); }
+.manual { margin-top: 18px; text-align: center; font-size: 13px; line-height: 2; color: var(--dim); }
 .manual b {
   display: inline-block; min-width: 34px; padding: 2px 7px; margin: 0 2px;
-  border: 1px solid var(--line); border-radius: 2px; color: var(--gold);
-  font-weight: normal; font-size: 12px;
+  border: 1px solid var(--line); border-radius: 2px; color: var(--signal); font-weight: normal; font-size: 12px; letter-spacing: 1px;
 }
 .how-link { color: var(--dim); font-size: 12px; text-decoration: underline dotted; letter-spacing: 1px; }
-.how-link:hover { color: var(--gold-2); }
+.how-link:hover { color: var(--signal); }
 .manual .fine { font-size: 11px; opacity: 0.7; }
 
-/* 滑动跟随的回弹（星球容器，避免和棋盘旋转冲突） */
-.planet.nu0 { animation: grv-nu0 0.26s cubic-bezier(0.3, 1.2, 0.4, 1); }
-.planet.nu1 { animation: grv-nu1 0.26s cubic-bezier(0.3, 1.2, 0.4, 1); }
-.planet.nu2 { animation: grv-nu2 0.26s cubic-bezier(0.3, 1.2, 0.4, 1); }
-.planet.nu3 { animation: grv-nu3 0.26s cubic-bezier(0.3, 1.2, 0.4, 1); }
+/* 滑动回弹 */
+.starpit.nu0 { animation: grv-nu0 0.26s cubic-bezier(0.3, 1.2, 0.4, 1); }
+.starpit.nu1 { animation: grv-nu1 0.26s cubic-bezier(0.3, 1.2, 0.4, 1); }
+.starpit.nu2 { animation: grv-nu2 0.26s cubic-bezier(0.3, 1.2, 0.4, 1); }
+.starpit.nu3 { animation: grv-nu3 0.26s cubic-bezier(0.3, 1.2, 0.4, 1); }
 @keyframes grv-nu0 { 0% { transform: translateY(5px); } 100% { transform: translateY(0); } }
 @keyframes grv-nu1 { 0% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
 @keyframes grv-nu2 { 0% { transform: translateY(-5px) scale(1.01); } 100% { transform: translateY(0) scale(1); } }
 @keyframes grv-nu3 { 0% { transform: translateX(5px); } 100% { transform: translateX(0); } }
 
-/* 首次进入的引导遮罩 */
+/* 首次进入 */
 .howto {
   position: fixed; inset: 0; z-index: 50;
   display: none; align-items: center; justify-content: center;
-  background: rgba(6, 8, 13, 0.74); backdrop-filter: blur(3px); padding: 20px;
+  background: rgba(4, 5, 8, 0.8); padding: 20px;
 }
 .howto.show { display: flex; }
 .howto-card {
   max-width: 360px; width: 100%; padding: 26px 24px; text-align: left;
-  background: linear-gradient(165deg, #1a2130, #141926); border: 1px solid var(--line);
-  border-radius: 4px; box-shadow: 0 30px 80px rgba(0,0,0,0.6);
-  color: var(--cream);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 2px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6); color: var(--ink);
 }
-.howto-card h2 { margin: 0 0 10px; font-size: 24px; letter-spacing: 3px; color: var(--gold); }
+.howto-card h2 { margin: 0 0 10px; font-size: 24px; letter-spacing: 3px; color: var(--signal); }
 .howto-card p { margin: 0 0 12px; font-size: 13.5px; line-height: 1.8; color: var(--dim); }
-.howto-card p b { color: var(--cream); }
-.howto-card ul { margin: 0 0 16px; padding: 0 0 0 18px; font-size: 13px; line-height: 2; color: var(--cream); }
-.howto-card li b { color: var(--gold); font-weight: normal; }
+.howto-card p b { color: var(--ink); }
+.howto-card ul { margin: 0 0 16px; padding: 0 0 0 18px; font-size: 13px; line-height: 2; color: var(--ink); }
+.howto-card li b { color: var(--signal); font-weight: normal; }
 .howto-ok {
   width: 100%; padding: 12px; font-family: inherit; font-size: 15px; font-weight: 700;
-  letter-spacing: 2px; color: var(--night); background: var(--gold); border: 0; border-radius: 3px; cursor: pointer;
+  letter-spacing: 2px; color: #07120c; background: var(--signal); border: 0; border-radius: 2px; cursor: pointer;
 }
-.howto-ok:hover { background: #f2d38a; }
+.howto-ok:hover { background: #9fe6c0; }
 
 @media (max-width: 420px) {
-  .headline { font-size: 46px; letter-spacing: 4px; }
-  .plate { padding: 22px 16px 24px; }
-  .gcell { font-size: 21px; }
+  .tag { font-size: 44px; }
+  .gauge-num { font-size: 22px; }
+  .gcell { font-size: 20px; }
 }

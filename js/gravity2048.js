@@ -57,6 +57,60 @@
     while (out.length < 4) out.push(0);
     return { line: out, gained: gained, moved: moved };
   }
+
+  /* 链式合体：瓦片落到底后，同数会连锁地一路合上去
+     （4,4,8 坠落 → 先 4+4=8，再 8+8=16），一次坠落多次得分。
+     index 0 是引力目标端。 */
+  function cascadeToAim(line) {
+    var nz = [];
+    for (var i = 0; i < line.length; i++) if (line[i]) nz.push(line[i]);
+    var stack = nz.slice(); // stack[0] 最靠近目标端
+    var gained = 0, merges = 0, changed = true;
+    while (changed) {
+      changed = false;
+      for (var m = 0; m < stack.length - 1; m++) {
+        if (stack[m] === stack[m + 1]) {
+          stack[m] = stack[m] * 2; // 留在更靠近重力一端
+          stack.splice(m + 1, 1);
+          gained += stack[m];
+          merges++;
+          changed = true;
+          break; // 重扫，让新合出的数字继续连锁
+        }
+      }
+    }
+    var out = [];
+    for (var j = 0; j < line.length; j++) out.push(stack[j] || 0);
+    var moved = false;
+    for (var k = 0; k < line.length; k++) if (line[k] !== (out[k] || 0)) moved = true;
+    return { line: out, gained: gained, merges: merges, moved: moved };
+  }
+
+  // 用链式合体执行一次坠落（dir 为棋盘方向）— 仅用于玩家坠落，判定可用性仍走 tryMove
+  function fallBoard(board, dir) {
+    var b = clone(board);
+    var gained = 0, moved = false, merges = 0;
+    var axis = (dir === 0 || dir === 2) ? 1 : 0;
+    var forward = (dir === 1 || dir === 2) ? -1 : 1;
+    for (var lane = 0; lane < 4; lane++) {
+      var vals = [];
+      for (var i = 0; i < 4; i++) {
+        var rr = axis === 0 ? lane : (forward === 1 ? i : 3 - i);
+        var cc = axis === 0 ? (forward === 1 ? i : 3 - i) : lane;
+        vals.push(b[rr][cc]);
+      }
+      var res = cascadeToAim(vals);
+      if (res.moved) moved = true;
+      gained += res.gained;
+      merges += res.merges;
+      for (var j = 0; j < 4; j++) {
+        var rr2 = axis === 0 ? lane : (forward === 1 ? j : 3 - j);
+        var cc2 = axis === 0 ? (forward === 1 ? j : 3 - j) : lane;
+        b[rr2][cc2] = res.line[j];
+      }
+    }
+    return { board: b, gained: gained, moved: moved, merges: merges };
+  }
   function deadOr(b) {
     if (emptyCells(b).length) return false;
     for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++) {
@@ -79,11 +133,14 @@
 
     this.el = el;
     this.elBoard = document.getElementById("board-grav");
-    this.elPlanet = document.querySelector(".planet");
+    this.elPlanet = document.querySelector(".starpit");
     this.elScore = document.getElementById("grav-score");
     this.elBest = document.getElementById("grav-best");
     this.elMsg = document.getElementById("grav-msg");
     this.elCompass = document.getElementById("compass");
+    this.elCombo = document.getElementById("grav-combo");
+    this.prev = null;
+    this.merges = 0;
 
     this.seed();
     this.render(true);
@@ -122,10 +179,13 @@
     if (this.over || (this.won && !this.keep)) return;
     this.lastDrop = [];
     var dir = [2, 1, 0, 3][this.rot];
-    var res = tryMove(this.board, dir); // 屏幕正下
-    if (!res.moved) return;
+    this.prev = clone(this.board);
+    var res = fallBoard(this.board, dir); // 屏幕正下，支持链式合体
+    if (!res.moved) { this.prev = null; return; }
     this.board = res.board;
     this.score += res.gained;
+    this.merges = res.merges;
+    this.flashCombo();
     if (maxVal(this.board) >= WIN_VAL && !this.won) this.won = true;
     this.spawnFalling();
     if (!this.settled()) this.over = true;
@@ -133,6 +193,17 @@
     if (window.nudge) window.nudge(this.elPlanet, 2); // 坠落轻微的星球回弹
     this.render();
     this.announce();
+  };
+
+  OrbitGame.prototype.flashCombo = function () {
+    if (this.elCombo && this.merges >= 2) {
+      this.elCombo.textContent = "+" + this.merges + " 连击";
+      this.elCombo.classList.remove("on");
+      void this.elCombo.offsetWidth;
+      this.elCombo.classList.add("on");
+    } else if (this.elCombo) {
+      this.elCombo.classList.remove("on");
+    }
   };
 
   OrbitGame.prototype.spawnFalling = function () {
@@ -176,6 +247,8 @@
   OrbitGame.prototype.restart = function () {
     this.board = emptyBoard(); this.score = 0; this.won = false; this.over = false; this.keep = false;
     this.rot = 0; this.elBoard.style.transform = "rotate(0deg)"; this.setCompass();
+    this.prev = null; this.merges = 0;
+    if (this.elCombo) this.elCombo.classList.remove("on");
     this.seed();
     this.render(true);
     if (this.elMsg) this.elMsg.style.display = "none";
@@ -189,6 +262,7 @@
     var self = this;
     var fresh = {};
     this.lastDrop.forEach(function (d) { fresh[d.toRow + "," + d.toCol] = true; });
+    var prev = this.prev || null;
     for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++) {
       var cell = document.createElement("div");
       cell.className = "gcell";
@@ -198,11 +272,14 @@
         cell.className += " t" + v;
         if (v >= 2048) cell.className += " star";
         if (fresh[r + "," + c]) cell.className += " t-new";
+        // 链式合体的落点：值比上一帧变大 → 轻回弹
+        if (prev && prev[r][c] && v > prev[r][c]) cell.className += " g-chain";
         cell.style.setProperty("--ph", self.phase(v));
       }
       this.elBoard.appendChild(cell);
     }
     this.lastDrop = [];
+    this.prev = null;
   };
   OrbitGame.prototype.phase = function (v) {
     // 金星冲日：数字越大相位越小
