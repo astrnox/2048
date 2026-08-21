@@ -104,11 +104,13 @@ body {
   letter-spacing: clamp(1px, 0.5vw, 4px);
   color: var(--ink);
 }
-/* 克制暖金小圆点，增强品牌识别又不喧宾夺主 */
-.logo-2048::after {
-  content: "·";
+/* 金色 "+" 强调品牌 */
+.logo-2048 .logo-plus {
   color: var(--gold);
-  margin-left: 0.1em;
+  font-size: 0.62em;
+  margin-left: 0.12em;
+  font-weight: 400;
+  vertical-align: 0.1em;
 }
 
 /* 底部细金线，更显大气收束 */
@@ -116,10 +118,19 @@ body {
 .logo-2048::before {
   content: "";
   position: absolute;
-  left: 50%; bottom: clamp(-18px, -3vw, -26px); transform: translateX(-50%);
+  left: 50%; bottom: clamp(-16px, -2vw, -24px); transform: translateX(-50%);
   width: clamp(56px, 22%, 120px); height: 3px;
   border-radius: 999px;
   background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+/* 副标题：2048 PLUS */
+.logo-sub {
+  margin: clamp(22px, 4vh, 34px) 0 0;
+  font-size: clamp(11px, 3vw, 14px);
+  font-weight: 700;
+  letter-spacing: clamp(3px, 1.6vw, 8px);
+  color: var(--sub);
+  text-indent: clamp(3px, 1.6vw, 8px); /* 抵消末位字距，保持视觉居中 */
 }
 
 /* =====================================================
