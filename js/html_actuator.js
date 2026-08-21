@@ -3,9 +3,38 @@ function HTMLActuator() {
   this.scoreContainer   = document.querySelector(".score-container");
   this.bestContainer    = document.querySelector(".best-container");
   this.messageContainer = document.querySelector(".game-message");
+  this.timerElement     = document.querySelector(".timer");
+  this.hintElement      = document.querySelector("#mode-hint");
 
   this.score = 0;
 }
+
+HTMLActuator.prototype.setMode = function (mode) {
+  document.body.className = "mode-" + (mode || "classic");
+
+  var hints = {
+    classic: 'Join the numbers and get to the <strong>2048 tile!</strong>',
+    time:    'Score as many points as you can before the <strong>clock runs out!</strong>',
+    endless: 'No final tile here &mdash; how far can you build <strong>this time?</strong>'
+  };
+
+  this.timerElement.classList.toggle("hidden", mode !== "time");
+
+  if (this.hintElement) {
+    this.hintElement.innerHTML = hints[mode] || hints.classic;
+  }
+};
+
+HTMLActuator.prototype.updateTimer = function (totalSeconds) {
+  if (!this.timerElement) return;
+
+  var minutes = Math.floor(totalSeconds / 60);
+  var seconds = totalSeconds % 60;
+  this.timerElement.textContent = minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+
+  // Turn the countdown red for the final stretch
+  this.timerElement.classList.toggle("timer-warning", totalSeconds <= 10);
+};
 
 HTMLActuator.prototype.actuate = function (grid, metadata) {
   var self = this;
@@ -26,7 +55,9 @@ HTMLActuator.prototype.actuate = function (grid, metadata) {
 
     if (metadata.terminated) {
       if (metadata.over) {
-        self.message(false); // You lose
+        var timeUp = metadata.mode === "time" ?
+          "Time's up! Your score: " + metadata.score : null;
+        self.message(false, timeUp); // You lose
       } else if (metadata.won) {
         self.message(true); // You win!
       }
@@ -124,9 +155,9 @@ HTMLActuator.prototype.updateBestScore = function (bestScore) {
   this.bestContainer.textContent = bestScore;
 };
 
-HTMLActuator.prototype.message = function (won) {
+HTMLActuator.prototype.message = function (won, text) {
   var type    = won ? "game-won" : "game-over";
-  var message = won ? "You win!" : "Game over!";
+  var message = text || (won ? "You win!" : "Game over!");
 
   this.messageContainer.classList.add(type);
   this.messageContainer.getElementsByTagName("p")[0].textContent = message;

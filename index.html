@@ -26,8 +26,19 @@
       </div>
     </div>
 
+    <div class="mode-selector">
+      <a class="mode-button" data-mode="classic">经典模式</a>
+      <a class="mode-button" data-mode="time">限时挑战</a>
+      <a class="mode-button" data-mode="endless">无尽模式</a>
+    </div>
+
+    <div class="timer-container">
+      <span class="timer-label">剩余时间</span>
+      <div class="timer">1:00</div>
+    </div>
+
     <div class="above-game">
-      <p class="game-intro">Join the numbers and get to the <strong>2048 tile!</strong></p>
+      <p class="game-intro" id="mode-hint">Join the numbers and get to the <strong>2048 tile!</strong></p>
       <a class="restart-button">New Game</a>
     </div>
 
@@ -94,6 +105,7 @@
   <script src="js/tile.js"></script>
   <script src="js/local_storage_manager.js"></script>
   <script src="js/game_manager.js"></script>
+  <script src="js/modes.js"></script>
   <script src="js/application.js"></script>
 </body>
 </html>

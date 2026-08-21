@@ -756,3 +756,56 @@ hr {
     margin-top: 90px !important; }
   .game-message .lower {
     margin-top: 30px !important; } }
+
+/* ------------------------------------------------------------------
+   Mode selector & countdown timer (added for game modes)
+------------------------------------------------------------------- */
+.mode-selector {
+  text-align: center;
+  margin-top: 12px; }
+  .mode-selector .mode-button {
+    display: inline-block;
+    background: #bbada0;
+    color: #f9f6f2;
+    border-radius: 3px;
+    padding: 9px 16px;
+    margin-right: 6px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    -webkit-transition: background 120ms ease;
+    -moz-transition: background 120ms ease;
+    transition: background 120ms ease; }
+    .mode-selector .mode-button:last-child {
+      margin-right: 0; }
+    .mode-selector .mode-button:hover {
+      background: #8f7a66; }
+    .mode-selector .mode-button.active {
+      background: #f59563; }
+
+.timer-container {
+  display: none;
+  text-align: center;
+  margin-top: 14px; }
+body.mode-time .timer-container {
+  display: block; }
+.timer-label {
+  font-size: 13px;
+  color: #776e65;
+  display: block;
+  margin-bottom: 2px; }
+.timer {
+  font-size: 28px;
+  font-weight: bold;
+  color: #776e65; }
+  body.mode-time .timer.timer-warning {
+    color: #f65e3b; }
+
+@media screen and (max-width: 520px) {
+  .mode-selector .mode-button {
+    padding: 7px 12px;
+    font-size: 13px;
+    margin-right: 4px; } }

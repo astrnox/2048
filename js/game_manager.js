@@ -6,6 +6,11 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
 
   this.startTiles     = 2;
 
+  // Game mode: "classic" | "time" | "endless"
+  this.mode           = "classic";
+  this.timeLimit      = 60; // seconds, used in time mode
+  this.timeLeft       = this.timeLimit;
+
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
@@ -15,9 +20,60 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
 
 // Restart the game
 GameManager.prototype.restart = function () {
+  this.startNewGame(this.mode);
+};
+
+// Switch the active game mode and begin a fresh game
+GameManager.prototype.setMode = function (mode) {
+  this.startNewGame(mode);
+};
+
+// Reset the board, keeping (or adopting) the given mode
+GameManager.prototype.startNewGame = function (mode) {
+  this.stopTimer();
+
+  if (mode) {
+    this.mode = mode;
+    this.actuator.setMode(mode); // Sync the UI (buttons / body class)
+  }
+
+  this.timeLeft = this.timeLimit;
+
   this.storageManager.clearGameState();
   this.actuator.continueGame(); // Clear the game won/lost message
+  this.actuator.updateTimer(this.timeLeft);
+
   this.setup();
+
+  if (this.mode === "time") {
+    this.startTimer();
+  }
+};
+
+// Kick off the countdown used by the time mode
+GameManager.prototype.startTimer = function () {
+  var self = this;
+
+  this.stopTimer();
+  this.timer = window.setInterval(function () {
+    self.timeLeft--;
+
+    if (self.timeLeft <= 0) {
+      self.timeLeft = 0;
+      self.stopTimer();
+      self.over = true; // Time's up!
+      self.actuate();
+    } else {
+      self.actuator.updateTimer(self.timeLeft);
+    }
+  }, 1000);
+};
+
+GameManager.prototype.stopTimer = function () {
+  if (this.timer) {
+    window.clearInterval(this.timer);
+    this.timer = null;
+  }
 };
 
 // Keep playing after winning (allows going over 2048)
@@ -93,7 +149,8 @@ GameManager.prototype.actuate = function () {
     over:       this.over,
     won:        this.won,
     bestScore:  this.storageManager.getBestScore(),
-    terminated: this.isGameTerminated()
+    terminated: this.isGameTerminated(),
+    mode:       this.mode
   });
 
 };
@@ -166,8 +223,8 @@ GameManager.prototype.move = function (direction) {
           // Update the score
           self.score += merged.value;
 
-          // The mighty 2048 tile
-          if (merged.value === 2048) self.won = true;
+          // Win only in classic mode; time & endless keep playing past 2048
+          if (merged.value === 2048 && this.mode === "classic") self.won = true;
         } else {
           self.moveTile(tile, positions.farthest);
         }
