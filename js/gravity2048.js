@@ -271,9 +271,9 @@
         cell.textContent = v;
         cell.className += " t" + v;
         if (v >= 2048) cell.className += " star";
-        if (fresh[r + "," + c]) cell.className += " t-new";
-        // 链式合体的落点：值比上一帧变大 → 轻回弹
-        if (prev && prev[r][c] && v > prev[r][c]) cell.className += " g-chain";
+        if (fresh[r + "," + c]) cell.className += " t-new";                // 新落之星：原地浮现
+        else if (prev && prev[r][c] > 0 && prev[r][c] !== v) cell.className += " g-chain";  // 同格数值变大 → 合体弹跳
+        else cell.className += " g-settle";                                // 其它：掉落/挪移到此处 → 下落落定
         cell.style.setProperty("--ph", self.phase(v));
       }
       this.elBoard.appendChild(cell);

@@ -5,13 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>2048 · 蜂窝六边形</title>
   <link rel="shortcut icon" href="favicon.ico">
+  <link href="style/ui.css" rel="stylesheet" type="text/css">
   <link href="style/hex.css" rel="stylesheet" type="text/css">
 </head>
 <body>
   <div class="container">
-    <div class="topbar">
-      <a class="home-link" href="index.html">← 返回首页</a>
-    </div>
+    <header class="cli-bar">
+      <a class="back-link" href="index.html">← 返回</a>
+      <span class="cli-sys">MODE.2048 // HEX</span>
+    </header>
 
     <div class="heading">
       <h1 class="title">2048</h1>
@@ -29,7 +31,7 @@
 
     <p class="hex-keys">
       方向键 / WASD 主方向 · <b>Q</b> <b>E</b>(↔ <b>C Z</b>) 斜向滑动<br>
-      <button class="hex-restart" id="restart">重新开始</button>
+      <button class="btn btn-primary" id="restart">重新开始</button>
     </p>
   </div>
 

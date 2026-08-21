@@ -132,10 +132,12 @@ body::after {
   font-variant-numeric: tabular-nums;
   transition: background 0.25s ease, color 0.25s ease, transform 0.15s ease;
 }
-.gcell.t-new { animation: fall 0.4s cubic-bezier(0.2, 0.8, 0.3, 1.05) both; }
-@keyframes fall { from { transform: translateY(-46px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.gcell.t-new { animation: g-emerge 0.32s cubic-bezier(0.2, 1.2, 0.3, 1) both; }
+@keyframes g-emerge { from { opacity: 0; transform: scale(0.45); } to { opacity: 1; transform: scale(1); } }
 .gcell.g-chain { animation: g-chain 0.24s ease; }
 @keyframes g-chain { 0% { transform: scale(0.5); } 55% { transform: scale(1.16); } 100% { transform: scale(1); } }
+.gcell.g-settle { animation: g-settle 0.22s cubic-bezier(0.3, 1.1, 0.4, 1); }
+@keyframes g-settle { from { transform: translateY(5px); opacity: 0.7; } to { transform: translateY(0); opacity: 1; } }
 
 .gcell.t2   { background: #1e2a26; color: #8be0b4; }
 .gcell.t4   { background: #22302a; color: #9ce8bf; }

@@ -58,15 +58,18 @@
 
   function tileColor(val) {
     var colors = {
-      0: "#cdc1b4", 2: "#eee4da", 4: "#ede0c8", 8: "#f2b179", 16: "#f59563",
-      32: "#f67c5f", 64: "#f65e3b", 128: "#edcf72", 256: "#edcc61",
-      512: "#edc850", 1024: "#edc53f", 2048: "#edc22e",
-      4096: "#3c3a32", 8192: "#6b60a0"
+      2: "#1c2824", 4: "#202f29", 8: "#24352e", 16: "#2a3b36",
+      32: "#31453f", 64: "#38494e", 128: "#46584a", 256: "#546845",
+      512: "#6c7a42", 1024: "#858a3e", 2048: "#7ad6a4",
+      4096: "#dfe6dd", 8192: "#e8f2ea"
     };
-    return colors[val] || "#3c3a32";
+    return colors[val] || "#dfe6dd";
   }
   function tileTextColor(val) {
-    return (val === 2 || val === 4 || val === 0) ? "#776e65" : "#f9f6f2";
+    if (val === 2048) return "#07120c";
+    if (val === 2 || val === 4) return "#8be0b4";
+    if (val >= 4096) return "#0a0d11";
+    return "#fffff0";
   }
   function tileFontSize(val) {
     if (val < 100)  return "28px";
@@ -340,8 +343,9 @@
         if (!inRange(q, r)) continue;
         var k = key(q, r);
         if (!(k in this.board)) continue;
-        var g = this.nodeByKey[k] || this.makeTile(k);
-        this.positionTile(g, center(q, r), this.board[k], k === this.flash);
+        var isNew = !(k in this.nodeByKey);
+        var g = isNew ? this.makeTile(k) : this.nodeByKey[k];
+        this.positionTile(g, center(q, r), this.board[k], k === this.flash, isNew);
       }
     this.flash = null;
   };
@@ -363,7 +367,7 @@
     return g;
   };
 
-  HexGame.prototype.positionTile = function (g, c, val, isFlash) {
+  HexGame.prototype.positionTile = function (g, c, val, isFlash, isNew) {
     var poly = g.childNodes[0];
     var txt = g.childNodes[1];
     poly.setAttribute("fill", tileColor(val));
@@ -374,11 +378,12 @@
     txt.setAttribute("style", "font-size:" + tileFontSize(val));
     txt.textContent = val;
 
-    g.setAttribute("transform", "translate(" + c.x.toFixed(2) + " " + c.y.toFixed(2) + ")");
-    if (isFlash) {
-      g.setAttribute("class", "hex-tile hex-merged");
-    }
-    g.setAttribute("class", isFlash ? "hex-tile hex-merged" : "hex-tile");
+    // 用 CSS transform 驱动移动，让 .hex-tile 的 transition 平滑滑动
+    g.style.transform = "translate(" + c.x.toFixed(2) + "px," + c.y.toFixed(2) + "px)";
+    var cls = "hex-tile";
+    if (isFlash) cls += " hex-merged";
+    if (isNew) cls += " hex-new";
+    g.setAttribute("class", cls);
   };
 
   window.HexGame = HexGame;

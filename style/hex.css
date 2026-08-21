@@ -1,108 +1,101 @@
 /* ===========================================================
-   蜂窝·六边形 2048 — page styles
+   蜂窝·六边形 2048 — Hive console 皮肤
+   引入 ui.css（深空基座/共用顶栏/共用按钮），仅保留棋盘
+   特有的蜂窝尺寸与动画。整体与其他玩法一致。
    =========================================================== */
-@font-face {
-  font-family: "ClearSans";
-  src: url("fonts/ClearSans-Regular-webfont.woff") format("woff");
-  font-weight: 400;
-}
-@font-face {
-  font-family: "ClearSans";
-  src: url("fonts/ClearSans-Bold-webfont.woff") format("woff");
-  font-weight: 700;
-}
-
-:root {
-  --ink: #776e65;
-  --ink-deep: #5c5348;
-  --board: #bbada0;
-  --bg: #faf8ef;
-  --gold: #edc22e;
-}
-
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: "ClearSans", "PingFang SC", "Microsoft YaHei", sans-serif;
-}
+@import url("ui.css");
 
 .container {
-  max-width: 480px;
+  max-width: 440px;
   margin: 0 auto;
   padding: 22px 16px 48px;
 }
 
-.topbar { margin-bottom: 6px; }
-.home-link {
-  display: inline-block;
-  font-size: 13px;
-  font-weight: bold;
-  color: var(--ink);
-  background: rgba(187, 173, 160, 0.20);
-  padding: 6px 12px;
-  border-radius: 20px;
-  text-decoration: none;
-  transition: background 0.15s ease;
-}
-.home-link:hover { background: rgba(187, 173, 160, 0.4); }
-
 .heading { text-align: center; }
 .heading .title {
   font-size: 64px;
-  font-weight: 700;
-  margin: 6px 0 2px;
-  color: var(--ink-deep);
+  font-weight: 800;
+  margin: 8px 0 4px;
+  color: var(--ink);
   letter-spacing: 2px;
 }
-.scores-container { display: flex; justify-content: center; gap: 10px; margin-top: 4px; }
+.heading .title::after {
+  content: "HEX";
+  display: block;
+  font-size: 12px;
+  letter-spacing: 6px;
+  color: var(--signal);
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+/* 读数：任务台 chip */
+.scores-container { display: flex; justify-content: center; gap: 10px; margin-top: 6px; }
 .score-container, .best-container {
   position: relative;
-  background: var(--board);
-  padding: 10px 18px;
+  background: rgba(12, 15, 22, 0.7);
+  border: 1px solid var(--line);
+  padding: 12px 20px 8px;
   font-size: 22px;
   font-weight: 700;
-  border-radius: 4px;
-  color: #fff;
+  border-radius: var(--radius);
+  color: var(--signal);
+  font-variant-numeric: tabular-nums;
 }
 .best-container::before, .score-container::before {
   content: attr(data-label);
   position: absolute;
   top: 4px; left: 0; right: 0;
-  font-size: 11px;
-  letter-spacing: 1px;
+  font-size: 10px;
+  letter-spacing: 2px;
   text-align: center;
-  opacity: 0.8;
+  color: var(--dim);
 }
 
 .hex-hint {
   text-align: center;
-  font-size: 13px;
-  margin: 6px 0 14px;
-  color: #998d82;
+  font-size: 12.5px;
+  letter-spacing: 1px;
+  margin: 14px 0 10px;
+  color: var(--dim);
 }
 
 .hex-board {
   position: relative;
   display: flex;
   justify-content: center;
-  padding: 14px 0;
+  padding: 6px;
+  background: #0b0e15;
+  border: 1px solid var(--line);
+  border-radius: 4px;
   touch-action: none;
   -webkit-user-select: none; user-select: none;
 }
 
+/* 底格：深空蜂窝（cellsGroup 是 svg 第一个 g） */
+.hex-board svg > g:first-child polygon {
+  fill: rgba(122, 214, 164, 0.05);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.hex-board svg > g polygon {
+  stroke: rgba(255, 255, 255, 0.12);
+}
+
 /* tiles */
-.hex-tile polygon { stroke: #fff; stroke-width: 2; }
-.hex-tile { transition: transform 0.16s ease-in-out; }
+.hex-tile { transition: transform 0.18s cubic-bezier(0.3, 0.9, 0.3, 1); }
+.hex-tile polygon { stroke: rgba(255, 255, 255, 0.12); stroke-width: 1.5; }
 .hex-tile .hex-text { font-weight: 700; pointer-events: none; }
+
+/* 新落的方块：淡入浮现 */
+.hex-tile.hex-new { animation: hex-fade 0.28s ease both; }
+@keyframes hex-fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
 /* 合并瞬间的回弹 */
 .hex-merged polygon { animation: hex-pop 0.2s ease; }
 @keyframes hex-pop {
   0% { transform: scale(0.6); }
-  60% { transform: scale(1.08); }
+  60% { transform: scale(1.1); }
   100% { transform: scale(1); }
 }
 
@@ -119,57 +112,47 @@ body {
 .hex-message {
   display: none;
   text-align: center;
-  margin: 10px auto 0;
+  margin: 12px auto 0;
   padding: 14px 18px;
   max-width: 340px;
   font-size: 18px;
   font-weight: 700;
-  color: #f9f6f2;
-  background: rgba(60, 58, 50, 0.92);
-  border-radius: 8px;
+  color: #07120c;
+  background: var(--signal);
+  border-radius: var(--radius);
 }
 .hex-message button {
   margin: 4px 6px;
   padding: 6px 14px;
   font-family: inherit;
   font-weight: 700;
-  border: 0;
-  border-radius: 4px;
-  background: var(--gold);
-  color: #f9f6f2;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: var(--radius);
+  background: transparent;
+  color: #07120c;
   cursor: pointer;
 }
+.hex-message button:hover { background: rgba(0, 0, 0, 0.1); }
 
 .hex-keys {
   text-align: center;
   font-size: 13px;
   line-height: 1.8;
-  color: #998d82;
+  color: var(--dim);
   margin-top: 18px;
 }
 .hex-keys b {
   display: inline-block;
   min-width: 26px;
-  padding: 4px 7px;
+  padding: 2px 7px;
   margin: 2px;
-  background: #eee4da;
-  border-radius: 5px;
-  color: var(--ink-deep);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  color: var(--signal);
+  font-weight: normal;
   font-size: 12px;
+  letter-spacing: 1px;
 }
-.hex-restart {
-  margin-top: 10px;
-  padding: 9px 22px;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  color: #f9f6f2;
-  background: #8f7a66;
-  border: 0;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.hex-restart:hover { background: #a08d78; }
 
 @media (max-width: 380px) {
   .heading .title { font-size: 52px; }

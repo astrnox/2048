@@ -1,16 +1,7 @@
 /* =============================================================
-   2048 · AI 对抗模式 — 双棋盘人机竞速
+   2048 · AI 对抗模式 — 统一任务台肤色后的地方样式
    ============================================================= */
-@font-face {
-  font-family: "ClearSans";
-  src: url("fonts/ClearSans-Regular-webfont.woff") format("woff");
-  font-weight: 400;
-}
-@font-face {
-  font-family: "ClearSans";
-  src: url("fonts/ClearSans-Bold-webfont.woff") format("woff");
-  font-weight: 700;
-}
+@import url("ui.css");
 
 :root {
   --ink: #776e65;

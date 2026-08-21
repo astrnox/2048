@@ -1,0 +1,127 @@
+/* =============================================================
+   classic-console.css · 经典 2048 的控制台肤色
+   载入 ui.css 之后、main.css 之后：把经典棋盘与读数统一成
+   任务台风格（深空 + 信号绿），保留原有瓦片摆放的像素规则。
+   ============================================================= */
+@import url("ui.css");
+
+/* 页面基调：回到深空 */
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(900px 620px at 50% -12%, rgba(72, 184, 131, 0.10), transparent 60%),
+    radial-gradient(1000px 640px at 120% 120%, rgba(30, 60, 80, 0.5), transparent 62%),
+    linear-gradient(165deg, var(--void) 0%, var(--panel) 55%, #050609 100%);
+  background-attachment: fixed;
+}
+
+.cli-wrap { padding-top: 18px; }
+
+/* 标题行 */
+.classic-head { align-items: center; margin-top: 8px; }
+.classic-head .title {
+  color: var(--ink);
+  font-size: clamp(58px, 12vw, 84px);
+}
+.classic-head .scores-container { text-align: right; }
+
+/* 读数：换成任务台 chip */
+.score-container, .best-container {
+  background: rgba(12, 15, 22, 0.7);
+  border: 1px solid var(--line);
+  color: var(--signal);
+  border-radius: var(--radius);
+}
+.score-container:after { content: "分数"; }
+.best-container:after  { content: "最佳"; }
+.score-container:after, .best-container:after { color: var(--dim); }
+
+/* 模式切换：统一按钮配色 */
+.mode-selector { gap: 6px; margin-top: 14px; }
+.mode-selector .mode-button {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: var(--radius);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.mode-selector .mode-button:hover { background: rgba(122, 214, 164, 0.08); }
+.mode-selector .mode-button.active { background: var(--signal); color: #07120c; }
+
+/* 倒计时 */
+.timer { color: var(--signal); }
+.timer-label { color: var(--dim); }
+body.mode-time .timer.timer-warning { color: var(--amber); }
+
+/* 重开按钮 */
+.restart-button {
+  background: var(--signal);
+  color: #07120c;
+  border-radius: var(--radius);
+  line-height: 42px;
+}
+.restart-button:hover { background: #9fe6c0; }
+
+/* 棋盘与格 */
+.game-container {
+  background: #0b0e15;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.grid-cell {
+  background: rgba(122, 214, 164, 0.06);
+  border-radius: 3px;
+}
+
+/* 瓦片：控制台矿物色阶 */
+.tile .tile-inner {
+  border-radius: 4px;
+  color: var(--ink);
+}
+.tile.tile-2 .tile-inner   { background: #1c2824; color: #8be0b4; }
+.tile.tile-4 .tile-inner   { background: #202f29; color: #9ce8bf; }
+.tile.tile-8 .tile-inner   { background: #24352e; color: #c4f0d4; }
+.tile.tile-16 .tile-inner  { background: #2a3b36; color: #dfe6dd; }
+.tile.tile-32 .tile-inner  { background: #31453f; color: #eef4ec; }
+.tile.tile-64 .tile-inner  { background: #38494e; color: #f2f7f1; }
+.tile.tile-128 .tile-inner { background: #46584a; color: #f7faf6; }
+.tile.tile-256 .tile-inner { background: #546845; color: #f7faf6; }
+.tile.tile-512 .tile-inner { background: #6c7a42; color: #f8fbf7; }
+.tile.tile-1024 .tile-inner{ background: #858a3e; color: #fafcf8; }
+.tile.tile-2048 .tile-inner{ background: var(--signal); color: #07120c; }
+.tile.tile-super .tile-inner{ background: var(--ink); color: #0a0d11; }
+/* 清掉原版的金框光晕 */
+.tile.tile-2 .tile-inner, .tile.tile-4 .tile-inner, .tile.tile-8 .tile-inner,
+.tile.tile-16 .tile-inner, .tile.tile-32 .tile-inner, .tile.tile-64 .tile-inner,
+.tile.tile-128 .tile-inner, .tile.tile-256 .tile-inner, .tile.tile-512 .tile-inner,
+.tile.tile-1024 .tile-inner, .tile.tile-2048 .tile-inner {
+  box-shadow: none;
+}
+
+/* 结束/胜利弹层 */
+.game-container .game-message {
+  background: rgba(6, 8, 11, 0.82);
+  color: var(--ink);
+}
+.game-container .game-message.game-won { background: rgba(7, 18, 12, 0.9); }
+.game-container .game-message p { color: var(--ink); font-size: clamp(34px, 9vw, 60px); }
+.game-container .game-message .lower a {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: var(--radius);
+}
+.game-container .game-message .lower a.keep-playing-button { display: none; }
+.game-container .game-message.game-won .lower a.keep-playing-button { display: inline-block; }
+.game-container .game-message a:hover { background: rgba(122, 214, 164, 0.1); }
+
+/* 顶部说明行 */
+.classic-above .game-intro { line-height: 42px; color: var(--dim); }
+.classic-above .game-intro strong { color: var(--signal); }
+
+@media (max-width: 520px) {
+  body { margin: 0; padding: 0 16px; }
+  .cli-wrap { padding-left: 0; padding-right: 0; }
+  .classic-head .title { font-size: 46px; }
+}

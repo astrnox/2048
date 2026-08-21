@@ -1,28 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <title>2048 · 游戏</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>2048 · 经典</title>
+  <link href="style/ui.css" rel="stylesheet" type="text/css">
   <link href="style/main.css" rel="stylesheet" type="text/css">
+  <link href="style/classic-console.css" rel="stylesheet" type="text/css">
   <link rel="shortcut icon" href="favicon.ico">
-  <link rel="apple-touch-icon" href="meta/apple-touch-icon.png">
-  <link rel="apple-touch-startup-image" href="meta/apple-touch-startup-image-640x1096.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)"> <!-- iPhone 5+ -->
-  <link rel="apple-touch-startup-image" href="meta/apple-touch-startup-image-640x920.png"  media="(device-width: 320px) and (device-height: 480px) and (-webkit-device-pixel-ratio: 2)"> <!-- iPhone, retina -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover" name="viewport">
 </head>
 <body>
-  <div class="container">
-    <div class="topbar">
-      <a class="home-link" href="index.html">← 返回首页</a>
-    </div>
+  <div class="cli-wrap">
 
-    <div class="heading">
+    <header class="cli-bar">
+      <a class="back-link" href="index.html">← 返回</a>
+      <span class="cli-sys">MODE.2048 // CLASSIC</span>
+    </header>
+
+    <div class="heading classic-head">
       <h1 class="title">2048</h1>
       <div class="scores-container">
         <div class="score-container">0</div>
@@ -31,9 +26,9 @@
     </div>
 
     <div class="mode-selector">
-      <a class="mode-button" data-mode="classic" href="game.html?mode=classic">经典模式</a>
-      <a class="mode-button" data-mode="time" href="game.html?mode=time">限时挑战</a>
-      <a class="mode-button" data-mode="endless" href="game.html?mode=endless">无尽模式</a>
+      <a class="mode-button" data-mode="classic" href="game.html?mode=classic">经典</a>
+      <a class="mode-button" data-mode="time" href="game.html?mode=time">限时</a>
+      <a class="mode-button" data-mode="endless" href="game.html?mode=endless">无尽</a>
     </div>
 
     <div class="timer-container">
@@ -41,59 +36,33 @@
       <div class="timer">1:00</div>
     </div>
 
-    <div class="above-game">
-      <p class="game-intro" id="mode-hint">Join the numbers and get to the <strong>2048 tile!</strong></p>
-      <a class="restart-button">New Game</a>
+    <div class="above-game classic-above">
+      <p class="game-intro" id="mode-hint">同数相撞即合体，合出 <strong>2048</strong> 获胜。</p>
+      <a class="restart-button">重开</a>
     </div>
 
     <div class="game-container">
       <div class="game-message">
         <p></p>
         <div class="lower">
-          <a class="keep-playing-button">Keep going</a>
-          <a class="retry-button">Try again</a>
+          <a class="keep-playing-button">继续</a>
+          <a class="retry-button">再来</a>
         </div>
       </div>
-
       <div class="grid-container">
-        <div class="grid-row">
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-          <div class="grid-cell"></div>
-        </div>
+        <div class="grid-row"><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div></div>
+        <div class="grid-row"><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div></div>
+        <div class="grid-row"><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div></div>
+        <div class="grid-row"><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div></div>
       </div>
-
-      <div class="tile-container">
-
-      </div>
+      <div class="tile-container"></div>
     </div>
 
-    <p class="game-explanation">
-      <strong class="important">How to play:</strong> Use your <strong>arrow keys</strong> to move the tiles. When two tiles with the same number touch, they <strong>merge into one!</strong>
+    <p class="cli-tut">
+      方向键 / <span class="k">WASD</span> 移动 · 手机上直接<span class="k">滑动</span> · <span class="k">R</span> 重开<br>
+      <span class="k">相同</span>数字相撞即<b>合体</b>，数字翻倍；刚开始先占一角，别把大数顶散。
     </p>
-    <hr>
-    <p>
-    <strong class="important">Note:</strong> This site is the official version of 2048. You can play it on your phone via <a href="http://git.io/2048">http://git.io/2048.</a> All other apps or sites are derivatives or fakes, and should be used with caution.
-    </p>
+
   </div>
 
   <script src="js/bind_polyfill.js"></script>

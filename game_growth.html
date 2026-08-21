@@ -5,14 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>种子 · 万物生长</title>
   <link rel="shortcut icon" href="favicon.ico">
+  <link href="style/ui.css" rel="stylesheet" type="text/css">
   <link href="style/growth.css" rel="stylesheet" type="text/css">
 </head>
 <body>
   <div class="grove">
 
-    <header class="leaves-head">
-      <a class="home-link" href="index.html">← 回首页</a>
-      <span class="latin">BOTANIC ✦ 2048</span>
+    <header class="cli-bar">
+      <a class="back-link" href="index.html">← 返回</a>
+      <span class="cli-sys">MODE.2048 // GROWTH</span>
     </header>
 
     <div class="sheet">
@@ -41,6 +42,8 @@
         <b>方向键</b> / <b>WASD</b> 移动合体 · 种子每回合破土而出<br>
         <span class="fine">2 要快合，否则它就长成 4</span>
       </p>
+
+      <div class="cli-actions"><button class="btn btn-primary" id="seed-restart">重新开始</button></div>
     </div>
 
   </div>
@@ -48,7 +51,8 @@
   <script src="js/swipe.js"></script>
   <script src="js/growth2048.js"></script>
   <script>
-    window.SeedGame && window.SeedGame();
+    var sg = window.SeedGame();
+    document.getElementById("seed-restart").addEventListener("click", function () { sg.restart(); });
   </script>
 </body>
 </html>

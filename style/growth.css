@@ -1,9 +1,9 @@
 /* =============================================================
    种子 · 万物生长
-   燕麦色纸底、墨色与苔绿、覆木红点缀。
-   手绘新芽、十字织网纹格，像一页植物标本速写。
+   燕麦色纸底 → 已统一为任务台控制台肤色（参见 ui.css）。
+   只保留花圃、季节、收成的地方样式。
    ============================================================= */
-@import url("fonts/clear-sans.css");
+@import url("ui.css");
 
 :root {
   --paper:   #efe7d6;
@@ -175,6 +175,8 @@ body::after {
   cursor: pointer; color: #f9f0e0;
 }
 .msg .sd-act:hover { background: rgba(0,0,0,0.12); }
+
+.cli-actions { margin-top: 14px; text-align: center; }
 
 .manual { margin-top: 18px; font-size: 13px; line-height: 2; color: var(--ink-soft); }
 .manual b {
