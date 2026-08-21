@@ -53,11 +53,17 @@
       pluck(160, 70, 0.16, 0.35, "sine");
       pluck(420, 180, 0.07, 0.12, "triangle");
     },
-    // 合体：果冻“啵啾”，清脆上翘，像戳果冻
+    // 普通滑动（无合并）：轻轻的滑行沙沙声，很解压
+    move: function () {
+      if (!enabled || !ctx) return;
+      pluck(250, 150, 0.09, 0.16, "triangle");
+      pluck(780, 540, 0.05, 0.05, "sine");
+    },
+    // 合体：“啵”的一声，清脆短促，像戳果冻
     merge: function () {
       if (!enabled || !ctx) return;
-      pluck(520, 820, 0.12, 0.28, "sine");
-      pluck(1040, 460, 0.16, 0.14, "sine");
+      pluck(660, 420, 0.10, 0.32, "sine");
+      pluck(1400, 760, 0.05, 0.10, "triangle");
     },
     // 设置里点开关时的试听小音
     tap: function () {

@@ -52,6 +52,24 @@
     }
     return { out: out, gain: gain, merges: merges };
   }
+  // 整盘竖直解析：每一列都向上(底)坍缩合并，反复直到无上下的相邻同数
+  // —— 让“上下能合成的”同时完成，链式连锁
+  function resolveBoard(grid) {
+    var gain = 0, merges = 0, guard = 0;
+    while (guard++ < 64) {
+      var pass = 0;
+      for (var c = 0; c < COLS; c++) {
+        var stack = colObjs(grid, c);      // 自底向顶 非空
+        var res = collapseCol(stack);      // 向下合体
+        for (var r = 0; r < ROWS; r++) grid[r][c] = null;
+        for (var k = 0; k < res.out.length; k++) grid[ROWS - 1 - k][c] = res.out[k];
+        pass += res.merges; gain += res.gain;
+      }
+      if (!pass) break;
+      merges += pass;
+    }
+    return { gain: gain, merges: merges };
+  }
   // 候选牌：加权随机 2/4/8/16，让选择存在风险与取舍
   function genTray() {
     var t = [];
@@ -71,6 +89,7 @@
     this.tray = genTray();
     this.next = genTray();
     this.lastNewId = -1;      // 本次发射、未合体而存活的瓦片 id
+    this.fallMoves = {};      // id -> 从屏幕上方下坠到 finalRow
     this.nodes = {};          // id -> { outer, inner }
 
     // DOM
@@ -122,30 +141,32 @@
     if (e.length) { var q = e.splice(Math.floor(Math.random() * e.length), 1)[0]; this.grid[q[0]][q[1]] = newT(Math.random() < 0.9 ? 2 : 4); }
   };
 
-  // 发射选中的牌到指定列
+  // 发射选中的牌到指定列：从屏幕上方受重力落到列顶，再整盘竖直解析合体
   LaunchGame.prototype.launch = function (col) {
     if (this.over || this.armed < 0) return;
     if (colFull(this.grid, col)) return;
 
     var val = this.tray[this.armed];
     var nt = newT(val);
-    this.lastNewId = nt.id;
     this.armed = -1;
     this.tray = this.next; this.next = genTray();
     this.renderTray();
 
-    // 把新瓦片放到该列栈顶，做一次向下坍缩合并
-    var stack = colObjs(this.grid, col);
-    stack.push(nt);
-    var res = collapseCol(stack);
+    // 先放进该列“栈顶”（落下点），再整盘解析——让上下能合成的部位同时合体
+    var count = colObjs(this.grid, col).length;
+    this.grid[ROWS - 1 - count][col] = nt;
 
-    // 清空该列，回填坍缩结果（自底向顶）
-    for (var r = 0; r < ROWS; r++) this.grid[r][col] = null;
-    for (var k = 0; k < res.out.length; k++) this.grid[ROWS - 1 - k][col] = res.out[k];
+    var res = resolveBoard(this.grid);
+    var loc = null;
+    for (var r = 0; r < ROWS; r++) if (this.grid[r][col] && this.grid[r][col].id === nt.id) loc = { r: r, c: col };
 
     this.score += res.gain;
     if (res.merges >= 2) this.flashCombo(res.merges);
     if (window.Sound) { window.Sound.drop(); if (res.merges > 0) window.Sound.merge(); }
+
+    // 记录发射的这颗：从屏幕上方（row 之上）下坠到最终位
+    this.fallMoves = {};
+    if (loc) this.fallMoves[nt.id] = loc.r;
 
     this.checkState();
     this.render();
@@ -182,7 +203,7 @@
 
   LaunchGame.prototype.restart = function () {
     this.grid = emptyGrid(); this.score = 0; this.won = false; this.over = false; this.armed = -1;
-    this.tray = genTray(); this.next = genTray(); this.lastNewId = -1;
+    this.tray = genTray(); this.next = genTray(); this.lastNewId = -1; this.fallMoves = {};
     // 清空所有瓦片 DOM
     var self = this;
     Object.keys(this.nodes).forEach(function ( id ) { self.elBoard.removeChild(self.nodes[id].outer); });
@@ -203,8 +224,7 @@
     inner.className = "ltile-inner t" + o.v;
     inner.textContent = o.v;
     if (o.v >= WIN_VAL) inner.className += " star";
-    if (o.id === this.lastNewId && !o.merge) inner.className += " fly";   // 发射飞行
-    else if (o.merge) inner.className += " pop";                          // 合体弹跳
+    if (o.merge) inner.className += " pop";                          // 合体弹跳
 
     outer.appendChild(inner);
     this.nodes[o.id] = { outer: outer, inner: inner };
@@ -265,6 +285,23 @@
     Object.keys(this.nodes).forEach(function (id) {
       if (!(id in wanted)) { self.elBoard.removeChild(self.nodes[id].outer); delete self.nodes[id]; }
     });
+
+    // 受重力从屏幕上方下坠的这颗：先移到顶部再回落到位
+    Object.keys(this.fallMoves).forEach(function (rid) {
+      var node = self.nodes[rid];
+      if (!node) return;
+      var loc = self.findLoc(parseInt(rid, 10));
+      if (!loc) return;
+      var x = PAD + loc.c * (cw + GAP);
+      var y = PAD + loc.r * (ch + GAP);
+      var startY = (0 - loc.r) * (ch + GAP); // 起点在棋盘顶部之上
+      node.outer.style.transition = "none";
+      node.outer.style.transform = "translate(" + x + "px," + (y + startY) + "px)";
+      void node.outer.offsetWidth;
+      node.outer.style.transition = "transform 0.5s cubic-bezier(0.45, 0.05, 0.8, 0.42)";
+      node.outer.style.transform = "translate(" + x + "px," + y + "px)";
+    });
+    this.fallMoves = {};
 
     this.refreshCols();   // 满列禁用
     this.lastNewId = -1;  // 只对当次发射生效

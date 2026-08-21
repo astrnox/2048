@@ -129,18 +129,28 @@
     [ 1,  2,  3, 10]
   ];
 
+  function lg(v) { return v ? Math.log(v) / Math.LN2 : 0; }
+
   function heuristic(board) {
-    var s = 0, empty = 0;
+    var empty = 0, corner = 0, smooth = 0, mono = 0;
     for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++) {
       var v = board[r][c];
       if (!v) { empty++; continue; }
-      s += v * W[r][c];
-      // 平滑：紧邻数字差距越小越好
-      if (c + 1 < 4 && board[r][c + 1]) s -= Math.abs(v - board[r][c + 1]) * 2;
-      if (r + 1 < 4 && board[r + 1][c]) s -= Math.abs(v - board[r + 1][c]) * 2;
+      var l = lg(v);
+      corner += l * W[r][c];                       // 大数压向角
+      if (c + 1 < 4 && board[r][c + 1]) smooth -= Math.abs(l - lg(board[r][c + 1]));
+      if (r + 1 < 4 && board[r + 1][c]) smooth -= Math.abs(l - lg(board[r + 1][c]));
     }
-    s += empty * 260;
-    return s;
+    // 列/行单调性：靠角一侧数值应更大（贪心保持递增）
+    for (var x = 0; x < 4; x++) {
+      for (var y = 0; y < 3; y++) {
+        var a = board[x][y], b = board[x][y + 1];
+        if (b && a) mono -= (lg(a) > lg(b)) ? 0 : (lg(b) - lg(a));
+        var u = board[y][x], w = board[y + 1][x];
+        if (w && u) mono -= (lg(u) > lg(w)) ? 0 : (lg(w) - lg(u));
+      }
+    }
+    return corner + smooth * 2.8 + mono * 1.3 + empty * 270;
   }
 
   // 从空位里随机抽样至多 k 个，作为"对手随机放子"的采样（限制计算量）
@@ -156,41 +166,60 @@
 
   // 全局节点预算：让每次决策的计算量严格受控，深度再高也不至于卡顿
   var budget = 0;
-  var NODE_BUDGETS = { 2: 800, 4: 3200, 6: 16000 }; // 简单/中等/困难
+  var NODE_BUDGETS = { 2: 900, 4: 4200, 6: 20000 }; // 简单/普通/困难
 
-  // chanceNode=true 表示轮到随机放子（对手），false 表示自己挑最好走法
-  function expectimax(board, depth, chanceNode) {
-    if (depth <= 0 || --budget <= 0) return heuristic(board);
-    if (chanceNode) {
-      var cells = emptyCells(board);
-      if (!cells.length) return (depth <= 1) ? heuristic(board) : -Infinity;
-      var samples = sampleCells(cells, Math.min(3, cells.length));
-      var total = 0;
-      for (var i = 0; i < samples.length; i++) {
-        var rc = samples[i];
-        var b2 = clone(board); b2[rc[0]][rc[1]] = 2;
-        var b4 = clone(board); b4[rc[0]][rc[1]] = 4;
-        total += 0.9 * expectimax(b2, depth - 1, false) + 0.1 * expectimax(b4, depth - 1, false);
-      }
-      return total / samples.length;
-    } else {
-      var best = -Infinity;
-      for (var d = 0; d < 4; d++) {
-        var res = tryMove(board, d);
-        if (res.moved) best = Math.max(best, expectimax(res.board, depth - 1, true));
-      }
-      return best === -Infinity ? heuristic(board) : best;
+  // 按局面优劣排序候选方向，先试有希望的分支 → 更好的 alpha-beta 剪枝
+  function moveOrder(board) {
+    var arr = [];
+    for (var d = 0; d < 4; d++) {
+      var res = tryMove(board, d);
+      if (res.moved) arr.push({ d: d, h: heuristic(res.board) });
     }
+    arr.sort(function (a, b) { return b.h - a.h; });
+    var order = [];
+    for (var i = 0; i < arr.length; i++) order.push(arr[i].d);
+    return order;
+  }
+
+  // chanceNode=true 轮到随机放子（对手），false 轮到 _max 挑最好走法（带 alpha-beta）
+  function chanceNode(board, depth, alpha, beta) {
+    if (depth <= 0 || --budget <= 0) return heuristic(board);
+    var cells = emptyCells(board);
+    if (!cells.length) return heuristic(board);
+    var samples = sampleCells(cells, Math.min(3, cells.length));
+    var total = 0;
+    for (var i = 0; i < samples.length; i++) {
+      var rc = samples[i];
+      var b2 = clone(board); b2[rc[0]][rc[1]] = 2;
+      var b4 = clone(board); b4[rc[0]][rc[1]] = 4;
+      total += 0.9 * maxNode(b2, depth - 1, alpha, beta) + 0.1 * maxNode(b4, depth - 1, alpha, beta);
+    }
+    return total / samples.length;
+  }
+
+  function maxNode(board, depth, alpha, beta) {
+    if (depth <= 0 || --budget <= 0) return heuristic(board);
+    var best = -Infinity;
+    var order = moveOrder(board);
+    for (var i = 0; i < order.length; i++) {
+      var res = tryMove(board, order[i]);
+      var v = chanceNode(res.board, depth - 1, alpha, beta);
+      if (v > best) best = v;
+      if (best > alpha) alpha = best;
+      if (alpha >= beta) break;                     // α-β 剪枝
+    }
+    return best === -Infinity ? heuristic(board) : best;
   }
 
   function bestMove(board, depth) {
     depth = depth || 4;
-    budget = NODE_BUDGETS[depth] || 3200;
+    budget = NODE_BUDGETS[depth] || 4200;
     var bestDir = null, best = -Infinity;
-    for (var d = 0; d < 4; d++) {
+    var order = moveOrder(board);
+    for (var i = 0; i < order.length; i++) {
+      var d = order[i];
       var res = tryMove(board, d);
-      if (!res.moved) continue;
-      var s = expectimax(res.board, depth, true); // 自己走一步后，推对手随机放子
+      var s = chanceNode(res.board, depth, best, Infinity);
       if (s > best) { best = s; bestDir = d; }
     }
     return bestDir;

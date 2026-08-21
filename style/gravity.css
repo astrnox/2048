@@ -76,8 +76,7 @@
 .board {
   position: relative; z-index: 2;
   width: 74%; height: 74%;
-  display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr);
-  gap: 6px; padding: 7px;
+  padding: 7px;
   background: linear-gradient(180deg, var(--board-hi), var(--board));
   border-radius: 11px;
   box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.16), 0 2px 0 rgba(93, 71, 48, 0.14), 0 12px 26px rgba(93, 71, 48, 0.16);
@@ -89,33 +88,28 @@
 }
 /* 棋盘的旋转由内联 transform 驱动，入场只能动 opacity，不可动 transform */
 @keyframes grv-board-in { from { opacity: 0; } }
-.board:active .gcell { transform: scale(0.97); }
-.gcell {
-  position: relative;
+/* 空槽底格（绝对定位铺满，同 .gcell 几何） */
+.gbg {
+  position: absolute;
   background: rgba(238, 228, 218, 0.35);
   border-radius: 6px;
   box-shadow: inset 0 1px 2px rgba(93, 71, 48, 0.10);
+}
+.gcell {
+  position: absolute;
+  border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: clamp(17px, 5.2vw, 24px); line-height: 1; color: var(--ink);
   font-variant-numeric: tabular-nums;
-  transition: background 0.25s ease, color 0.25s ease, transform 0.15s ease;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.3s var(--ease-pop);
+  will-change: transform;
 }
 
-/* —— 下落动画：浮现 / 落定 / 连锁 —— */
-.gcell.t-new { animation: g-emerge 0.5s cubic-bezier(0.33, 0, 0.2, 1) both; }
-@keyframes g-emerge {
-  from { opacity: 0; transform: translateY(-55%) scale(0.55); }
-  70%  { transform: translateY(-4%) scale(1.04); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+/* —— 受重力下坠：加速落下后轻轻落定 —— */
+.gcell.g-fall {
+  transition: transform 0.4s cubic-bezier(0.5, 0.05, 0.85, 0.35);
 }
-/* 落定 = 顺着重力平滑下坠到位 */
-.gcell.g-settle { animation: g-settle 0.55s cubic-bezier(0.33, 0, 0.25, 1) both; }
-@keyframes g-settle {
-  0%   { transform: translateY(-68%); opacity: 0; }
-  75%  { transform: translateY(2%); opacity: 1; }
-  100% { transform: translateY(0); opacity: 1; }
-}
-.gcell.g-chain { animation: g-chain 0.28s var(--ease-pop); }
+.gcell.g-merge { animation: g-chain 0.3s var(--ease-pop); }
 @keyframes g-chain {
   0%   { transform: scale(0.4); }
   55%  { transform: scale(1.18); }

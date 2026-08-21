@@ -379,7 +379,7 @@ GameManager.prototype.move = function (direction) {
     this.undoStack  = preMove;
     this.moves++;
     if (this.comboBonus > 0) this.score += this.comboBonus;
-    if (window.Sound && window.Sound.drop) window.Sound.drop(); // 落子闷响
+    if (window.Sound && window.Sound.move) window.Sound.move(); // 滑动解压声（合并另有 啵）
 
     this.addRandomTile();
 

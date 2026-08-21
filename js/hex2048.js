@@ -270,7 +270,7 @@
 
     if (moved) {
       this.spawn();
-      if (window.Sound && window.Sound.drop) window.Sound.drop();
+      if (window.Sound && window.Sound.move) window.Sound.move();
       if (!this.movesAvailable()) this.over = true;
       this.flashCombo();
       this.actuate();
