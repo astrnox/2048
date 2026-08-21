@@ -6,6 +6,15 @@ function HTMLActuator() {
   this.timerElement     = document.querySelector(".timer");
   this.hintElement      = document.querySelector("#mode-hint");
 
+  // 2048+ 增强 UI
+  this.comboElement   = document.querySelector("#comboBadge");
+  this.comboText      = document.querySelector("#comboCount");
+  this.undoButton     = document.querySelector(".undo-button");
+  this.dailyHud       = document.querySelector("#dailyHud");
+  this.dailyDateEl    = document.querySelector("#dailyDate");
+  this.dailyBestEl    = document.querySelector("#dailyBest");
+  this.movesElement   = document.querySelector("#movesCount");
+
   this.score = 0;
 }
 
@@ -15,14 +24,29 @@ HTMLActuator.prototype.setMode = function (mode) {
   var hints = {
     classic: '相同数字相撞即合体，合成 <strong>2048</strong> 获胜！',
     time:    '限时 <strong>60 秒</strong>，尽可能多地得分！',
-    endless: '没有终点——这一次你能合到多大？'
+    endless: '没有终点——这一次你能合到多大？',
+    daily:   '今日同一盘、运数相同，你能合到多高？按 <strong>Z</strong> 悔一步'
   };
 
   this.timerElement.classList.toggle("hidden", mode !== "time");
 
+  // 每日模式：展示当天日期
+  if (mode === "daily" && this.dailyDateEl) {
+    var d = new Date();
+    this.dailyDateEl.textContent = d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日";
+  }
+
   if (this.hintElement) {
     this.hintElement.innerHTML = hints[mode] || hints.classic;
   }
+};
+
+// 切换模式/开新局时重置 2048+ 增强 UI
+HTMLActuator.prototype.updateModeExtras = function (mode) {
+  if (this.comboElement) this.comboElement.classList.add("hidden");
+  if (this.dailyHud)     this.dailyHud.classList.toggle("hidden", mode !== "daily");
+  if (this.undoButton)   this.undoButton.disabled = true;
+  if (this.movesElement) this.movesElement.textContent = "0";
 };
 
 HTMLActuator.prototype.updateTimer = function (totalSeconds) {
@@ -53,14 +77,35 @@ HTMLActuator.prototype.actuate = function (grid, metadata) {
     self.updateScore(metadata.score);
     self.updateBestScore(metadata.bestScore);
 
-    if (metadata.terminated) {
-      if (metadata.over) {
-        var timeUp = metadata.mode === "time" ?
-          "时间到！你的得分：" + metadata.score : null;
-        self.message(false, timeUp); // You lose
-      } else if (metadata.won) {
-        self.message(true); // You win!
+    // 2048+ 连击徽标
+    if (self.comboElement && self.comboText) {
+      if (metadata.combo > 1) {
+        self.comboText.textContent = "×" + metadata.combo + "  ·  +" + metadata.comboBonus;
+        self.comboElement.classList.remove("hidden");
+      } else {
+        self.comboElement.classList.add("hidden");
       }
+    }
+    // 2048+ 悔棋可用性
+    if (self.undoButton) self.undoButton.disabled = !metadata.canUndo;
+    // 2048+ 步数 / 今日最佳
+    if (self.movesElement) self.movesElement.textContent = metadata.moves;
+    if (self.dailyBestEl)  self.dailyBestEl.textContent = metadata.dailyBest;
+
+    if (metadata.terminated) {
+      var closingText = null;
+      if (metadata.over) {
+        if (metadata.mode === "time") {
+          closingText = "时间到！你的得分：" + metadata.score;
+        } else if (metadata.mode === "daily") {
+          closingText = "今日收官！得分 " + metadata.score + " · 今日最佳 " + metadata.dailyBest;
+        }
+      } else if (metadata.won) {
+        if (metadata.mode === "daily") {
+          closingText = "今日达成 2048＋！得分 " + metadata.score;
+        }
+      }
+      self.message(metadata.won && !metadata.over, closingText);
     }
 
   });

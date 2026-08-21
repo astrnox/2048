@@ -6,14 +6,22 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
 
   this.startTiles     = 2;
 
-  // Game mode: "classic" | "time" | "endless"
+  // Game mode: "classic" | "time" | "endless" | "daily"
   this.mode           = "classic";
   this.timeLimit      = 60; // seconds, used in time mode
   this.timeLeft       = this.timeLimit;
 
+  // 2048+ 增强：可复现随机(每日)、连击、悔棋、步数
+  this.rng            = Math.random;   // 默认随机；每日模式替换为按日期播种
+  this.combo          = 0;             // 当前一步内的连击数
+  this.comboBonus     = 0;             // 连击额外加分
+  this.undoStack      = null;          // 单步悔棋快照
+  this.moves          = 0;             // 已走步数
+
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
+  this.inputManager.on("undo", this.undo.bind(this));
 
   this.setup();
 }
@@ -39,9 +47,17 @@ GameManager.prototype.startNewGame = function (mode) {
 
   this.timeLeft = this.timeLimit;
 
+  // 2048+：重置增强状态；每日模式用当天日期播种，保证全天同一盘、运数相同
+  this.moves      = 0;
+  this.combo      = 0;
+  this.comboBonus = 0;
+  this.undoStack  = null;
+  this.rng = (this.mode === "daily") ? this.mulberry32(this.todaySeed()) : Math.random;
+
   this.storageManager.clearGameState();
   this.actuator.continueGame(); // Clear the game won/lost message
   this.actuator.updateTimer(this.timeLeft);
+  this.actuator.updateModeExtras(this.mode);
 
   this.setup();
 
@@ -126,8 +142,8 @@ GameManager.prototype.addRandomTile = function () {
   if (!this.grid.cellsAvailable()) return;
 
   var cell, value;
-  if (window.Assist && window.Assist.get() !== "off") {
-    // 后台即时推算"此时需要的方块与位置"，按难度调整援助力度（只扫一遍空位，性能开销可忽略）
+  // 每日模式要求可复现：绕过援助(assist)，走后端可复现随机
+  if (this.mode !== "daily" && window.Assist && window.Assist.get() !== "off") {
     var strengthS = window.Assist.strength(window.Assist.get());
     var b = this.gridToBoard();
     var pick = window.Assist.pick4(b, strengthS);
@@ -137,12 +153,24 @@ GameManager.prototype.addRandomTile = function () {
     }
   }
   if (!cell) {
-    value = Math.random() < 0.9 ? 2 : 4;
-    cell = this.grid.randomAvailableCell();
+    value = this.pickSpawnValue();
+    cell = this.pickSpawnCell();
   }
 
   var tile = new Tile(cell, value);
   this.grid.insertTile(tile);
+};
+
+// 可复现落子值：用 this.rng（每日模式=按日期播种）替代 Math.random
+GameManager.prototype.pickSpawnValue = function () {
+  return this.rng() < 0.9 ? 2 : 4;
+};
+
+// 可复现落子格：基于空位列表 + this.rng
+GameManager.prototype.pickSpawnCell = function () {
+  var cells = this.grid.availableCells();
+  if (!cells.length) return null;
+  return cells[Math.floor(this.rng() * cells.length)];
 };
 
 // 导出当前棋盘数值矩阵，供援助打分用（0 表示空格）
@@ -178,7 +206,13 @@ GameManager.prototype.actuate = function () {
     won:        this.won,
     bestScore:  this.storageManager.getBestScore(),
     terminated: this.isGameTerminated(),
-    mode:       this.mode
+    mode:       this.mode,
+    // 2048+ 增强数据
+    combo:       this.combo,
+    comboBonus:  this.comboBonus,
+    canUndo:     !!this.undoStack,
+    moves:       this.moves,
+    dailyBest:   (this.mode === "daily") ? this.recordDaily() : 0
   });
 
 };
@@ -192,6 +226,76 @@ GameManager.prototype.serialize = function () {
     won:         this.won,
     keepPlaying: this.keepPlaying
   };
+};
+
+// ============ 2048+ 增强：悔棋 / 每日可复现 ============
+
+// 悔棋快照：记录序列化局面 + 当步连击
+GameManager.prototype.snapshot = function () {
+  return {
+    state:       this.serialize(),
+    combo:       this.combo,
+    comboBonus:  this.comboBonus
+  };
+};
+
+// 一步悔棋：恢复到本步开始前
+GameManager.prototype.undo = function () {
+  if (this.isGameTerminated()) return;
+  if (!this.undoStack) return;
+
+  var s  = this.undoStack;
+  var st = s.state;
+  this.undoStack  = null;
+  this.grid       = new Grid(st.grid.size, st.grid.cells);
+  this.score      = st.score;
+  this.over       = false;
+  this.won        = st.won;
+  this.keepPlaying = false;
+  this.combo      = 0;
+  this.comboBonus = 0;
+
+  this.actuate();
+};
+
+// mulberry32：确定性 PRNG（每日模式用它替代 Math.random）
+GameManager.prototype.mulberry32 = function (a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+};
+
+// 当天日期整数种子（如 20260821）
+GameManager.prototype.todaySeed = function () {
+  var d = new Date();
+  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+};
+
+// 每日纪录 localStorage 键（按日期区分）
+GameManager.prototype.dailyKey = function () {
+  var d = new Date();
+  return "2048-daily-" + d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+};
+
+// 读取今日最佳；非每日模式返回 0
+GameManager.prototype.todayBest = function () {
+  if (this.mode !== "daily") return 0;
+  var v = window.localStorage.getItem(this.dailyKey());
+  return v ? parseInt(v, 10) : 0;
+};
+
+// 尝试写入今日最佳，返回当前最高分
+GameManager.prototype.recordDaily = function () {
+  var key = this.dailyKey();
+  var best = this.todayBest();
+  if (this.score > best) {
+    window.localStorage.setItem(key, this.score);
+    best = this.score;
+  }
+  return best;
 };
 
 // Save all tile positions and remove merger info
@@ -217,6 +321,11 @@ GameManager.prototype.move = function (direction) {
   var self = this;
 
   if (this.isGameTerminated()) return; // Don't do anything if the game's over
+
+  // 2048+：记录本步开始状态（用于悔棋），并重置当步连击
+  var preMove = this.snapshot();
+  this.combo = 0;
+  this.comboBonus = 0;
 
   var cell, tile;
 
@@ -248,11 +357,15 @@ GameManager.prototype.move = function (direction) {
           // Converge the two tiles' positions
           tile.updatePosition(positions.next);
 
-          // Update the score
+          // 2048+：连击 —— 一步内多次合并叠加倍率，额外加分
+          self.combo++;
           self.score += merged.value;
+          if (self.combo > 1) {
+            self.comboBonus += merged.value;
+          }
 
-          // Win only in classic mode; time & endless keep playing past 2048
-          if (merged.value === 2048 && this.mode === "classic") self.won = true;
+          // Win classic & daily when reaching 2048; time & endless play on
+          if (merged.value === 2048 && (this.mode === "classic" || this.mode === "daily")) self.won = true;
         } else {
           self.moveTile(tile, positions.farthest);
         }
@@ -265,6 +378,11 @@ GameManager.prototype.move = function (direction) {
   });
 
   if (moved) {
+    // 2048+：保留悔棋快照、累计连击加分与步数
+    this.undoStack  = preMove;
+    this.moves++;
+    if (this.comboBonus > 0) this.score += this.comboBonus;
+
     this.addRandomTile();
 
     if (!this.movesAvailable()) {
@@ -272,6 +390,9 @@ GameManager.prototype.move = function (direction) {
     }
 
     this.actuate();
+  } else {
+    this.combo = 0;
+    this.comboBonus = 0;
   }
 };
 

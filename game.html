@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>2048 · 经典</title>
+  <title>2048＋ · 经典</title>
   <link href="style/ui.css" rel="stylesheet" type="text/css">
   <link href="style/main.css" rel="stylesheet" type="text/css">
   <link href="style/classic.css" rel="stylesheet" type="text/css">
@@ -18,7 +18,7 @@
     </header>
 
     <div class="heading classic-head rise-in">
-      <h1 class="title">2048</h1>
+      <h1 class="title">2048＋</h1>
       <div class="scores-container">
         <div class="score-container">0</div>
         <div class="best-container">0</div>
@@ -29,6 +29,13 @@
       <a class="mode-button" data-mode="classic" href="game.html?mode=classic">经典</a>
       <a class="mode-button" data-mode="time" href="game.html?mode=time">限时</a>
       <a class="mode-button" data-mode="endless" href="game.html?mode=endless">无尽</a>
+      <a class="mode-button" data-mode="daily" href="game.html?mode=daily">每日</a>
+    </div>
+
+    <div class="daily-hud hidden" id="dailyHud">
+      <span class="daily-date" id="dailyDate"></span>
+      <span class="daily-metric">今日最佳 <b id="dailyBest">0</b></span>
+      <span class="daily-metric">步数 <b id="movesCount">0</b></span>
     </div>
 
     <div class="timer-container">
@@ -39,6 +46,11 @@
     <div class="above-game classic-above">
       <p class="game-intro" id="mode-hint">同数相撞即合体，合出 <strong>2048</strong> 获胜。</p>
       <a class="restart-button">重开</a>
+    </div>
+
+    <div class="hud-extras">
+      <a class="undo-button" id="undoBtn" title="悔一步（Z / 退格）">悔一步</a>
+      <div class="combo-badge hidden" id="comboBadge">连击 <span id="comboCount">×1</span></div>
     </div>
 
     <div id="diff-slot" class="diff-slot"></div>

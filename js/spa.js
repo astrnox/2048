@@ -199,7 +199,7 @@
     if (confirm('确定要退出游戏吗？')) {
       // 浏览器无法真正"退出"，回到空白页
       try { window.close(); } catch (e) {}
-      setTimeout(function () { document.body.innerHTML = '<div style="color:#999;text-align:center;padding:40vh 0;font-family:sans-serif">感谢游玩 2048 肉鸽 ✦</div>'; }, 50);
+      setTimeout(function () { document.body.innerHTML = '<div style="color:#999;text-align:center;padding:40vh 0;font-family:sans-serif">感谢游玩 2048＋ ✦</div>'; }, 50);
     }
   }
 
