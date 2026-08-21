@@ -79,6 +79,7 @@
 
     this.el = el;
     this.elBoard = document.getElementById("board-grav");
+    this.elPlanet = document.querySelector(".planet");
     this.elScore = document.getElementById("grav-score");
     this.elBest = document.getElementById("grav-best");
     this.elMsg = document.getElementById("grav-msg");
@@ -129,6 +130,7 @@
     this.spawnFalling();
     if (!this.settled()) this.over = true;
     this.save();
+    if (window.nudge) window.nudge(this.elPlanet, 2); // 坠落轻微的星球回弹
     this.render();
     this.announce();
   };

@@ -199,6 +199,16 @@ body::before {
 .how-link:hover { color: var(--gold-2); }
 .manual .fine { font-size: 11px; opacity: 0.7; }
 
+/* 滑动跟随的回弹（星球容器，避免和棋盘旋转冲突） */
+.planet.nu0 { animation: grv-nu0 0.26s cubic-bezier(0.3, 1.2, 0.4, 1); }
+.planet.nu1 { animation: grv-nu1 0.26s cubic-bezier(0.3, 1.2, 0.4, 1); }
+.planet.nu2 { animation: grv-nu2 0.26s cubic-bezier(0.3, 1.2, 0.4, 1); }
+.planet.nu3 { animation: grv-nu3 0.26s cubic-bezier(0.3, 1.2, 0.4, 1); }
+@keyframes grv-nu0 { 0% { transform: translateY(5px); } 100% { transform: translateY(0); } }
+@keyframes grv-nu1 { 0% { transform: translateX(-5px); } 100% { transform: translateX(0); } }
+@keyframes grv-nu2 { 0% { transform: translateY(-5px) scale(1.01); } 100% { transform: translateY(0) scale(1); } }
+@keyframes grv-nu3 { 0% { transform: translateX(5px); } 100% { transform: translateX(0); } }
+
 /* 首次进入的引导遮罩 */
 .howto {
   position: fixed; inset: 0; z-index: 50;

@@ -94,13 +94,26 @@ body {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
   background: var(--board-bg); border-radius: 6px; padding: 8px; width: 100%;
   aspect-ratio: 1 / 1;
+  touch-action: none;
+  -webkit-user-select: none; user-select: none;
 }
 .board .cell {
   position: relative; border-radius: 4px; background: rgba(238, 228, 218, 0.35);
   display: flex; align-items: center; justify-content: center; font-weight: 700;
 }
+.board { -webkit-user-select: none; user-select: none; }
 .board .cell.has-tile { animation: pop 0.12s ease; }
 @keyframes pop { from { transform: scale(0.85); opacity: 0.5; } to { transform: scale(1); opacity: 1; } }
+
+/* 滑动跟随的推力动画（己方棋盘） */
+.board.nu0 { animation: ai-nu0 0.2s ease; }
+.board.nu1 { animation: ai-nu1 0.2s ease; }
+.board.nu2 { animation: ai-nu2 0.2s ease; }
+.board.nu3 { animation: ai-nu3 0.2s ease; }
+@keyframes ai-nu0 { 0% { transform: translateY(7px); } 100% { transform: translateY(0); } }
+@keyframes ai-nu1 { 0% { transform: translateX(-7px); } 100% { transform: translateX(0); } }
+@keyframes ai-nu2 { 0% { transform: translateY(-7px); } 100% { transform: translateY(0); } }
+@keyframes ai-nu3 { 0% { transform: translateX(7px); } 100% { transform: translateX(0); } }
 
 .side-key { text-align: center; font-size: 12px; color: #a89f92; margin: 12px 0 0; }
 

@@ -9,7 +9,7 @@
   "use strict";
 
   var WIN_VAL = 2048;
-  var STALL_SPROUT = 5; // 连续不合体 N 步，春天额外发芽一次
+  var STALL_SPROUT = 4; // 连续不合体 N 步，春天额外发芽一次
 
   function emptyBoard() {
     var b = [];
@@ -128,6 +128,7 @@
 
     this.secondChance(); // 若错过，仍可能合体；这里做最终判定
     this.save();
+    if (window.nudge) window.nudge(this.elBoard, dir); // 滑动跟随的推力
     this.render();
     this.announce();
   };

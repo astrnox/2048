@@ -150,12 +150,20 @@
       var idx = KEYS[e.code];
       if (idx === undefined) return;
       e.preventDefault();
-      self.move(DIRS[idx]);
-    });
-    // 手机滑动：四向手势映射到六边网格最接近的方向（上=NW 右=E 下=SE 左=W）
-    var SWIPE_TO = { 1: 0, 3: 3, 2: 1, 0: 4 };
-    if (window.bindSwipe) {
-      window.bindSwipe(this.container, function (d) { self.move(DIRS[SWIPE_TO[d]]); });
+      this.move(DIRS[idx]);
+    }.bind(this));
+
+    // 手机八向滑动：含对角线，映射到六边网格的全部六个方向
+    // 右=E(0) 右下=SE(1) 下≈SE(1) 左下=SW(2) 左=W(3) 左上=NW(4) 上≈NW(4) 右上=NE(5)
+    var SWIPE8_TO = { 1: 0, 5: 1, 2: 1, 6: 2, 3: 3, 7: 4, 0: 4, 4: 5 };
+    // 六边方向 → 用于视觉推力的四向
+    var NUDGE_DIR = { 0: 1, 1: 2, 2: 2, 3: 3, 4: 0, 5: 0 };
+    if (window.bindSwipe8) {
+      window.bindSwipe8(this.container, function (code) {
+        var idx = SWIPE8_TO[code];
+        self.move(DIRS[idx]);
+        if (window.nudge) window.nudge(self.container, NUDGE_DIR[idx]);
+      });
     }
   };
 

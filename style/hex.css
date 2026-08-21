@@ -89,12 +89,32 @@ body {
   display: flex;
   justify-content: center;
   padding: 14px 0;
+  touch-action: none;
+  -webkit-user-select: none; user-select: none;
 }
 
 /* tiles */
 .hex-tile polygon { stroke: #fff; stroke-width: 2; }
-.hex-tile { transition: transform 0.13s ease; }
+.hex-tile { transition: transform 0.16s ease-in-out; }
 .hex-tile .hex-text { font-weight: 700; pointer-events: none; }
+
+/* 合并瞬间的回弹 */
+.hex-merged polygon { animation: hex-pop 0.2s ease; }
+@keyframes hex-pop {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* 滑动跟随的推力动画（棋盘容器） */
+.hex-board.nu0 { animation: hex-nu0 0.24s ease; }
+.hex-board.nu1 { animation: hex-nu1 0.24s ease; }
+.hex-board.nu2 { animation: hex-nu2 0.24s ease; }
+.hex-board.nu3 { animation: hex-nu3 0.24s ease; }
+@keyframes hex-nu0 { 0% { transform: translateY(6px); } 100% { transform: translateY(0); } }
+@keyframes hex-nu1 { 0% { transform: translateX(-6px); } 100% { transform: translateX(0); } }
+@keyframes hex-nu2 { 0% { transform: translateY(-6px); } 100% { transform: translateY(0); } }
+@keyframes hex-nu3 { 0% { transform: translateX(6px); } 100% { transform: translateX(0); } }
 
 .hex-message {
   display: none;

@@ -109,6 +109,8 @@ body::after {
   width: min(320px, 78vw); margin: 20px auto 0; aspect-ratio: 1 / 1;
   background: rgba(91, 125, 83, 0.14);
   border: 1px solid var(--line); border-radius: 3px; padding: 8px;
+  touch-action: none;
+  -webkit-user-select: none; user-select: none;
 }
 .bcell {
   position: relative;
@@ -142,6 +144,18 @@ body::after {
   animation: sprout 0.5s ease both;
 }
 @keyframes sprout { from { transform: translateX(-50%) translateY(6px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+
+/* 滑动跟随的推力动画（花圃容器） */
+.garden.nu0 { animation: gr-nu0 0.2s ease; }
+.garden.nu1 { animation: gr-nu1 0.2s ease; }
+.garden.nu2 { animation: gr-nu2 0.2s ease; }
+.garden.nu3 { animation: gr-nu3 0.2s ease; }
+@keyframes gr-nu0 { 0% { transform: translateY(8px); } 100% { transform: translateY(0); } }
+@keyframes gr-nu1 { 0% { transform: translateX(-8px); } 100% { transform: translateX(0); } }
+@keyframes gr-nu2 { 0% { transform: translateY(-8px); } 100% { transform: translateY(0); } }
+@keyframes gr-nu3 { 0% { transform: translateX(8px); } 100% { transform: translateX(0); } }
+/* 新合的果：轻回弹 */
+.garden:active { transform: scale(0.99); }
 
 /* 收成 */
 .harvest-row { display: flex; justify-content: center; gap: 14px; margin-top: 20px; }

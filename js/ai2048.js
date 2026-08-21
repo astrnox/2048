@@ -247,6 +247,7 @@
     this.pMerge += res.gained;
     spawn(this.p);
     this.checkWin();
+    if (window.nudge) window.nudge(this.el.pBoard, dir); // 滑动跟随的推力
     this.render();
   };
 
