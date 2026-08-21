@@ -4,6 +4,12 @@ window.requestAnimationFrame(function () {
 
   var buttons = document.querySelectorAll(".mode-button");
 
+  // Pick the initial mode from the URL (?mode=endless), defaulting to classic.
+  // This lets homepage cards like game.html?mode=time jump straight into a mode.
+  var initial = "classic";
+  var match = window.location.search.match(/[?&]mode=([^&]+)/);
+  if (match) initial = match[1];
+
   function applyMode(mode) {
     game.setMode(mode);
     for (var i = 0; i < buttons.length; i++) {
@@ -12,12 +18,18 @@ window.requestAnimationFrame(function () {
   }
 
   for (var i = 0; i < buttons.length; i++) {
-    buttons[i].addEventListener("click", (function (button) {
-      return function () {
-        applyMode(button.getAttribute("data-mode"));
-      };
-    })(buttons[i]));
+    buttons[i].addEventListener("click", function (e) {
+      e.preventDefault(); // switch in place instead of reloading
+      applyMode(this.getAttribute("data-mode"));
+      history.replaceState(null, "", "game.html?mode=" + this.getAttribute("data-mode"));
+    });
   }
 
-  applyMode("classic");
+  // Preselect the matching button when arriving with a mode in the URL
+  for (var i = 0; i < buttons.length; i++) {
+    if (buttons[i].getAttribute("data-mode") === initial) {
+      buttons[i].classList.add("active");
+    }
+  }
+  game.setMode(initial);
 });

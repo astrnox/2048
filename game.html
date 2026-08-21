@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>2048 · 经典</title>
+  <link href="style/ui.css" rel="stylesheet" type="text/css">
+  <link href="style/main.css" rel="stylesheet" type="text/css">
+  <link href="style/classic.css" rel="stylesheet" type="text/css">
+  <link rel="shortcut icon" href="favicon.ico">
+</head>
+<body>
+  <div class="cli-wrap">
+
+    <header class="cli-bar">
+      <a class="back-link" href="index.html">← 返回</a>
+      <span class="cli-sys">MODE.2048 // CLASSIC</span>
+    </header>
+
+    <div class="heading classic-head rise-in">
+      <h1 class="title">2048</h1>
+      <div class="scores-container">
+        <div class="score-container">0</div>
+        <div class="best-container">0</div>
+      </div>
+    </div>
+
+    <div class="mode-selector">
+      <a class="mode-button" data-mode="classic" href="game.html?mode=classic">经典</a>
+      <a class="mode-button" data-mode="time" href="game.html?mode=time">限时</a>
+      <a class="mode-button" data-mode="endless" href="game.html?mode=endless">无尽</a>
+    </div>
+
+    <div class="timer-container">
+      <span class="timer-label">剩余时间</span>
+      <div class="timer">1:00</div>
+    </div>
+
+    <div class="above-game classic-above">
+      <p class="game-intro" id="mode-hint">同数相撞即合体，合出 <strong>2048</strong> 获胜。</p>
+      <a class="restart-button">重开</a>
+    </div>
+
+    <div id="diff-slot" class="diff-slot"></div>
+
+    <div class="game-container">
+      <div class="game-message">
+        <p></p>
+        <div class="lower">
+          <a class="keep-playing-button">继续</a>
+          <a class="retry-button">再来</a>
+        </div>
+      </div>
+      <div class="grid-container">
+        <div class="grid-row"><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div></div>
+        <div class="grid-row"><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div></div>
+        <div class="grid-row"><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div></div>
+        <div class="grid-row"><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div></div>
+      </div>
+      <div class="tile-container"></div>
+    </div>
+
+    <p class="cli-tut">
+      方向键 / <span class="k">WASD</span> 移动 · 手机上直接<span class="k">滑动</span> · <span class="k">R</span> 重开<br>
+      <span class="k">相同</span>数字相撞即<b>合体</b>，数字翻倍；刚开始先占一角，别把大数顶散。
+    </p>
+
+  </div>
+
+  <script src="js/bind_polyfill.js"></script>
+  <script src="js/classlist_polyfill.js"></script>
+  <script src="js/animframe_polyfill.js"></script>
+  <script src="js/keyboard_input_manager.js"></script>
+  <script src="js/html_actuator.js"></script>
+  <script src="js/grid.js"></script>
+  <script src="js/tile.js"></script>
+  <script src="js/local_storage_manager.js"></script>
+  <script src="js/game_manager.js"></script>
+  <script src="js/modes.js"></script>
+  <script src="js/assist.js"></script>
+  <script src="js/application.js"></script>
+  <script>
+    window.Assist && Assist.mount('diff-slot', { label: '援助 / 难度', key: '2048-diff', def: 'off' });
+  </script>
+</body>
+</html>

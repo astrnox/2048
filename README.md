@@ -1,38 +1,66 @@
-# 2048
-A small clone of [1024](https://play.google.com/store/apps/details?id=com.veewo.a1024), based on [Saming's 2048](http://saming.fr/p/2048/) (also a clone). 2048 was indirectly inspired by [Threes](https://asherv.com/threes/).
+# 2048 · 玩法索引
 
-Made just for fun. [Play it here!](http://gabrielecirulli.github.io/2048/)
+一个 2048 的改版集合：经典原样保留，旁边还印着四种新走法——倾斜重力的星球、会自己生长的棋盘、蜂窝六边形，以及一盘人机竞速。全部模式在手机、平板、电脑上均可直接**触摸/滑动**操作。
 
-The official app can also be found on the [Play Store](https://play.google.com/store/apps/details?id=com.gabrielecirulli.app2048) and [App Store!](https://itunes.apple.com/us/app/2048-by-gabriele-cirulli/id868076805)
+## 在线阅读
 
-### Contributions
+部署在 GitHub Pages：**https://astrnox.github.io/2048/**
 
-[Anna Harren](https://github.com/iirelu/) and [sigod](https://github.com/sigod) are maintainers for this repository.
+## 五种玩法
 
-Other notable contributors:
+| № | 玩法 | 页面 | 一句话规则 |
+|---|------|------|-----------|
+| 00 | **经典** | `game.html` | 方向键滑动，相同数字相撞合成，合出 2048 |
+| 01 | **星球引力** | `game_gravity.html` | 你不推，你倾斜：转动星体让重力替你坠 |
+| 02 | **万物生长** | `game_growth.html` | 棋盘会活：每步破土种子并熟成，久不合体春日加发 |
+| 03 | **蜂窝六边形** | `game_hex.html` | 六边形棋盘、六个方向滑动，在蜂窝里合体 |
+| 04 | **AI 对抗** | `game_ai.html` | 双棋盘人机竞速，谁先合成 2048 谁赢 |
 
- - [TimPetricola](https://github.com/TimPetricola) added best score storage
- - [chrisprice](https://github.com/chrisprice) added custom code for swipe handling on mobile
- - [marcingajda](https://github.com/marcingajda) made swipes work on Windows Phone
- - [mgarciaisaia](https://github.com/mgarciaisaia) added support for Android 2.3
+经典模式同时内置 **限时挑战（1 分钟）** 与 **无尽模式**，可通过游戏页内的模式切换或 `?mode=time` / `?mode=endless` 进入。
 
-Many thanks to [rayhaanj](https://github.com/rayhaanj), [Mechazawa](https://github.com/Mechazawa), [grant](https://github.com/grant), [remram44](https://github.com/remram44) and [ghoullier](https://github.com/ghoullier) for the many other good contributions.
+## 操作方式
 
-### Screenshot
+- **经典 / 万物生长 / AI 对抗 / 蜂窝六边形**：方向键 / WASD，手机上直接滑动。
+- **星球引力**：`←→` 或左右拖动转动星体，`Space` 或轻点让瓦片坠落合体。
+- 所有玩法均支持触摸滑动，`prefers-reduced-motion` 下自动关闭动画。
 
-<p align="center">
-  <img src="https://cloud.githubusercontent.com/assets/1175750/8614312/280e5dc2-26f1-11e5-9f1f-5891c3ca8b26.png" alt="Screenshot"/>
-</p>
+## 本地运行
 
-That screenshot is fake, by the way. I never reached 2048 :smile:
+任意静态服务器即可：
 
-## Contributing
-Changes and improvements are more than welcome! Feel free to fork and open a pull request. Please make your changes in a specific branch and request to pull into `master`! If you can, please make sure the game fully works before sending the PR, as that will help speed up the process.
+```bash
+cd 2048
+python3 -m http.server 8000
+# 打开 http://localhost:8000/
+```
 
-You can find the same information in the [contributing guide.](https://github.com/gabrielecirulli/2048/blob/master/CONTRIBUTING.md)
+## 项目结构
+
+```
+2048/
+├─ index.html            首页 · 玩法索引
+├─ game.html             经典 / 限时 / 无尽
+├─ game_gravity.html     星球引力
+├─ game_growth.html      万物生长
+├─ game_hex.html         蜂窝六边形
+├─ game_ai.html          AI 对抗
+├─ js/
+│  ├─ gravity2048.js     星球引力（重力换向 + 坠落合体）
+│  ├─ growth2048.js      万物生长（播种 / 成熟 / 春日加发）
+│  ├─ hex2048.js         蜂窝六边形（六方向轴向坐标 + SVG 渲染）
+│  ├─ ai2048.js          AI 对抗（双棋盘 + 启发式走子）
+│  └─ swipe.js           统一触摸滑动检测
+└─ style/                各玩法独立的样式表
+```
+
+## 设计说明
+
+全站采用「纸本印刷」视觉：燕麦纸底色、墨与苔绿、一点覆木红，标题与间距沿用经典 2048 的衬线气质。每个心动玩法以独立页面 + 独立样式呈现，改动彼此隔离，不互相污染。
+
+## 本项目的 2048 渊源
+
+经典部分 fork 自 [gabrielecirulli/2048](https://github.com/gabrielecirulli/2048)（MIT License）。新玩法（星球引力 / 万物生长 / 蜂窝六边形 / AI 对抗）均为本项目原创实现。
 
 ## License
-2048 is licensed under the [MIT license.](https://github.com/gabrielecirulli/2048/blob/master/LICENSE.txt)
 
-## Donations
-I made this in my spare time, and it's hosted on GitHub (which means I don't have any hosting costs), but if you enjoyed the game and feel like buying me coffee, you can donate at my BTC address: `1Ec6onfsQmoP9kkL3zkpB6c5sA4PVcXU2i`. Thank you very much!
+[MIT](LICENSE.txt)

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>2048 · 蜂窝六边形</title>
+  <link rel="shortcut icon" href="favicon.ico">
+  <link href="style/ui.css" rel="stylesheet" type="text/css">
+  <link href="style/hex.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+  <div class="container">
+    <header class="cli-bar">
+      <a class="back-link" href="index.html">← 返回</a>
+      <span class="cli-sys">MODE.2048 // HEX</span>
+    </header>
+
+    <div class="heading">
+      <h1 class="title">2048</h1>
+      <div class="scores-container">
+        <div class="score-container" id="hex-score" data-label="得分">0</div>
+        <div class="best-container" id="hex-best" data-label="最佳">0</div>
+      </div>
+    </div>
+
+    <p class="hex-hint">六边形棋盘 · 六个方向滑动，数字在蜂窝里旋转合体</p>
+
+    <div id="diff-slot" class="diff-slot"></div>
+
+    <div class="hex-board" id="hex-board"></div>
+
+    <div class="hex-message" id="hex-message"></div>
+
+    <p class="hex-keys">
+      方向键 / WASD 主方向 · <b>Q</b> <b>E</b>(↔ <b>C Z</b>) 斜向滑动<br>
+      <button class="btn btn-primary" id="restart">重新开始</button>
+    </p>
+  </div>
+
+  <script src="js/swipe.js"></script>
+  <script src="js/assist.js"></script>
+  <script src="js/hex2048.js"></script>
+  <script>
+    var game = new window.HexGame(document.getElementById("hex-board"));
+    window.Assist && Assist.mount('diff-slot', { label: '援助 / 难度', key: '2048-diff', def: 'off' });
+    document.getElementById("restart").addEventListener("click", function () { game.restart(); });
+    document.addEventListener("click", function (e) {
+      if (e.target && (e.target.id === "restart2" || e.target.id === "keep")) {
+        if (e.target.id === "keep") { game.keepPlaying = true; game.actuate(); }
+        else { game.restart(); }
+      }
+    });
+  </script>
+</body>
+</html>

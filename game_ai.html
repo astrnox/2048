@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>2048 · AI 对抗</title>
+  <link rel="shortcut icon" href="favicon.ico">
+  <link href="style/ui.css" rel="stylesheet" type="text/css">
+  <link href="style/ai.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+  <div class="container">
+
+    <header class="cli-bar">
+      <a class="back-link" href="index.html">← 返回</a>
+      <span class="cli-sys">MODE.2048 // VS·AI</span>
+    </header>
+
+    <header class="stage-head">
+      <h1 class="title">AI · 对抗</h1>
+      <p class="subtitle">你在左 · 机器人在右 · 谁先合成 <b>2048</b> 谁赢</p>
+    </header>
+
+    <div class="race-info">
+      <div class="effort">
+        <span class="rate-dot you"></span><span>你的步数由你掌控</span>
+      </div>
+      <div class="clock">
+        <span class="clock-label">⌛ 本局用时</span>
+        <span class="clock-main" id="race-timer">0:00</span>
+      </div>
+      <div class="effort">
+        <span class="rate-dot bot"></span><span>机器人与你轮流走子</span>
+      </div>
+    </div>
+
+    <div class="arena">
+      <section class="side you">
+        <div class="side-head">
+          <span class="side-badge">你</span>
+          <div class="side-stats">
+            <div class="stat"><span class="stat-num" id="score-p">0</span><span class="stat-label">得分</span></div>
+            <div class="stat"><span class="stat-num golden" id="merges-p">+0</span><span class="stat-label">合成</span></div>
+          </div>
+        </div>
+        <div class="board" id="board-p"></div>
+        <p class="side-key">方向键 / WASD 控制左边的棋盘</p>
+      </section>
+
+      <div class="vs">VS</div>
+
+      <section class="side bot">
+        <div class="side-head">
+          <div class="side-stats right">
+            <div class="stat"><span class="stat-num" id="score-b">0</span><span class="stat-label">得分</span></div>
+            <div class="stat"><span class="stat-num golden" id="merges-b">+0</span><span class="stat-label">合成</span></div>
+          </div>
+          <span class="side-badge bot">AI</span>
+        </div>
+        <div class="board" id="board-b"></div>
+        <p class="side-key" id="ai-status">你的回合</p>
+      </section>
+    </div>
+
+    <div class="banner" id="banner">
+      <span class="banner-text" id="banner-text"></span>
+      <button class="btn btn-primary" id="replay">再战一局</button>
+    </div>
+
+    <div id="diff-slot" class="diff-slot"></div>
+
+    <p class="game-note">你走一步，机器人想一步（深度前瞻）再走一步，随后停下等你。难度越高，机器人想得越深。</p>
+
+  </div>
+
+  <script src="js/swipe.js"></script>
+  <script src="js/assist.js"></script>
+  <script src="js/ai2048.js"></script>
+  <script>
+    window.AiDuel && window.AiDuel();
+    window.Assist && Assist.mount('diff-slot', {
+      label: '机器人难度', key: '2048-botdiff', def: 'med',
+      options: [['easy', '简单'], ['med', '中等'], ['hard', '困难']]
+    });
+  </script>
+</body>
+</html>
