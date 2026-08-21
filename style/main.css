@@ -762,7 +762,14 @@ hr {
 ------------------------------------------------------------------- */
 .mode-selector {
   text-align: center;
-  margin-top: 12px; }
+  margin-top: 12px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  -webkit-justify-content: center;
+  justify-content: center;
+  gap: 6px; }
   .mode-selector .mode-button {
     display: inline-block;
     background: #bbada0;
@@ -811,12 +818,10 @@ body.mode-time .timer-container {
     margin-right: 4px; } }
 
 /* Back-to-home link on the game page */
-.container {
-  position: relative; }
+.topbar {
+  margin-bottom: 12px; }
 .home-link {
-  position: absolute;
-  top: 10px;
-  left: 0;
+  display: inline-block;
   font-size: 13px;
   font-weight: bold;
   color: #776e65;
@@ -826,7 +831,6 @@ body.mode-time .timer-container {
   text-decoration: none;
   -webkit-transition: background 150ms ease;
   -moz-transition: background 150ms ease;
-  transition: background 150ms ease;
-  z-index: 10; }
+  transition: background 150ms ease; }
   .home-link:hover {
     background: rgba(187, 173, 160, 0.38); }
