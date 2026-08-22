@@ -8,13 +8,15 @@
 
   // ---------- 常量 ----------
   var SLIDE_MS = 300;
-  var SAVE_KEY = 'game_save';
+  // 经典模式真正的存档键（对应 classic 页面 LocalStorageManager 的 gameState）
+  var SAVE_KEY = 'gameState';
   var MODE_MAP = {
     classic: { label: '经典模式', url: 'game.html' },
     gravity: { label: '星落模式', url: 'game_gravity.html' },
-    growth:  { label: '生长模式', url: 'game_growth.html' },
     hex:     { label: '六边模式', url: 'game_hex.html' },
-    ai:      { label: '对抗模式', url: 'game_ai.html' }
+    ai:      { label: '对抗模式', url: 'game_ai.html' },
+    quantum: { label: '量子模式', url: 'game_quantum.html' },
+    dive:    { label: '整除模式', url: 'game_dive.html' }
   };
 
   // ---------- 状态 ----------
@@ -75,11 +77,21 @@
   function refreshContinueBtn() {
     var btn = $('#btnContinue');
     if (!btn) return;
-    if (hasSave()) {
+    // 只有经典模式会自动存档(gameState)，其它模式暂不支持续玩
+    if (currentMode === 'classic' && hasSave()) {
       btn.classList.remove('is-disabled');
     } else {
       btn.classList.add('is-disabled');
     }
+  }
+
+  // 清除经典模式的存档（新游戏 / 覆盖确认用）
+  function clearSave() {
+    try {
+      localStorage.removeItem('gameState');      // 经典存档
+      localStorage.removeItem('game_save');      // 旧键，兜底清理
+      localStorage.removeItem('bestScore');
+    } catch (e) {}
   }
 
   // ---------- 跳转游戏 ----------
@@ -92,11 +104,11 @@
 
   // ---------- 新游戏 ----------
   function startNewGame() {
-    if (hasSave()) {
+    if (hasSave() && currentMode === 'classic') {
       openConfirm();
     } else {
-      // 清除存档防止意外残留，然后跳转
-      try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+      // 清除存档防止意外残留，然后跳转（真正开始一局新的）
+      clearSave();
       goGame();
     }
   }
@@ -173,7 +185,7 @@
     var cok = $('#confirmOk');
     if (cok) cok.addEventListener('click', function () {
       closeConfirm();
-      try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+      clearSave();
       goGame();
     });
 

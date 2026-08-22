@@ -30,6 +30,8 @@
       <a class="mode-button" data-mode="time" href="game.html?mode=time">限时</a>
       <a class="mode-button" data-mode="endless" href="game.html?mode=endless">无尽</a>
       <a class="mode-button" data-mode="daily" href="game.html?mode=daily">每日</a>
+      <a class="mode-button" data-mode="n128" href="game.html?mode=n128">别造128</a>
+      <a class="mode-button" data-mode="anti" href="game.html?mode=anti">反转</a>
     </div>
 
     <div class="daily-hud hidden" id="dailyHud">
@@ -54,6 +56,8 @@
     </div>
 
     <div id="diff-slot" class="diff-slot"></div>
+
+    <div id="settings-slot" class="diff-slot"></div>
 
     <div class="game-container">
       <div class="game-message">
@@ -90,9 +94,11 @@
   <script src="js/game_manager.js"></script>
   <script src="js/modes.js"></script>
   <script src="js/assist.js"></script>
+  <script src="js/sfx.js"></script>
   <script src="js/application.js"></script>
   <script>
-    window.Assist && Assist.mount('diff-slot', { label: '援助 / 难度', key: '2048-diff', def: 'off' });
+    window.Assist && Assist.mount('diff-slot', { label: '难度', key: '2048-diff' });
+    window.Sound && Sound.mount('settings-slot', { label: '音效' });
   </script>
 </body>
 </html>

@@ -80,7 +80,7 @@
 
 /* ---------- 棋盘：陶土底（瓦片色由 JS 内联提供） ---------- */
 .board {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  position: relative;
   background: linear-gradient(180deg, var(--board-hi), var(--board));
   border-radius: 12px; padding: 8px; width: 100%;
   aspect-ratio: 1 / 1;
@@ -89,7 +89,7 @@
   -webkit-user-select: none; user-select: none;
 }
 .board .cell {
-  position: relative; border-radius: 6px;
+  position: absolute; border-radius: 6px;
   background: rgba(238, 228, 218, 0.35);
   box-shadow: inset 0 1px 2px rgba(93, 71, 48, 0.10);
   display: flex; align-items: center; justify-content: center;
@@ -98,9 +98,16 @@
 }
 .board .cell.has-tile {
   box-shadow: var(--shadow-tile);
-  animation: pop 0.12s ease;
+  z-index: 2;
 }
-@keyframes pop { from { transform: scale(0.85); opacity: 0.5; } to { transform: scale(1); opacity: 1; } }
+/* 滑动：平移过渡（参照经典模式） */
+.board .a-tile { transition: transform 0.24s cubic-bezier(0.3, 0.9, 0.3, 1); will-change: transform; }
+/* 合体弹跳 */
+.board .a-merged { animation: ai-pop 0.22s var(--ease-pop); }
+@keyframes ai-pop { 0% { transform: scale(0.4); } 55% { transform: scale(1.18); } 100% { transform: scale(1); } }
+/* 新方块浮现 */
+.board .a-new { animation: ai-grow 0.24s var(--ease-pop); }
+@keyframes ai-grow { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
 
 /* ---------- 滑动回弹（玩家棋盘） ---------- */
 .board.nu0 { animation: ai-nu0 0.2s ease; }
@@ -113,6 +120,19 @@
 @keyframes ai-nu3 { 0% { transform: translateX(7px); } 100% { transform: translateX(0); } }
 
 .side-key { text-align: center; font-size: 12px; color: var(--dim); margin: 12px 0 0; }
+
+/* ---------- 玩家连击徽标 ---------- */
+.combo-wrap { min-height: 24px; margin-top: 10px; text-align: center; }
+.combo {
+  display: inline-block; color: var(--accent-deep); font-size: 14px;
+  font-weight: 700; letter-spacing: 1px; opacity: 0; transform: translateY(6px);
+}
+.combo.on { animation: combo-pop 0.6s var(--ease-pop); opacity: 1; }
+@keyframes combo-pop {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.8); }
+  30%  { opacity: 1; transform: translateY(0) scale(1.15); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
 
 /* ---------- VS 徽章 ---------- */
 .vs {
@@ -141,6 +161,43 @@
 .banner-text { font-size: 20px; font-weight: 700; letter-spacing: 1px; }
 
 .game-note { text-align: center; font-size: 12px; color: var(--dim); margin-top: 24px; line-height: 1.9; animation: cli-rise 0.5s var(--ease-pop) 0.3s both; }
+.game-note b { color: var(--accent); font-weight: 700; }
+
+/* ---------- 隐藏分 / 目标胜率 状态条（SKILL 系统） ---------- */
+.skill-info {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 14px;
+  max-width: 520px; margin: 12px auto 0; padding: 8px 16px;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  font-size: 12px; color: var(--dim); box-shadow: var(--shadow-chip);
+  animation: cli-rise 0.4s var(--ease-pop) both;
+}
+.skill-info span { display: inline-flex; align-items: baseline; gap: 4px; }
+.skill-info b { color: var(--accent-deep); font-size: 13px; font-variant-numeric: tabular-nums; }
+.skill-desc { flex-basis: 100%; text-align: center; color: var(--dim); font-size: 11px; }
+.container.is-hell .skill-info { border-color: rgba(217, 96, 63, 0.5); }
+.container.is-hell .skill-info b { color: #d9603f; }
+
+/* ---------- 地狱模式（Adversarial）----------
+   随机数生成器变成你的对手：你的出生块由 AI 恶意放置，
+   会把新块精准怼在你最薄弱的地方。页面染上灼烧的赤红。 */
+.container.is-hell .side.bot {
+  border-color: #d9603f;
+  box-shadow: 0 0 0 1px rgba(217, 96, 63, 0.55), 0 0 30px rgba(217, 96, 63, 0.30), var(--shadow-card);
+}
+.container.is-hell .side.bot .side-badge.bot {
+  background: linear-gradient(180deg, #e0704a, #c9442e);
+  box-shadow: 0 2px 0 #9c2f1e, 0 6px 16px rgba(201, 68, 46, 0.5);
+}
+.container.is-hell .game-note { color: rgba(201, 68, 46, 0.9); }
+.container.is-hell .vs {
+  background: linear-gradient(180deg, #e76a45, #c22e1e);
+  box-shadow: 0 2px 0 #901f12, 0 10px 24px rgba(194, 46, 30, 0.5);
+  animation: vs-in 0.6s var(--ease-pop) 0.24s both, hell-breathe 2.2s ease-in-out infinite;
+}
+@keyframes hell-breathe {
+  0%, 100% { box-shadow: 0 2px 0 #901f12, 0 10px 24px rgba(194, 46, 30, 0.4); }
+  50%      { box-shadow: 0 2px 0 #901f12, 0 0 34px rgba(231, 106, 69, 0.85); }
+}
 
 /* ---------- 响应式 ---------- */
 @media (max-width: 720px) {

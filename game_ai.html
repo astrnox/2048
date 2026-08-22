@@ -18,7 +18,7 @@
 
     <header class="stage-head">
       <h1 class="title">AI · 对抗</h1>
-      <p class="subtitle">你在左 · 机器人在右 · 谁先合成 <b>2048</b> 谁赢</p>
+      <p class="subtitle">你在左 · 机器人在右 · <b>逐步行棋</b>，谁先合成 <b>2048</b> 谁赢</p>
     </header>
 
     <div class="race-info">
@@ -44,6 +44,7 @@
           </div>
         </div>
         <div class="board" id="board-p"></div>
+        <div class="combo-wrap"><span class="combo" id="ai-combo"></span></div>
         <p class="side-key">方向键 / WASD 控制左边的棋盘</p>
       </section>
 
@@ -69,18 +70,25 @@
 
     <div id="diff-slot" class="diff-slot"></div>
 
-    <p class="game-note">你走一步，机器人想一步（深度前瞻）再走一步，随后停下等你。难度越高，机器人想得越深。</p>
+    <div class="skill-info" id="skill-info"></div>
+
+    <div id="settings-slot" class="diff-slot"></div>
+
+    <p class="game-note">你走一步，机器人想一步（深度前瞻）后走一步 —— <b>严格轮流</b>。<b>难度带确定性封顶</b>：简单档 AI 被钉死在 ≤8、随便划也大比分赢；普通撑到 256；困难逼近 1024；地狱你是 <b>负反馈拉满</b> —— 玩家盘落点刁钻，且 AI 与你<b>同起点</b>、零失误深搜步步紧逼高位，几乎让你无从反超。隐藏分动态调节灵敏度但不再能削弱地狱。</p>
 
   </div>
 
   <script src="js/swipe.js"></script>
   <script src="js/assist.js"></script>
+  <script src="js/sfx.js"></script>
   <script src="js/ai2048.js"></script>
   <script>
-    window.AiDuel && window.AiDuel();
+    var _duel = window.AiDuel && window.AiDuel();
+    window.Sound && Sound.mount('settings-slot', { label: '音效' });
     window.Assist && Assist.mount('diff-slot', {
-      label: '机器人难度', key: '2048-botdiff', def: 'med',
-      options: [['easy', '简单'], ['med', '中等'], ['hard', '困难']]
+      label: '机器人难度', key: '2048-botdiff', def: 'normal',
+      options: [['easy', '简单'], ['normal', '普通'], ['hard', '困难'], ['hell', '地狱']],
+      onchange: function () { if (_duel) _duel.newRound(); }
     });
   </script>
 </body>

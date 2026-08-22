@@ -127,6 +127,19 @@
   100% { transform: scale(1); }
 }
 
+/* ---------- 连击徽标 ---------- */
+.combo-wrap { min-height: 26px; margin-top: 14px; text-align: center; }
+.combo {
+  display: inline-block; color: var(--accent-deep); font-size: 14px;
+  font-weight: 700; letter-spacing: 1px; opacity: 0; transform: translateY(6px);
+}
+.combo.on { animation: combo-pop 0.6s var(--ease-pop); opacity: 1; }
+@keyframes combo-pop {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.8); }
+  30%  { opacity: 1; transform: translateY(0) scale(1.15); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 /* ---------- 滑动回弹（棋盘容器） ---------- */
 .hex-board.nu0 { animation: hex-nu0 0.24s ease; }
 .hex-board.nu1 { animation: hex-nu1 0.24s ease; }

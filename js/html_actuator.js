@@ -25,7 +25,9 @@ HTMLActuator.prototype.setMode = function (mode) {
     classic: '相同数字相撞即合体，合成 <strong>2048</strong> 获胜！',
     time:    '限时 <strong>60 秒</strong>，尽可能多地得分！',
     endless: '没有终点——这一次你能合到多大？',
-    daily:   '今日同一盘、运数相同，你能合到多高？按 <strong>Z</strong> 悔一步'
+    daily:   '今日同一盘、运数相同，你能合到多高？按 <strong>Z</strong> 悔一步',
+    n128:    '别造 <strong>128</strong>：一旦合成 128 立刻出局，分数越高越要小心！',
+    anti:    '反转 2048：把棋盘 <strong>填到无路可走</strong> 才算赢！'
   };
 
   this.timerElement.classList.toggle("hidden", mode !== "time");
@@ -99,13 +101,17 @@ HTMLActuator.prototype.actuate = function (grid, metadata) {
           closingText = "时间到！你的得分：" + metadata.score;
         } else if (metadata.mode === "daily") {
           closingText = "今日收官！得分 " + metadata.score + " · 今日最佳 " + metadata.dailyBest;
+        } else if (metadata.mode === "n128") {
+          closingText = "你合出了 128，出局！得分 " + metadata.score;
+        } else if (metadata.mode === "anti") {
+          closingText = "棋盘填满，了不起！得分 " + metadata.score;
         }
       } else if (metadata.won) {
         if (metadata.mode === "daily") {
           closingText = "今日达成 2048＋！得分 " + metadata.score;
         }
       }
-      self.message(metadata.won && !metadata.over, closingText);
+      self.message(metadata.won, closingText);
     }
 
   });

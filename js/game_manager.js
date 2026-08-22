@@ -137,20 +137,16 @@ GameManager.prototype.addStartTiles = function () {
   }
 };
 
-// Adds a tile in a position chosen by the active difficulty/assist (default off = random)
+// Adds a tile in a position chosen by the active difficulty (scientifically: value distribution)
 GameManager.prototype.addRandomTile = function () {
   if (!this.grid.cellsAvailable()) return;
 
   var cell, value;
-  // 每日模式要求可复现：绕过援助(assist)，走后端可复现随机
-  if (this.mode !== "daily" && window.Assist && window.Assist.get() !== "off") {
-    var strengthS = window.Assist.strength(window.Assist.get());
-    var b = this.gridToBoard();
-    var pick = window.Assist.pick4(b, strengthS);
-    if (pick) {
-      cell = { x: pick.c, y: pick.r };
-      value = window.Assist.pickValue(strengthS);
-    }
+  // 每日模式要求可复现：绕过难度(assist)，走后端可复现随机
+  if (this.mode !== "daily" && window.Assist) {
+    value = window.Assist.spawnValue(window.Assist.get());
+    cell = { x: Math.floor(this.rng() * this.size), y: Math.floor(this.rng() * this.size) };
+    if (!this.grid.cellAvailable(cell)) cell = this.pickSpawnCell();
   }
   if (!cell) {
     value = this.pickSpawnValue();
@@ -360,6 +356,7 @@ GameManager.prototype.move = function (direction) {
           // 2048+：连击 —— 一步内多次合并叠加倍率，额外加分
           self.combo++;
           self.score += merged.value;
+          if (window.Sound && window.Sound.merge) window.Sound.merge(); // 合体果冻声
           if (self.combo > 1) {
             self.comboBonus += merged.value;
           }
@@ -382,10 +379,17 @@ GameManager.prototype.move = function (direction) {
     this.undoStack  = preMove;
     this.moves++;
     if (this.comboBonus > 0) this.score += this.comboBonus;
+    if (window.Sound && window.Sound.move) window.Sound.move(); // 滑动解压声（合并另有 啵）
 
     this.addRandomTile();
 
-    if (!this.movesAvailable()) {
+    // 反转模式判定（复用经典动画）
+    if (this.mode === "n128" && this.maxTile() >= 128) {
+      this.over = true; this.won = false;      // 造出 128 → 出局
+    } else if (this.mode === "anti") {
+      if (!this.movesAvailable()) { this.over = true; this.won = true; } // 填满 → 胜利
+      else if (this.maxTile() >= 2048) { this.over = true; this.won = true; } // 也算达成
+    } else if (!this.movesAvailable()) {
       this.over = true; // Game over!
     }
 
@@ -394,6 +398,13 @@ GameManager.prototype.move = function (direction) {
     this.combo = 0;
     this.comboBonus = 0;
   }
+};
+
+// 当前棋盘最大瓦片值
+GameManager.prototype.maxTile = function () {
+  var m = 0;
+  this.grid.eachCell(function (x, y, t) { if (t && t.value > m) m = t.value; });
+  return m;
 };
 
 // Get the vector representing the chosen direction

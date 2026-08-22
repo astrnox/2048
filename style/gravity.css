@@ -76,71 +76,77 @@
 .board {
   position: relative; z-index: 2;
   width: 74%; height: 74%;
-  display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr);
-  gap: 6px; padding: 7px;
+  padding: 7px;
   background: linear-gradient(180deg, var(--board-hi), var(--board));
   border-radius: 11px;
   box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.16), 0 2px 0 rgba(93, 71, 48, 0.14), 0 12px 26px rgba(93, 71, 48, 0.16);
-  transition: transform 0.42s var(--ease-pop);
+  transition: transform 0.5s var(--ease-pop);
+  will-change: transform;
   touch-action: none; cursor: pointer;
   -webkit-user-select: none; user-select: none;
   animation: grv-board-in 0.5s ease 0.1s both;
 }
 /* 棋盘的旋转由内联 transform 驱动，入场只能动 opacity，不可动 transform */
 @keyframes grv-board-in { from { opacity: 0; } }
-.board:active .gcell { transform: scale(0.97); }
-.gcell {
-  position: relative;
+/* 空槽底格（绝对定位铺满，同 .gcell 几何） */
+.gbg {
+  position: absolute;
   background: rgba(238, 228, 218, 0.35);
   border-radius: 6px;
   box-shadow: inset 0 1px 2px rgba(93, 71, 48, 0.10);
+}
+.gcell {
+  position: absolute;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.3s var(--ease-pop);
+  will-change: transform;
+}
+/* 内层面：数值与颜色，负责合体弹跳 */
+.gface {
+  position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
   font-weight: 700; font-size: clamp(17px, 5.2vw, 24px); line-height: 1; color: var(--ink);
   font-variant-numeric: tabular-nums;
-  transition: background 0.25s ease, color 0.25s ease, transform 0.15s ease;
 }
 
-/* —— 下落动画：浮现 / 落定 / 连锁 —— */
-.gcell.t-new { animation: g-emerge 0.34s var(--ease-pop) both; }
-@keyframes g-emerge {
-  from { opacity: 0; transform: translateY(-40%) scale(0.2); }
-  60%  { transform: translateY(0) scale(1.06); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+/* —— 受重力下坠：加速落下后轻轻落定 —— */
+.gcell.g-fall {
+  transition: transform 0.4s cubic-bezier(0.5, 0.05, 0.85, 0.35);
 }
-.gcell.g-settle { animation: g-settle 0.28s var(--ease-pop); }
-@keyframes g-settle {
-  from { transform: translateY(-60%); opacity: 0; }
-  70%  { transform: translateY(0) scale(1.03); opacity: 1; }
-  to   { transform: translateY(0) scale(1); }
-}
-.gcell.g-chain { animation: g-chain 0.26s var(--ease-pop); }
+.gface.g-pop { animation: g-chain 0.3s var(--ease-pop); }
 @keyframes g-chain {
   0%   { transform: scale(0.4); }
   55%  { transform: scale(1.18); }
   100% { transform: scale(1); }
 }
+/* 新生成的方块：在所在格子里原地浮现 */
+.gface.g-new { animation: g-new 0.32s var(--ease-pop); }
+@keyframes g-new {
+  from { opacity: 0; transform: scale(0.5); }
+  to   { opacity: 1; transform: scale(1); }
+}
 
-/* ---------- 经典瓦片色阶 + 物理厚度 ---------- */
-.gcell.t2   { background: var(--t2);   color: #776e65; box-shadow: var(--shadow-tile); }
-.gcell.t4   { background: var(--t4);   color: #776e65; box-shadow: var(--shadow-tile); }
-.gcell.t8   { background: var(--t8);   color: #f9f6f2; box-shadow: var(--shadow-tile); }
-.gcell.t16  { background: var(--t16);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
-.gcell.t32  { background: var(--t32);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
-.gcell.t64  { background: var(--t64);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
-.gcell.t128 { background: var(--t128); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 18px rgba(243, 215, 116, 0.35); }
-.gcell.t256 { background: var(--t256); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 20px rgba(243, 215, 116, 0.42); }
-.gcell.t512 { background: var(--t512); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 22px rgba(243, 215, 116, 0.5); }
-.gcell.t1024{ background: var(--t1024); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 24px rgba(243, 215, 116, 0.55); }
-.gcell.t2048, .gcell.star {
+/* ---------- 经典瓦片色阶 + 物理厚度 (+)内层面 ---------- */
+.gface.t2   { background: var(--t2);   color: #776e65; box-shadow: var(--shadow-tile); }
+.gface.t4   { background: var(--t4);   color: #776e65; box-shadow: var(--shadow-tile); }
+.gface.t8   { background: var(--t8);   color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.gface.t16  { background: var(--t16);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.gface.t32  { background: var(--t32);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.gface.t64  { background: var(--t64);  color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.gface.t128 { background: var(--t128); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 18px rgba(243, 215, 116, 0.35); }
+.gface.t256 { background: var(--t256); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 20px rgba(243, 215, 116, 0.42); }
+.gface.t512 { background: var(--t512); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 22px rgba(243, 215, 116, 0.5); }
+.gface.t1024{ background: var(--t1024); color: #f9f6f2; box-shadow: var(--shadow-tile), 0 0 24px rgba(243, 215, 116, 0.55); }
+.gface.t2048, .gface.star {
   background: var(--t2048); color: #f9f6f2;
   box-shadow: var(--shadow-tile), 0 0 26px rgba(237, 194, 46, 0.6);
 }
-.gcell.t4096 { background: var(--tsuper); color: #f9f6f2; box-shadow: var(--shadow-tile); }
-.gcell.t8192 { background: #5bca57; color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.gface.t4096 { background: var(--tsuper); color: #f9f6f2; box-shadow: var(--shadow-tile); }
+.gface.t8192 { background: #5bca57; color: #f9f6f2; box-shadow: var(--shadow-tile); }
 
 /* 四位数以上缩小字号，防溢出 */
-.gcell.t1024, .gcell.t2048 { font-size: clamp(13px, 4.1vw, 18px); }
-.gcell.t4096, .gcell.t8192 { font-size: clamp(11px, 3.5vw, 15px); }
+.gface.t1024, .gface.t2048 { font-size: clamp(13px, 4.1vw, 18px); }
+.gface.t4096, .gface.t8192 { font-size: clamp(11px, 3.5vw, 15px); }
 
 .core {
   position: absolute; z-index: 1; width: 14px; height: 14px; border-radius: 50%;
