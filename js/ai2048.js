@@ -48,19 +48,32 @@
   var RP_DEF = 1200;        // 新玩家基准分
   var K_BASE = 36;          // 灵敏度基准（会再被 dynamicK 修正）
   var DIFF_TARGET = { easy: 0.90, normal: 0.60, hard: 0.30, hell: 0.01 };
-  // 分难度：预算乘数(强度)、反馈不对称(winK/loseK)、玩家盘生成策略
+  // 分难度配置（R4 · 确定性兜底优先）。
+  //   pow      —— 搜索预算乘数（隐藏分经验强度之上再乘难度系数）
+  //   blunder  —— AI 每次动手随机乱走的概率（简单高 / 地狱 0）
+  //   aiStart  —— AI 起手高位块；开局即握高额分，制造"物理分差"
+  //   ceil     —— AI 可达瓦片值上限；0 = 不限。
+  //               *只要 AI 超过上限即判负*（checkWin 强制），这是
+  //              "简单随便划也稳赢 / 普通有得打"的确定性保证，
+  //              与概率式的失误率互补，杜绝 AI 靠运气冲到高位。
+  //   floor    —— AI 搜索预算下限；0 = 不设下限（信任隐藏分）。
+  //               地狱用它做"强度地板"：无论你隐藏分压得多低，地狱
+  //               AI 的深度/算力都不缩水，保证"30 秒内追不回来"。
+  //   depthFl  —— AI 深度下限（同上，为地狱/困难兜底）。
+  //   winK/LK  —— ELO 灵敏度方向（正/负反馈不对称）。
+  //   spawn    —— 玩家盘生成策略（help/neutral/worst）。
   var DIFF_CFG = {
-    easy:   { pow: 0.65, winK: 1.6, loseK: 0.5, spawn: "help"   },
-    normal: { pow: 1.0,  winK: 1.0, loseK: 1.0, spawn: "neutral"},
-    hard:   { pow: 1.8,  winK: 0.8, loseK: 1.3, spawn: "worst"  },
-    hell:   { pow: 5.0,  winK: 0.25, loseK: 1.9, spawn: "worst" }
+    easy:   { pow: 0.5,  blunder: 0.85, aiStart: 2,  ceil: 8,   floor: 0,   depthFl: 3, winK: 1.7, loseK: 0.4, spawn: "help",   p4b: 0.10, p4p: 0.06 },
+    normal: { pow: 1.0,  blunder: 0.45, aiStart: 2,  ceil: 256, floor: 0,   depthFl: 4, winK: 1.0, loseK: 1.0, spawn: "neutral", p4b: 0.10, p4p: 0.14 },
+    hard:   { pow: 1.8,  blunder: 0.08, aiStart: 4,  ceil: 1024,floor: 0,   depthFl: 5, winK: 0.8, loseK: 1.3, spawn: "worst",  p4b: 0.10, p4p: 0.28 },
+    hell:   { pow: 4.0,  blunder: 0.0,  aiStart: 1024,ceil: 0,   floor: 60000, depthFl: 8, winK: 0.2, loseK: 2.0, spawn: "worst", p4b: 0.10, p4p: 0.40 }
   };
   // 各档体验描述（UI 用）
   var DIFF_DESC = {
-    easy:   "正反馈拉满 · AI 浅算出块宽松",
-    normal: "AI 稳定合牌，和你势均力敌",
-    hard:   "AI 深算 + 落点针对，压你一头",
-    hell:   "负反馈拉满 · AI 全力推演并落最差块，几乎不可战胜"
+    easy:   "确定性封顶 · AI 撑不过 8 且常失误，随便划也能大比分赢",
+    normal: "AI 随时能摸到 256，势均力敌",
+    hard:   "AI 少失误 + 落点针对，逼近 1024 才止步",
+    hell:   "负反馈拉满 · AI 零失误持 1024 起手，分数/棋面全程碾压、不可破"
   };
 
   // —— 近期战绩滑动窗：驱动动态灵敏度（随活动与表现变化） ——
@@ -382,7 +395,7 @@
       var rc = samples[i];
       var b2 = clone(board); b2[rc[0]][rc[1]] = 2;
       var b4 = clone(board); b4[rc[0]][rc[1]] = 4;
-      total += 0.9 * maxNode(b2, depth - 1, alpha, beta) + 0.1 * maxNode(b4, depth - 1, alpha, beta);
+      total += 0.88 * maxNode(b2, depth - 1, alpha, beta) + 0.12 * maxNode(b4, depth - 1, alpha, beta);
     }
     return total / samples.length;
   }
@@ -401,18 +414,36 @@
     return best === -Infinity ? heuristic(board) : best;
   }
 
-  function bestMove(board, budgetIn, maxDepthIn) {
+  function bestMove(board, budgetIn, maxDepthIn, allowed) {
     budget = budgetIn || 4200;
     maxDepthIn = maxDepthIn || 4;
     var bestDir = null, best = -Infinity;
-    var order = moveOrder(board);
+    var order = allowed || moveOrder(board);   // allowed: 已过滤(可动且不越天花板)的方向
     for (var i = 0; i < order.length; i++) {
       var d = order[i];
+      if (!tryMove(board, d).moved) continue;   // allowed 或缺省时都跳过无效方向
       var res = tryMove(board, d);
       var s = chanceNode(res.board, maxDepthIn, best, Infinity);
       if (s > best) { best = s; bestDir = d; }
     }
     return bestDir;
+  }
+
+  /* 难度天花板约束的 AI 走子选择（R4）。
+     ceil>0 时：只允许"走完仍不越过上限"的方向 —— AI 既不瞬间判负、
+     也不再往上长，被钉死在天花板下。这样简单档 AI 能继续陪跑攒分，
+     但物理上限把它的总分锁死 → 分差被拉满，且玩家迟早反超。
+     若被天花板卡到无路可走，返回 null（aiAct 会让它空转一轮）。 */
+  function chooseBotMove(board, budget, depth, blunder, ceil) {
+    function legal(dd) {
+      var r = tryMove(board, dd);
+      return r.moved && (!ceil || maxVal(r.board) <= ceil);
+    }
+    var opts = [];
+    for (var dd = 0; dd < 4; dd++) if (legal(dd)) opts.push(dd);
+    if (!opts.length) return null;
+    if (blunder > 0 && Math.random() < blunder) return opts[Math.floor(Math.random() * opts.length)];
+    return bestMove(board, budget, depth, opts);
   }
 
   // ---------------- Rendering ----------------
@@ -463,34 +494,49 @@
     this.locked = false;
     this.eloApplied = false;
 
-    // ---- SKILL：用玩家隐藏分算出本局 AI 的搜索强度（R2）----
+    // ---- SKILL：用玩家隐藏分算出本局 AI 的搜索强度（R3）----
     var diff = (window.Assist && window.Assist.get("2048-botdiff")) || "normal";
     this.diff = diff;
     this.hell = (diff === "hell");
     var cfg = DIFF_CFG[diff] || DIFF_CFG.normal;
     var target = DIFF_TARGET[diff] == null ? 0.5 : DIFF_TARGET[diff];
     this.aiRating = playerRating() + eloGap(target);     // 需要的 AI 强度分
-    this.aiBudget = scoreToBudget(this.aiRating, cfg.pow);// 分难度强度乘数
-    this.aiDepth = depthCap(this.aiBudget);               // → 深度上限
+    // 分难度强度乘数 + 强度地板：预算取"经验预算"与"难度下限"较大者，
+    // 保证地狱/困难即使玩家隐藏分极低也不缩水（确定性兜底）。
+    this.aiBudget = Math.max(scoreToBudget(this.aiRating, cfg.pow), cfg.floor || 0);
+    this.aiDepth = Math.max(depthCap(this.aiBudget), cfg.depthFl || 0);
     this.playerSpawn = cfg.spawn;                         // 玩家盘生成策略
+    this.blunder = cfg.blunder;                           // AI 失误率(简单高/地狱0)
+    this.ceil = cfg.ceil || 0;                            // AI 可达上限(0=不限)
+    this.p4b = (cfg.p4b == null ? 0.1 : cfg.p4b);         // AI 自己的 4 落子率
+    this.p4p = (cfg.p4p == null ? 0.1 : cfg.p4p);         // 玩家盘的 4 落子率
 
     if (this.el.container && this.el.container.classList) {
       this.el.container.classList.toggle("is-hell", this.hell);
     }
-    this.setStatus(this.hell ? "地狱开局 · 全力推演并落最差块" : "你的回合");
+    this.setStatus(this.hell ? "地狱开局 · AI 已握高位块" : "你的回合");
     this.updateSkillBar();
 
     if (this.el.combo) this.el.combo.classList.remove("on");
 
-    // 开局各 3 颗（均在目标盘生成策略下）
+    // 开局玩家 3 颗（给定生成策略；中立落子按难度 4 率）
     var self = this;
     function seedPlayer() {
       if (self.playerSpawn === "worst") spawnWorst(self.p);
       else if (self.playerSpawn === "help") spawnHelp(self.p);
-      else spawn(self.p);
+      else spawn(self.p, self.p4p);
     }
     seedPlayer(); seedPlayer(); seedPlayer();
-    spawn(this.b); spawn(this.b); spawn(this.b);   // AI 盘始终中立
+    // 开局 AI：若该档有高位起手块，先放一枚；其余补中立小块
+    if (cfg.aiStart > 2) {
+      var corner = [[0,0],[0,3],[3,0],[3,3]][Math.floor(Math.random() * 4)];
+      this.b[corner[0]][corner[1]] = cfg.aiStart;
+      this.bs = cfg.aiStart;            // 高位起手块的"历史合成分"一并计入，
+                                        // 让地狱的分差在开局即拉开（负反馈拉满）
+      spawn(this.b, this.p4b); spawn(this.b, this.p4b);
+    } else {
+      spawn(this.b, this.p4b); spawn(this.b, this.p4b); spawn(this.b, this.p4b);
+    }
 
     this.t0 = Date.now();
     this.el.banner.style.display = "none";
@@ -538,15 +584,19 @@
 
   Duel.prototype.aiAct = function () {
     if (this.winner) return;
-    var d = bestMove(this.b, this.aiBudget, this.aiDepth);   // SKILL 驱动的搜索强度
-    if (d === null) { this.checkWin(); this.locked = false; this.renderB(null); this.setStatus(this.winner ? "" : "机器入局停止"); return; }
+    // 决策：受"难度天花板"约束 + 简单/普通按失误率随机乱走，困难/地狱稳用深搜
+    var d = chooseBotMove(this.b, this.aiBudget, this.aiDepth, this.blunder, this.ceil);
+    if (d === null) { // 被天花板卡到无路可走 → 空转一轮，等待玩家反超
+      this.checkWin(); this.locked = false; this.renderB(null);
+      this.setStatus(this.winner ? "" : "机器已至上限 · 等待你反超"); return;
+    }
     var old = this.b;
     var res = tryMove(this.b, d);
     var sc = slideTrack(old, d);
     this.bs += res.gained;
     this.b = res.board;
     this.bMerge += res.gained;
-    spawn(this.b);   // AI 盘子：中立生成（强搜算法碾压，不靠生成作弊）
+    spawn(this.b, this.p4b);   // AI 盘子：中立生成（强度来自失误率+搜索+起手，非生成作弊）
     this.checkWin();
     this.locked = false;             // 解锁，轮到玩家
     this.renderB(sc);
@@ -569,7 +619,7 @@
     this.pCombo = res.merges; // 2048+ 本步连击
     if (this.playerSpawn === "worst") spawnWorst(this.p);
     else if (this.playerSpawn === "help") spawnHelp(this.p);
-    else spawn(this.p);
+    else spawn(this.p, this.p4p);
     if (window.Sound) { window.Sound.drop(); if (res.merges > 0) window.Sound.merge(); }
     this.checkWin();
     if (window.nudge) window.nudge(this.el.pBoard, dir); // 滑动跟随的推力
@@ -579,9 +629,14 @@
   };
 
   Duel.prototype.checkWin = function () {
+    // 确定性兜底（R4）：AI 盘只要越过本难度"可达上限"即判负。
+    // 这一条的约束力 >> 失误率：简单档 AI 被钉死在 8，物理上
+    // 撑不过高位，任何正常打得比你高 → 分差天然被拉满。
+    var CEILED = (this.ceil > 0 && maxVal(this.b) > this.ceil);
     var p2048 = maxVal(this.p) >= WIN_VAL;
-    var b2048 = maxVal(this.b) >= WIN_VAL;
-    if (p2048 && b2048) this.winner = "tie";
+    var b2048 = CEILED ? false : maxVal(this.b) >= WIN_VAL;
+    if (CEILED) this.winner = "p";
+    else if (p2048 && b2048) this.winner = "tie";
     else if (p2048) this.winner = "p";
     else if (b2048) this.winner = "b";
     else {
@@ -698,17 +753,32 @@
   // ---------------- input ----------------
   var KEYS = { ArrowUp: 0, KeyW: 0, ArrowRight: 1, KeyD: 1, ArrowDown: 2, KeyS: 2, ArrowLeft: 3, KeyA: 3 };
 
-  window.AiDuel = function () {
-    var game = new Duel();
-    window.addEventListener("keydown", function (e) {
-      var d = KEYS[e.code];
-      if (d === undefined) return;
-      e.preventDefault();
-      game.playerMove(d);
-    });
-    // 手机滑动：在己方棋盘上滑动控制左边的棋盘
-    if (window.bindSwipe) window.bindSwipe(document.getElementById("board-p"), function (d) { game.playerMove(d); });
-    document.getElementById("replay").addEventListener("click", function () { game.newRound(); });
-    return game;
-  };
+  if (typeof window !== "undefined") {
+    window.AiDuel = function () {
+      var game = new Duel();
+      window.addEventListener("keydown", function (e) {
+        var d = KEYS[e.code];
+        if (d === undefined) return;
+        e.preventDefault();
+        game.playerMove(d);
+      });
+      // 手机滑动：在己方棋盘上滑动控制左边的棋盘
+      if (window.bindSwipe) window.bindSwipe(document.getElementById("board-p"), function (d) { game.playerMove(d); });
+      document.getElementById("replay").addEventListener("click", function () { game.newRound(); });
+      return game;
+    };
+  }
+
+  // ---- 无头测试导出：供 Node 校验脚本复用同一套生产引擎 ----
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = {
+      WIN_VAL: WIN_VAL,
+      DIFF_CFG: DIFF_CFG, DIFF_TARGET: DIFF_TARGET,
+      emptyBoard: emptyBoard, clone: clone, emptyCells: emptyCells,
+      tryMove: tryMove, spawn: spawn, spawnWorst: spawnWorst, spawnHelp: spawnHelp,
+      maxVal: maxVal, deadOr: deadOr, bestMove: bestMove, heuristic: heuristic,
+      scoreToBudget: scoreToBudget, eloGap: eloGap, depthCap: depthCap,
+      chooseBotMove: chooseBotMove
+    };
+  }
 })();
