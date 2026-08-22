@@ -119,6 +119,12 @@
   55%  { transform: scale(1.18); }
   100% { transform: scale(1); }
 }
+/* 新生成的方块：在所在格子里原地浮现 */
+.gface.g-new { animation: g-new 0.32s var(--ease-pop); }
+@keyframes g-new {
+  from { opacity: 0; transform: scale(0.5); }
+  to   { opacity: 1; transform: scale(1); }
+}
 
 /* ---------- 经典瓦片色阶 + 物理厚度 (+)内层面 ---------- */
 .gface.t2   { background: var(--t2);   color: #776e65; box-shadow: var(--shadow-tile); }

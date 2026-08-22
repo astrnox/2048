@@ -238,11 +238,13 @@
     var self = this;
     var mergedThisMove = {};
     this.merges = 0; // 2048+ 本步连击
+    this.slideFrom = {}; // 每个落点 ← 来源中心，供滑动动画用
 
     cells.forEach(function (cell) {
       var fromK = key(cell.q, cell.r);
       if (!(fromK in self.board)) return;
       var val = self.board[fromK];
+      var src = center(cell.q, cell.r);
 
       var f = self.findFarthest(cell.q, cell.r, d);
       var nextK = key(f.next.q, f.next.r);
@@ -255,6 +257,7 @@
         delete self.board[fromK];
         self.board[nextK] = val * 2;
         mergedThisMove[nextK] = true;
+        self.slideFrom[nextK] = src;
         self.score += val * 2;
         self.merges++; // 2048+ 计数连击
         if (window.Sound && window.Sound.merge) window.Sound.merge();
@@ -262,8 +265,10 @@
         self.flash = nextK;
         moved = true;
       } else if (fromK !== key(f.farthest.q, f.farthest.r)) {
+        var toK = key(f.farthest.q, f.farthest.r);
         delete self.board[fromK];
-        self.board[key(f.farthest.q, f.farthest.r)] = val;
+        self.board[toK] = val;
+        self.slideFrom[toK] = src;
         moved = true;
       }
     });
@@ -365,9 +370,10 @@
         if (!(k in this.board)) continue;
         var isNew = !(k in this.nodeByKey);
         var g = isNew ? this.makeTile(k) : this.nodeByKey[k];
-        this.positionTile(g, center(q, r), this.board[k], k === this.flash, isNew);
+        this.positionTile(g, center(q, r), this.board[k], k === this.flash, isNew, this.slideFrom ? this.slideFrom[k] : null);
       }
     this.flash = null;
+    this.slideFrom = {};
   };
 
   HexGame.prototype.makeTile = function (k) {
@@ -387,7 +393,7 @@
     return g;
   };
 
-  HexGame.prototype.positionTile = function (g, c, val, isFlash, isNew) {
+  HexGame.prototype.positionTile = function (g, c, val, isFlash, isNew, from) {
     var poly = g.childNodes[0];
     var txt = g.childNodes[1];
     poly.setAttribute("fill", tileColor(val));
@@ -398,12 +404,24 @@
     txt.setAttribute("style", "font-size:" + tileFontSize(val));
     txt.textContent = val;
 
-    // 用 CSS transform 驱动移动，让 .hex-tile 的 transition 平滑滑动
-    g.style.transform = "translate(" + c.x.toFixed(2) + "px," + c.y.toFixed(2) + "px)";
+    var target = "translate(" + c.x.toFixed(2) + "px," + c.y.toFixed(2) + "px)";
     var cls = "hex-tile";
-    if (isFlash) cls += " hex-merged";
-    if (isNew) cls += " hex-new";
+    var sliding = from && (Math.abs(from.x - c.x) > 0.01 || Math.abs(from.y - c.y) > 0.01);
+    if (isFlash) {
+      cls += " hex-merged";                 // 合体：原地弹跳
+    } else if (sliding) {
+      // 滑动：先从来源位置出发，再用过渡滑到落点
+      cls += " hex-slide";
+      g.style.transition = "none";
+      g.style.transform = "translate(" + from.x.toFixed(2) + "px," + from.y.toFixed(2) + "px)";
+      void g.getBoundingClientRect();
+      g.style.transition = "";               // 恢复 .hex-tile 的过渡 → 触发滑动
+      g.style.transform = target;
+    } else {
+      cls += " hex-new";                     // 新生成的方块：原地浮现
+    }
     g.setAttribute("class", cls);
+    g.style.transform = target;               // 有 .hex-tile 过渡 → 平滑滑动
   };
 
   window.HexGame = HexGame;

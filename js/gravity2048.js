@@ -336,14 +336,17 @@ OrbitGame.prototype.spawnAtRandom = function () {
 
       var dx = (st.fromC - c) * this.cellW;
       var dy = (st.fromR - r) * this.cellH;
-      if (st.merge) {
+      if (st.fresh) {
+        // 新生成的方块：在所在格子里原地浮现，不是从上方移动过来
+        face.className += " g-new";
+      } else if (st.merge) {
         // 合体：外层照常受重力落下，内层同时弹跳
         var mdur = Math.min(0.66, 0.24 + Math.abs(st.fromR - r) * 0.12);
         face.className += " g-pop";
         cell.className += " g-fall";
         cell.style.transitionDuration = mdur + "s";
         cell.style.transform = "translate(" + dx + "px," + dy + "px)";
-      } else if (st.fresh || dx !== 0 || dy !== 0) {
+      } else if (dx !== 0 || dy !== 0) {
         cell.className += " g-fall";
         var dur = Math.min(0.72, 0.26 + Math.abs(st.fromR - r) * 0.13);
         cell.style.transitionDuration = dur + "s";

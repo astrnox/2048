@@ -10,6 +10,8 @@
   var COLS = 4;
   var ROWS = 5;         // 顶部 row=0，重力朝底 row=ROWS-1
   var WIN_VAL = 2048;
+  // 下坠到位的耗时（ms），之后才触发合成动画
+  var LAUNCH_FALL_MS = 520;
   // 与 launch.css 的 board 细节保持一致（gap=6,padding=7）
   var GAP = 6, PAD = 7;
 
@@ -90,6 +92,8 @@
     this.next = genTray();
     this.lastNewId = -1;      // 本次发射、未合体而存活的瓦片 id
     this.fallMoves = {};      // id -> 从屏幕上方下坠到 finalRow
+    this.launchBusy = false;  // 下落过程中禁止再次发射
+    this.pending = null;      // 落地后再应用的最终局面
     this.nodes = {};          // id -> { outer, inner }
 
     // DOM
@@ -141,9 +145,9 @@
     if (e.length) { var q = e.splice(Math.floor(Math.random() * e.length), 1)[0]; this.grid[q[0]][q[1]] = newT(Math.random() < 0.9 ? 2 : 4); }
   };
 
-  // 发射选中的牌到指定列：从屏幕上方受重力落到列顶，再整盘竖直解析合体
+  // 发射：方块必先受重力下落——遇到底/下方方块落定，才触发合成动画
   LaunchGame.prototype.launch = function (col) {
-    if (this.over || this.armed < 0) return;
+    if (this.over || this.armed < 0 || this.launchBusy) return;
     if (colFull(this.grid, col)) return;
 
     var val = this.tray[this.armed];
@@ -152,22 +156,35 @@
     this.tray = this.next; this.next = genTray();
     this.renderTray();
 
-    // 先放进该列“栈顶”（落下点），再整盘解析——让上下能合成的部位同时合体
-    var count = colObjs(this.grid, col).length;
-    this.grid[ROWS - 1 - count][col] = nt;
+    // 落在该列“栈顶”：下方有方块就落在它上面；空列落到底
+    var landingRow = ROWS - 1 - colObjs(this.grid, col).length;
+    this.grid[landingRow][col] = nt;
 
-    var res = resolveBoard(this.grid);
-    var loc = null;
-    for (var r = 0; r < ROWS; r++) if (this.grid[r][col] && this.grid[r][col].id === nt.id) loc = { r: r, c: col };
+    // 预先算好“落定后”的整盘竖直解析结果，放在坠落完成之后再应用（此刻先不触发合成）
+    var scratch = this.grid.map(function (row) { return row.slice(); });
+    var res = resolveBoard(scratch);
+    this.pending = { grid: scratch, gain: res.gain, merges: res.merges };
 
-    this.score += res.gain;
-    if (res.merges >= 2) this.flashCombo(res.merges);
-    if (window.Sound) { window.Sound.drop(); if (res.merges > 0) window.Sound.merge(); }
-
-    // 记录发射的这颗：从屏幕上方（row 之上）下坠到最终位
+    if (window.Sound) window.Sound.drop();       // 这一下只播“下落”
+    this.launchBusy = true;
     this.fallMoves = {};
-    if (loc) this.fallMoves[nt.id] = loc.r;
+    this.fallMoves[nt.id] = landingRow;          // 从屏幕上方落到栈顶的动画
+    this.render();
 
+    var self = this;
+    window.setTimeout(function () { self.land(); }, LAUNCH_FALL_MS);
+  };
+
+  // 落定后：应用最终局面并触发合成动画
+  LaunchGame.prototype.land = function () {
+    this.launchBusy = false;
+    var p = this.pending;
+    this.pending = null;
+    if (!p) return;
+    this.grid = p.grid;
+    this.score += p.gain;
+    if (p.merges >= 2) this.flashCombo(p.merges);
+    if (window.Sound && p.merges > 0) window.Sound.merge();
     this.checkState();
     this.render();
   };
@@ -204,6 +221,7 @@
   LaunchGame.prototype.restart = function () {
     this.grid = emptyGrid(); this.score = 0; this.won = false; this.over = false; this.armed = -1;
     this.tray = genTray(); this.next = genTray(); this.lastNewId = -1; this.fallMoves = {};
+    this.launchBusy = false; this.pending = null;
     // 清空所有瓦片 DOM
     var self = this;
     Object.keys(this.nodes).forEach(function ( id ) { self.elBoard.removeChild(self.nodes[id].outer); });
