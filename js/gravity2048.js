@@ -137,6 +137,7 @@
   function OrbitGame(el) {
     this.board = emptyBoard();
     this.rot = 0;         // 世界相对观测者的顺时针弧度(0..3) × 90°
+    this.angleDeg = 0;    // 连续旋转角（不取模），杜绝关键帧转一大圈
     this.score = 0;
     this.best = parseInt(localStorage.getItem("grav-best") || "0", 10);
     this.won = false; this.over = false; this.keep = false;
@@ -186,8 +187,9 @@ OrbitGame.prototype.spawnAtRandom = function () {
   };
 
   OrbitGame.prototype.tilt = function (dv) {
-    this.rot = (this.rot + dv + 4) % 4;
-    this.elBoard.style.transform = "rotate(" + (this.rot * 90) + "deg)";
+    this.angleDeg += dv * 90;                 // 连续角度，避免 270→0 反转一大圈
+    this.rot = (((this.angleDeg / 90) % 4) + 4) % 4;
+    this.elBoard.style.transform = "rotate(" + this.angleDeg + "deg)";
     this.setCompass();
   };
 
@@ -274,7 +276,7 @@ OrbitGame.prototype.spawnAtRandom = function () {
 
   OrbitGame.prototype.restart = function () {
     this.board = emptyBoard(); this.score = 0; this.won = false; this.over = false; this.keep = false;
-    this.rot = 0; this.elBoard.style.transform = "rotate(0deg)"; this.setCompass();
+    this.rot = 0; this.angleDeg = 0; this.elBoard.style.transform = "rotate(0deg)"; this.setCompass();
     this.moves = []; this.fresh = null; this.merges = 0;
     if (this.elCombo) this.elCombo.classList.remove("on");
     this.seed();
@@ -389,19 +391,21 @@ OrbitGame.prototype.spawnAtRandom = function () {
 
     // 统一 指针(鼠标/触摸)：按住并左右拖动 → 实时旋转这颗星，松手吸附到 0/90/180/270；
     // 轻点 / 向下拖动 → 坠落
-    var downX = 0, downY = 0, startT = 0, dragging = false, liveAngle = 0;
+    function norm(a) { return ((a % 360) + 360) % 360; }  // 把角度归一到 0..360，防止累计大角度转圈
+    var downX = 0, downY = 0, startT = 0, dragging = false, base = 0, liveAngle = 0;
     var board = this.elBoard;
     board.addEventListener("pointerdown", function (e) {
       downX = e.clientX; downY = e.clientY; startT = Date.now(); dragging = false;
-      liveAngle = self.rot * 90;
+      base = self.angleDeg;                // 拖动锚点（连续角）
+      liveAngle = base;
       board.style.transition = "none"; // 拖动时实时跟手
     });
     board.addEventListener("pointermove", function (e) {
       var dx = e.clientX - downX;
       if (Math.abs(e.clientX - downX) > 14 || Math.abs(e.clientY - downY) > 14) dragging = true;
       if (dragging) {
-        liveAngle = self.rot * 90 + dx * 0.45;
-        board.style.transform = "rotate(" + liveAngle + "deg)";
+        liveAngle = base + dx * 0.4;
+        board.style.transform = "rotate(" + norm(liveAngle) + "deg)";  // 只显示 0..360，避免转大圈
       }
     });
     board.addEventListener("pointerup", function (e) {
@@ -409,10 +413,11 @@ OrbitGame.prototype.spawnAtRandom = function () {
       var dx = e.clientX - downX, dy = e.clientY - downY;
       var adx = Math.abs(dx), ady = Math.abs(dy);
       if (dragging && adx >= ady) {
-        // 吸附到最近的 90° 倍数（0/90/180/270）
-        var snapped = Math.round(liveAngle / 90) * 90;
-        self.rot = ((Math.round(snapped / 90) % 4) + 4) % 4;
-        board.style.transform = "rotate(" + (self.rot * 90) + "deg)";
+        // 吸附到离当前显示角度最近的 90° 倍数（差值 ≤ 45°，不会转大圈）
+        var target = Math.round(norm(liveAngle) / 90) * 90;
+        self.rot = Math.round(target / 90) % 4;
+        self.angleDeg = target;
+        board.style.transform = "rotate(" + target + "deg)";
         self.setCompass();
         return;
       }

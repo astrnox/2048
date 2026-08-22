@@ -13,7 +13,6 @@
   var MODE_MAP = {
     classic: { label: '经典模式', url: 'game.html' },
     gravity: { label: '星落模式', url: 'game_gravity.html' },
-    launch:  { label: '发射模式', url: 'game_launch.html' },
     hex:     { label: '六边模式', url: 'game_hex.html' },
     ai:      { label: '对抗模式', url: 'game_ai.html' }
   };
