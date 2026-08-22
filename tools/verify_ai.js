@@ -224,24 +224,29 @@ function runSuite() {
     console.log("   （信息）同起点下玩家最终分反超 AI " + pOutScore + "/" + NHELL + " 局，AI 先到 2048 " + aiReach2048 + "/" + NHELL + " 局");
   }
   {
-    // C2 独力强度（信息）：AI 同公平起点，自己刷盘的爬升水平
+    // C2 独力强度（信息）：AI 同公平起点，自己刷盘的爬升水平。
+    // 地狱预算 60000 ≈ 500ms/步，300 步一份校验就要 2 分钟+；这里仅做
+    // 趋势采样覆盖（信息项，非硬断言），缩短到 120 步仍能看出爬升能力。
     const s = [];
-    for (let i = 0; i < 2; i++) s.push(soloAI("hell", 300));
+    for (let i = 0; i < 2; i++) s.push(soloAI("hell", 120));
     const repl = s.filter(x => x.highest >= 512).length;
     const best = s.reduce((m, x) => Math.max(m, x.highest), 0);
     console.log("   地狱 AI 独力（同起点）：最高瓦片 " + best + "，≥512 有 " + repl + "/" + s.length);
     agg.hellStrength = { repl, best };
     // 硬性时效：拥挤晚期盘上测最慢单步决策，必然 ≤5000ms（时间上限兜底）
     const hb = [
-      [4, 128, 8, 256],
-      [16, 64, 32, 512],
-      [4, 128, 8, 1024],
-      [16, 64, 512, 128]
+      [2, 0, 4, 0],
+      [8, 0, 16, 32],
+      [0, 64, 128, 256],
+      [4, 512, 8, 2]
     ];
+    const hcfg = DIFF_CFG.hell;
+    const hb2 = Math.max(scoreToBudget(1200 + eloGap(DIFF_TARGET.hell), hcfg.pow), hcfg.floor || 0);
+    const hd2 = Math.max(depthCap(hb2), hcfg.depthFl || 0);
     let worst = 0;
     for (let k = 0; k < 6; k++) {
       const t0 = Date.now();
-      chooseBotMove(hb, 500000, 10, 0, 0);
+      chooseBotMove(hb, hb2, hd2, 0, 0);
       const dt = Date.now() - t0; if (dt > worst) worst = dt;
     }
     console.log("   地狱 AI 单步最快停机路径下测量的最慢决策 = " + worst + "ms");

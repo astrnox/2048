@@ -66,7 +66,7 @@
     easy:   { pow: 0.5,  blunder: 0.85, aiStart: 2,  ceil: 8,   floor: 0,   depthFl: 3, winK: 1.7, loseK: 0.4, spawn: "help",   p4b: 0.10, p4p: 0.06 },
     normal: { pow: 1.0,  blunder: 0.45, aiStart: 2,  ceil: 256, floor: 0,   depthFl: 4, winK: 1.0, loseK: 1.0, spawn: "neutral", p4b: 0.10, p4p: 0.14 },
     hard:   { pow: 1.8,  blunder: 0.08, aiStart: 4,  ceil: 1024,floor: 0,   depthFl: 5, winK: 0.8, loseK: 1.3, spawn: "worst",  p4b: 0.10, p4p: 0.28 },
-    hell:   { pow: 4.0,  blunder: 0.0,  aiStart: 2,  ceil: 0,   floor: 500000, depthFl: 10, winK: 0.2, loseK: 2.0, spawn: "worst", p4b: 0.10, p4p: 0.40 }
+    hell:   { pow: 4.0,  blunder: 0.0,  aiStart: 2,  ceil: 0,   floor: 60000, depthFl: 8, winK: 0.2, loseK: 2.0, spawn: "worst", p4b: 0.10, p4p: 0.40 }
   };
   // 各档体验描述（UI 用）
   var DIFF_DESC = {
