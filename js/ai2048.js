@@ -25,14 +25,69 @@
     return out;
   }
 
-  // 出块偏向：难度越高，给机器人的落子越好、给玩家的越差
-  // (数值 = 出现 4 的概率，p4 越小越容易，越偏向机器人)
-  var SPAWN = {
-    easy:   { bot: 0.16, human: 0.04 },
-    normal: { bot: 0.10, human: 0.10 },
-    hard:   { bot: 0.02, human: 0.26 },
-    hell:   { bot: 0.00, human: 0.50 }   // 地狱：机器人几乎只出 2，人类出 4 概率拉满
+  /* =========================================================
+     SKILL 系统 ·「目标胜率 × 玩家隐藏分(ELO)」动态难度
+     ---------------------------------------------------------
+     设计说明（科学建模）：
+       1) 每个玩家有一个隐藏 ELO 分 Rp，持久化在 localStorage。
+       2) 每档难度固定一个"目标胜率 target"：
+             简单 0.90 / 普通 0.60 / 困难 0.30 / 地狱 ~0.01
+       3) 由标准 Elo 期望公式 P=E(Rp,Ra)=1/(1+10^((Ra-Rp)/400))，
+          反解达到该胜率所需的 AI 强度分：
+              Ra = Rp + 400·log10((1-target)/target)
+          难度越高 gap 越大 → 要求的 AI 越强。
+       4) Ra 单调映射为搜索节点预算（指数增长）与深度上限：
+              预算越大 → 推演越深 → AI 越强。
+          这样"难度"是连续的单个参数，可随玩家水平自动伸缩。
+       5) 每局结束按 Elo 更新 Rp：  Rp += K·(S - E)
+          S 本局实际结果(胜1/和.5/负0)，E 期望(用本局 Ra 算出)。
+          于是玩家越强 → Rp 越高 → AI 强度分随之上浮 → 难度自动
+          跟上玩家，把目标胜率钉住（困难实在太强则玩家分回落，AI
+          相应变弱，形成稳定负反馈）。
+     ---------------------------------------------------------
+     生成策略：
+       - 地狱不靠"生成偏向 AI"，而靠最强搜索碾压，双方生成都保持中立。
+       - 仅困难档在玩家盘上加对抗性 spawnWorst 作为补充难度来源，
+         主要压力仍来自搜索深度。
+     ========================================================= */
+  var RP_KEY = "2048-ai-elo";
+  var RP_DEF = 1200;        // 新玩家基准分
+  var ELO_K = 48;           // 更新步长（越大适应越快）
+  var DIFF_TARGET = { easy: 0.90, normal: 0.60, hard: 0.30, hell: 0.01 };
+  // 各档体验描述（UI 用）
+  var DIFF_DESC = {
+    easy:   "AI 浅算、爱失误，让你从容熟悉规则",
+    normal: "AI 稳定合牌，和你势均力敌",
+    hard:   "AI 深算 + 针对你的落点，压你一头",
+    hell:   "AI 全力推演、近乎完美，几乎不可战胜"
   };
+
+  function playerRating() {
+    try { var v = parseInt(localStorage.getItem(RP_KEY), 10); return isNaN(v) ? RP_DEF : v; }
+    catch (e) { return RP_DEF; }
+  }
+  function saveRating(r) { try { localStorage.setItem(RP_KEY, String(Math.round(r))); } catch (e) {} }
+
+  // Elo 期望（玩家胜率）
+  function eloExpected(playerR, aiR) { return 1 / (1 + Math.pow(10, (aiR - playerR) / 400)); }
+  // 目标胜率 → 需要的 AI 相对分差
+  function eloGap(target) { return 400 * Math.log10((1 - target) / target); }
+
+  // 强度分 + 档位 → 节点预算（指数）：Ra 越高预算指数级放大
+  function scoreToBudget(Ra) {
+    var s = Math.max(0, Math.min(1, (Ra - 1000) / 1600));   // 归一 0..1
+    return Math.round(700 * Math.pow(10, 2.4 * s));          // 700 → ~200000
+  }
+  // 预算 → 深度上限（限制递归层数，控时）
+  function depthCap(b) {
+    if (b < 1500) return 3;
+    if (b < 6000) return 5;
+    if (b < 20000) return 7;
+    if (b < 60000) return 8;
+    return 10;
+  }
+
+  // 生成：随机落 2/4（中立）
   function spawn(b, p4) {
     var cells = emptyCells(b);
     if (!cells.length) return false;
@@ -40,18 +95,11 @@
     b[p[0]][p[1]] = Math.random() < (p4 == null ? 0.1 : p4) ? 4 : 2;
     return true;
   }
-  // 把难度档位映射为当前对局的出块偏向
-  function spawnBias(botDiff) {
-    var d = botDiff === "easy" ? "easy" : (botDiff === "hard" ? "hard" : (botDiff === "hell" ? "hell" : "normal"));
-    return SPAWN[d];
-  }
 
-  /* ---- 对抗性放置（Adversarial 2048 核心）----
-     两个 AI 各负责一边的生成，都要提前算好“落点与取值”：
-        spawnWorst —— 在玩家棋盘上，选(落点, 取值)，使玩家【最优应对之后】
-                     的局面最差（min-max 两层的 Placer 视角）；
-        spawnBest ---- 在 AI 自己棋盘上，选(落点, 取值)，使 AI 自己局面最好。
-     取值同样由 AI 决定：权衡在某个格放 2 还是 4 对评分的净影响。 */
+  /* ---- 对抗性放置（Adversarial 补充难度来源）----
+     只在"困难"档对玩家盘生效：spawnWorst 挑(落点, 取值)，使玩家
+     【最优应对之后】的局面最差（min-max 两层的 Placer 视角），
+     作为搜索深度之外的额外压力。地狱/简单/普通走中立生成。 */
   // 一层玩家最优应对后的评分（Placer 想着 Slider 下一步会怎么走）
   function playerBestAfter(board, dir) {
     var res = tryMove(board, dir);
@@ -69,30 +117,13 @@
       for (var vi = 0; vi < 2; vi++) {
         var v = vi === 0 ? 2 : 4;
         var nb = clone(b); nb[rc[0]][rc[1]] = v;
-        // 对手最优应对 = max{玩家四向最佳后的评分}；Placer 选使这个值最小的落子
+        // 对手最优应对 = max{玩家四向最佳后的评分}；选使这个值最小的落子
         var best = -Infinity;
         for (var d = 0; d < 4; d++) {
           var s = playerBestAfter(nb, d);
           if (s > best) best = s;
         }
         if (best < worstVal) { worstVal = best; bestCell = rc; bestVal = v; }
-      }
-    }
-    b[bestCell[0]][bestCell[1]] = bestVal;
-    return true;
-  }
-  function spawnBest(b) {
-    var cells = emptyCells(b);
-    if (!cells.length) return false;
-    var bestCell = null, bestVal = 2, hi = -Infinity;
-    var cands = sampleCells(cells, Math.min(cells.length, 12));
-    for (var i = 0; i < cands.length; i++) {
-      var rc = cands[i];
-      for (var vi = 0; vi < 2; vi++) {
-        var v = vi === 0 ? 2 : 4;
-        var nb = clone(b); nb[rc[0]][rc[1]] = v;
-        var h = heuristic(nb);
-        if (h > hi) { hi = h; bestCell = rc; bestVal = v; }
       }
     }
     b[bestCell[0]][bestCell[1]] = bestVal;
@@ -269,7 +300,6 @@
 
   // 全局节点预算：让每次决策的计算量严格受控，深度再高也不至于卡顿
   var budget = 0;
-  var NODE_BUDGETS = { 2: 900, 4: 4200, 6: 20000, 8: 70000 }; // 简单/普通/困难/地狱
 
   // 按局面优劣排序候选方向，先试有希望的分支 → 更好的 alpha-beta 剪枝
   function moveOrder(board) {
@@ -314,15 +344,15 @@
     return best === -Infinity ? heuristic(board) : best;
   }
 
-  function bestMove(board, depth) {
-    depth = depth || 4;
-    budget = NODE_BUDGETS[depth] || 4200;
+  function bestMove(board, budgetIn, maxDepthIn) {
+    budget = budgetIn || 4200;
+    maxDepthIn = maxDepthIn || 4;
     var bestDir = null, best = -Infinity;
     var order = moveOrder(board);
     for (var i = 0; i < order.length; i++) {
       var d = order[i];
       var res = tryMove(board, d);
-      var s = chanceNode(res.board, depth, best, Infinity);
+      var s = chanceNode(res.board, maxDepthIn, best, Infinity);
       if (s > best) { best = s; bestDir = d; }
     }
     return bestDir;
@@ -374,29 +404,36 @@
     this.b = emptyBoard(); this.bs = 0; this.bMerge = 0;
     this.winner = null;
     this.locked = false;
+    this.eloApplied = false;
 
-    // 按“机器人难度”锁定本局出块偏向
+    // ---- SKILL：用玩家隐藏分算出本局 AI 的搜索强度 ----
     var diff = (window.Assist && window.Assist.get("2048-botdiff")) || "normal";
-    var bias = spawnBias(diff);
-    this.humanP4 = bias.human;
-    this.botP4 = bias.bot;
+    this.diff = diff;
     this.hell = (diff === "hell");
+    var target = DIFF_TARGET[diff] == null ? 0.5 : DIFF_TARGET[diff];
+    this.aiRating = playerRating() + eloGap(target);     // 需要的 AI 强度分
+    this.aiBudget = scoreToBudget(this.aiRating);         // → 节点预算
+    this.aiDepth = depthCap(this.aiBudget);               // → 深度上限
+
     if (this.el.container && this.el.container.classList) {
       this.el.container.classList.toggle("is-hell", this.hell);
-      this.el.status.textContent = this.hell ? "地狱 · 你的落子在为你绊脚" : "你的回合";
     }
-    this.setStatus(this.hell ? "地狱开局 · 新块由对手恶意放置" : "你的回合");
+    this.setStatus(this.hell ? "地狱开局 · 全力推演" : "你的回合");
+    this.updateSkillBar();
 
     if (this.el.combo) this.el.combo.classList.remove("on");
 
-    if (this.hell) {
-      // 地狱：生成由双 AI 决定 —— 你的棋盘被毫不犹豫地落子到最差处，AI 自己则挑最好的
+    // 生成策略（地狱不靠生成偏向 AI，纯靠最强算法碾压）：
+    //   简单/普通/地狱 → 双方中立随机；仅困难 → 玩家盘对抗性 spawn 补压
+    if (diff === "hard") {
       spawnWorst(this.p); spawnWorst(this.p); spawnWorst(this.p);
-      spawnBest(this.b); spawnBest(this.b); spawnBest(this.b);
+      this.playerSpawn = "worst";
     } else {
-      spawn(this.p, this.humanP4); spawn(this.p, this.humanP4); spawn(this.p, this.humanP4);
-      spawnBest(this.b); spawnBest(this.b); spawnBest(this.b);
+      spawn(this.p); spawn(this.p); spawn(this.p);
+      this.playerSpawn = "neutral";
     }
+    this.botSpawn = "neutral";
+    spawn(this.b); spawn(this.b); spawn(this.b);
 
     this.t0 = Date.now();
     this.el.banner.style.display = "none";
@@ -404,6 +441,18 @@
 
     this.setStatus("你的回合");
     this.render();
+  };
+
+  // 更新难度说明 + 隐藏分显示
+  Duel.prototype.updateSkillBar = function () {
+    var el = document.getElementById("skill-info");
+    if (!el) return;
+    var d = DIFF_DESC[this.diff] || "";
+    el.innerHTML = '<span class="skill-elo">隐藏分 <b>' + playerRating() +
+      '</b></span><span class="skill-target">目标胜率 <b>' +
+      Math.round(DIFF_TARGET[this.diff] * 100) + '%</b></span><span class="skill-ai">AI强度 ' +
+      Math.round(this.aiRating) + '</span>' +
+      (d ? '<span class="skill-desc">' + d + '</span>' : '');
   };
 
   // 2048+：你本步多次合并 → 弹连击徽标
@@ -432,10 +481,7 @@
 
   Duel.prototype.aiAct = function () {
     if (this.winner) return;
-    // 难度 → 搜索深度：简单=浅(弱) 中等=标准 困难=深(强)；bot 档位存于 2048-botdiff
-    var diff = (window.Assist && window.Assist.get("2048-botdiff")) || "med";
-    var depth = window.Assist ? window.Assist.botDepth(diff) : 4;
-    var d = bestMove(this.b, depth);
+    var d = bestMove(this.b, this.aiBudget, this.aiDepth);   // SKILL 驱动的搜索强度
     if (d === null) { this.checkWin(); this.locked = false; this.renderB(null); this.setStatus(this.winner ? "" : "机器入局停止"); return; }
     var old = this.b;
     var res = tryMove(this.b, d);
@@ -443,7 +489,7 @@
     this.bs += res.gained;
     this.b = res.board;
     this.bMerge += res.gained;
-    spawnBest(this.b);   // 机器人自己棋盘：由 AI 挑选最有利的(落点, 取值)
+    spawn(this.b);   // AI 盘子：中立生成（强搜算法碾压，不靠生成作弊）
     this.checkWin();
     this.locked = false;             // 解锁，轮到玩家
     this.renderB(sc);
@@ -464,7 +510,7 @@
     this.ps += res.gained;
     this.pMerge += res.gained;
     this.pCombo = res.merges; // 2048+ 本步连击
-    if (this.hell) spawnWorst(this.p); else spawn(this.p, this.humanP4);
+    if (this.playerSpawn === "worst") spawnWorst(this.p); else spawn(this.p);
     if (window.Sound) { window.Sound.drop(); if (res.merges > 0) window.Sound.merge(); }
     this.checkWin();
     if (window.nudge) window.nudge(this.el.pBoard, dir); // 滑动跟随的推力
@@ -485,7 +531,22 @@
       else if (pd) { this.winner = "b"; }
       else if (bd) { this.winner = "p"; }
     }
-    if (this.winner) this.actuateBanner();
+    if (this.winner) {
+      this.applyElo();
+      this.actuateBanner();
+    }
+  };
+
+  // ELO 更新：S 实际结果，E 期望（用本局 AI 强度分反推的玩家胜率）
+  Duel.prototype.applyElo = function () {
+    if (this.eloApplied) return;          // 只结算一次
+    this.eloApplied = true;
+    var S = this.winner === "p" ? 1 : (this.winner === "tie" ? 0.5 : 0);
+    var Rp = playerRating();
+    var E = eloExpected(Rp, this.aiRating);   // 该强度下玩家应得胜率
+    saveRating(Rp + ELO_K * (S - E));         // 闭环负反馈
+    var el = document.getElementById("skill-info");
+    if (el) this.updateSkillBar();
   };
 
   Duel.prototype.resolve = function () { this.checkWin(); };
