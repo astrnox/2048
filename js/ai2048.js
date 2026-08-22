@@ -66,7 +66,7 @@
     easy:   { pow: 0.5,  blunder: 0.85, aiStart: 2,  ceil: 8,   floor: 0,   depthFl: 3, winK: 1.7, loseK: 0.4, spawn: "help",   p4b: 0.10, p4p: 0.06 },
     normal: { pow: 1.0,  blunder: 0.45, aiStart: 2,  ceil: 256, floor: 0,   depthFl: 4, winK: 1.0, loseK: 1.0, spawn: "neutral", p4b: 0.10, p4p: 0.14 },
     hard:   { pow: 1.8,  blunder: 0.08, aiStart: 4,  ceil: 1024,floor: 0,   depthFl: 5, winK: 0.8, loseK: 1.3, spawn: "worst",  p4b: 0.10, p4p: 0.28 },
-    hell:   { pow: 4.0,  blunder: 0.0,  aiStart: 2,  ceil: 0,   floor: 30000, depthFl: 8, winK: 0.2, loseK: 2.0, spawn: "worst", p4b: 0.10, p4p: 0.40 }
+    hell:   { pow: 4.0,  blunder: 0.0,  aiStart: 2,  ceil: 0,   floor: 500000, depthFl: 10, winK: 0.2, loseK: 2.0, spawn: "worst", p4b: 0.10, p4p: 0.40 }
   };
   // 各档体验描述（UI 用）
   var DIFF_DESC = {
@@ -378,6 +378,9 @@
   // 全局节点预算：让每次决策的计算量严格受控，深度再高也不至于卡顿
   var budget = 0;
   var budgetFloor = 0;   // 单步"预算闸"：一个方向只能吃自己那份，不能饿死其余方向
+  var searchStart = 0;   // 单次决策起始时间（迭代加深 + 硬性时间上限 ≥5s 的兜底）
+  var searchCap = 4200;  // 单次决策最久 ms（≡ 你领先≥5 秒的内控上限）
+  var clock = 0;         // 每隔 N 节点读一次表，避免热路径 Date.now() 拖慢
 
   // 按局面优劣排序候选方向，先试有希望的分支 → 更好的 alpha-beta 剪枝
   function moveOrder(board) {
@@ -395,6 +398,8 @@
   // chanceNode=true 轮到随机放子（对手），false 轮到 _max 挑最好走法（带 alpha-beta）
   function chanceNode(board, depth, alpha, beta) {
     if (depth <= 0 || --budget <= budgetFloor) return heuristic(board);
+    // 硬性时间上限：单次决策绝不超时（≥5s 内控兜底），超时就按当前启发式截断
+    if (--clock <= 0) { clock = 1024; if (Date.now() - searchStart > searchCap) return heuristic(board); }
     var cells = emptyCells(board);
     if (!cells.length) return heuristic(board);
     var samples = sampleCells(cells, Math.min(3, cells.length));
@@ -410,6 +415,7 @@
 
   function maxNode(board, depth, alpha, beta) {
     if (depth <= 0 || --budget <= budgetFloor) return heuristic(board);
+    if (--clock <= 0) { clock = 1024; if (Date.now() - searchStart > searchCap) return heuristic(board); }
     var best = -Infinity;
     var order = moveOrder(board);
     for (var i = 0; i < order.length; i++) {
@@ -433,12 +439,12 @@
       dirs = dirs.filter(function (x) { return ok[x] === 1; });
     }
     if (!dirs.length) return null;
-    // 关键修正：只有"大预算"才按方向数平分 + budgetFloor 闸门，让每个方向
-    // 都被搜到同等深度 —— 避免"第一个方向递归耗尽全部预算、其余方向只评
-    // 一层"的错判（此前大预算反而越搜越弱）。小预算维持原逻辑（单路径快搜），
-    // 避免普通/困难这种中低预算的强度被均分稀释。
+    // 大预算按方向平分（budgetFloor 闸门）——每个方向都被搜到同等的既定深度，避免
+    // "第一个方向递归耗尽全部预算、其余方向只评一层"的错判。同时用 searchStart 时钟
+    // + searchCap 硬性锁死单次决策 ≤5s（budgetFloor/searchCap 双保险）。
     var split = budgetIn >= 9000;
-    var slice = split ? Math.max(40, Math.floor(budgetIn / dirs.length)) : 0;
+    var slice = split ? Math.max(40, Math.floor(budgetIn / Math.max(1, dirs.length))) : 0;
+    searchStart = Date.now(); clock = 1024;   // 决策时钟起跑，供 chance/maxNode 超时截断
     var bestDir = dirs[0], best = -Infinity;
     for (var i = 0; i < dirs.length; i++) {
       var d = dirs[i];

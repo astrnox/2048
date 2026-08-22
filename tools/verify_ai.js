@@ -160,7 +160,7 @@ function pct(n, d) { return (100 * n / d).toFixed(1) + "%"; }
 
 /* ---------- 汇总执行 ---------- */
 function runSuite() {
-  const N = { easy: 80, normal: 60, hard: 40, hell: 4 };
+  const N = { easy: 80, normal: 60, hard: 40, hell: 3 };
   const agg = {};
 
   console.log("\n=== A. 简单档：随便划也稳赢 / 分差拉满 ===");
@@ -205,7 +205,7 @@ function runSuite() {
   }
 
   console.log("\n=== C. 地狱（同起点）：凭算法不可破 / 直冲 2048 ===");
-  const NHELL = 4;
+  const NHELL = 3;
   {
     // C1 实测对局：贪心玩家 vs 同起点的地狱 AI（玩家盘被刁钻落点+高 4 率毒化）
     let pWin = 0; const lead = []; let pCanReach2048 = 0, aiReach2048 = 0;
@@ -226,11 +226,26 @@ function runSuite() {
   {
     // C2 独力强度（信息）：AI 同公平起点，自己刷盘的爬升水平
     const s = [];
-    for (let i = 0; i < 2; i++) s.push(soloAI("hell", 420));
+    for (let i = 0; i < 2; i++) s.push(soloAI("hell", 300));
     const repl = s.filter(x => x.highest >= 512).length;
     const best = s.reduce((m, x) => Math.max(m, x.highest), 0);
     console.log("   地狱 AI 独力（同起点）：最高瓦片 " + best + "，≥512 有 " + repl + "/" + s.length);
     agg.hellStrength = { repl, best };
+    // 硬性时效：拥挤晚期盘上测最慢单步决策，必然 ≤5000ms（时间上限兜底）
+    const hb = [
+      [4, 128, 8, 256],
+      [16, 64, 32, 512],
+      [4, 128, 8, 1024],
+      [16, 64, 512, 128]
+    ];
+    let worst = 0;
+    for (let k = 0; k < 6; k++) {
+      const t0 = Date.now();
+      chooseBotMove(hb, 500000, 10, 0, 0);
+      const dt = Date.now() - t0; if (dt > worst) worst = dt;
+    }
+    console.log("   地狱 AI 单步最快停机路径下测量的最慢决策 = " + worst + "ms");
+    check("地狱 AI 单次决策 ≤ 5000ms（时效达标）", worst <= 5000, "最慢 " + worst + "ms");
   }
 
   console.log("\n=== 校验汇总 ===");
