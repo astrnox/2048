@@ -46,22 +46,53 @@
     return SPAWN[d];
   }
 
-  /* ---- 地狱模式 · 对抗性放置 ----
-     Adversarial 2048 核心：当随机数生成器变成你的对手。
-     不再均匀随机落子，而是对每个空位 × 取值(2/4) 模拟放置后，
-     用启发式打分选出【对你的局面破坏最大】的那个位置 ——
-     就像设下迷雾的对手，总把新块怼在你最薄弱、最致命的地方。 */
-  function spawnAdversarial(b) {
+  /* ---- 对抗性放置（Adversarial 2048 核心）----
+     两个 AI 各负责一边的生成，都要提前算好“落点与取值”：
+        spawnWorst —— 在玩家棋盘上，选(落点, 取值)，使玩家【最优应对之后】
+                     的局面最差（min-max 两层的 Placer 视角）；
+        spawnBest ---- 在 AI 自己棋盘上，选(落点, 取值)，使 AI 自己局面最好。
+     取值同样由 AI 决定：权衡在某个格放 2 还是 4 对评分的净影响。 */
+  // 一层玩家最优应对后的评分（Placer 想着 Slider 下一步会怎么走）
+  function playerBestAfter(board, dir) {
+    var res = tryMove(board, dir);
+    if (!res.moved) return -Infinity;
+    return heuristic(res.board);
+  }
+  function spawnWorst(b, depth) {
     var cells = emptyCells(b);
     if (!cells.length) return false;
-    var bestCell = null, bestVal = 2, worst = Infinity;
-    for (var i = 0; i < cells.length; i++) {
-      var rc = cells[i];
+    var bestCell = null, bestVal = 2, worstVal = Infinity;
+    // 采样空位上限，控制计算量（空位多时不必全算）
+    var cands = sampleCells(cells, Math.min(cells.length, 14));
+    for (var i = 0; i < cands.length; i++) {
+      var rc = cands[i];
+      for (var vi = 0; vi < 2; vi++) {
+        var v = vi === 0 ? 2 : 4;
+        var nb = clone(b); nb[rc[0]][rc[1]] = v;
+        // 对手最优应对 = max{玩家四向最佳后的评分}；Placer 选使这个值最小的落子
+        var best = -Infinity;
+        for (var d = 0; d < 4; d++) {
+          var s = playerBestAfter(nb, d);
+          if (s > best) best = s;
+        }
+        if (best < worstVal) { worstVal = best; bestCell = rc; bestVal = v; }
+      }
+    }
+    b[bestCell[0]][bestCell[1]] = bestVal;
+    return true;
+  }
+  function spawnBest(b) {
+    var cells = emptyCells(b);
+    if (!cells.length) return false;
+    var bestCell = null, bestVal = 2, hi = -Infinity;
+    var cands = sampleCells(cells, Math.min(cells.length, 12));
+    for (var i = 0; i < cands.length; i++) {
+      var rc = cands[i];
       for (var vi = 0; vi < 2; vi++) {
         var v = vi === 0 ? 2 : 4;
         var nb = clone(b); nb[rc[0]][rc[1]] = v;
         var h = heuristic(nb);
-        if (h < worst) { worst = h; bestCell = rc; bestVal = v; }
+        if (h > hi) { hi = h; bestCell = rc; bestVal = v; }
       }
     }
     b[bestCell[0]][bestCell[1]] = bestVal;
@@ -313,6 +344,7 @@
     this.t0 = 0;
     this.aiTimer = null;
     this.thinking = false;
+    this.locked = false;   // 严格轮流：bot 思考/行动期间锁住玩家输入
 
     this.el = {
       container: document.querySelector(".container"),
@@ -341,6 +373,7 @@
     this.p = emptyBoard(); this.ps = 0; this.pMerge = 0; this.pCombo = 0;
     this.b = emptyBoard(); this.bs = 0; this.bMerge = 0;
     this.winner = null;
+    this.locked = false;
 
     // 按“机器人难度”锁定本局出块偏向
     var diff = (window.Assist && window.Assist.get("2048-botdiff")) || "normal";
@@ -357,12 +390,13 @@
     if (this.el.combo) this.el.combo.classList.remove("on");
 
     if (this.hell) {
-      // 地狱：玩家的出生块由对手“精准恶意”放置
-      spawnAdversarial(this.p); spawnAdversarial(this.p); spawnAdversarial(this.p);
+      // 地狱：生成由双 AI 决定 —— 你的棋盘被毫不犹豫地落子到最差处，AI 自己则挑最好的
+      spawnWorst(this.p); spawnWorst(this.p); spawnWorst(this.p);
+      spawnBest(this.b); spawnBest(this.b); spawnBest(this.b);
     } else {
       spawn(this.p, this.humanP4); spawn(this.p, this.humanP4); spawn(this.p, this.humanP4);
+      spawnBest(this.b); spawnBest(this.b); spawnBest(this.b);
     }
-    spawn(this.b, this.botP4); spawn(this.b, this.botP4); spawn(this.b, this.botP4);
 
     this.t0 = Date.now();
     this.el.banner.style.display = "none";
@@ -390,6 +424,7 @@
   Duel.prototype.think = function () {
     var self = this;
     if (this.winner) return;
+    this.locked = true;              // 锁定玩家输入，等 bot 走完再解锁（严格轮流）
     this.setStatus("机器人思考中…");
     if (this.aiTimer) window.clearTimeout(this.aiTimer);
     this.aiTimer = window.setTimeout(function () { self.aiAct(); }, 420);
@@ -401,15 +436,16 @@
     var diff = (window.Assist && window.Assist.get("2048-botdiff")) || "med";
     var depth = window.Assist ? window.Assist.botDepth(diff) : 4;
     var d = bestMove(this.b, depth);
-    if (d === null) { this.checkWin(); this.renderB(null); this.setStatus(this.winner ? "" : "机器入局停止"); return; }
+    if (d === null) { this.checkWin(); this.locked = false; this.renderB(null); this.setStatus(this.winner ? "" : "机器入局停止"); return; }
     var old = this.b;
     var res = tryMove(this.b, d);
     var sc = slideTrack(old, d);
     this.bs += res.gained;
     this.b = res.board;
     this.bMerge += res.gained;
-    spawn(this.b, this.botP4);
+    spawnBest(this.b);   // 机器人自己棋盘：由 AI 挑选最有利的(落点, 取值)
     this.checkWin();
+    this.locked = false;             // 解锁，轮到玩家
     this.renderB(sc);
     this.setStatus(this.winner ? "" : "你的回合");
   };
@@ -419,7 +455,7 @@
   };
 
   Duel.prototype.playerMove = function (dir) {
-    if (this.winner) return;
+    if (this.winner || this.locked) return;   // 严格轮流：bot 回合内不接受玩家输入
     var old = this.p;
     var res = tryMove(this.p, dir);
     if (!res.moved) return;
@@ -428,7 +464,7 @@
     this.ps += res.gained;
     this.pMerge += res.gained;
     this.pCombo = res.merges; // 2048+ 本步连击
-    if (this.hell) spawnAdversarial(this.p); else spawn(this.p, this.humanP4);
+    if (this.hell) spawnWorst(this.p); else spawn(this.p, this.humanP4);
     if (window.Sound) { window.Sound.drop(); if (res.merges > 0) window.Sound.merge(); }
     this.checkWin();
     if (window.nudge) window.nudge(this.el.pBoard, dir); // 滑动跟随的推力
