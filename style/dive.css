@@ -53,24 +53,6 @@
 .dgtile.dg-static { animation: dg-static 0.3s var(--ease-pop); }
 @keyframes dg-static { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
 
-.dgtile.t2    { background: #eee4da; color: #776e65; }
-.dgtile.t3    { background: #e8e0d5; color: #776e65; }
-.dgtile.t5    { background: #e3d8c8; color: #776e65; }
-.dgtile.t7    { background: #ddd0bb; color: #776e65; }
-.dgtile.t4    { background: #ede0c8; color: #776e65; }
-.dgtile.t8    { background: #f2b179; color: #f9f6f2; }
-.dgtile.t16   { background: #f59563; color: #f9f6f2; }
-.dgtile.t32   { background: #f67c5f; color: #f9f6f2; }
-.dgtile.t64   { background: #f65e3b; color: #f9f6f2; }
-.dgtile.t128  { background: #edcf72; color: #f9f6f2; }
-.dgtile.t256  { background: #edcc61; color: #f9f6f2; }
-.dgtile.t512  { background: #edc850; color: #f9f6f2; }
-.dgtile.t1024 { background: #edc53f; color: #f9f6f2; }
-.dgtile.t2048 { background: #edc22e; color: #f9f6f2; box-shadow: 0 0 26px rgba(237,194,46,0.6); }
-/* 大于 2048：金色高光渐变 */
-.dgtile.t4096,
-.dgtile.t8192  { background: linear-gradient(135deg, #edc22e, #f0a93a); color: #fff; box-shadow: 0 0 30px rgba(240,169,58,0.65); }
-
 .msg {
   display: none; margin: 16px auto 0; max-width: 360px; padding: 16px 18px;
   font-size: 15px; line-height: 1.8; color: #fff; text-align: center;

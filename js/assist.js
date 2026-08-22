@@ -20,11 +20,12 @@
   var TABLE = {
     easy:   { p8: 0,    p4: 0.02 },
     normal: { p8: 0,    p4: 0.10 },
-    hard:   { p8: 0.08, p4: 0.35 }
+    hard:   { p8: 0.08, p4: 0.35 },
+    hell:   { p8: 0.20, p4: 0.60 }
   };
 
   // 兼容旧存档：off/med 并入等价档位
-  var MIGRATE = { off: "normal", med: "normal", easy: "easy", normal: "normal", hard: "hard" };
+  var MIGRATE = { off: "normal", med: "normal", easy: "easy", normal: "normal", hard: "hard", hell: "hell" };
 
   function get(key) {
     key = key || DEF_KEY;
@@ -106,7 +107,7 @@
 
   /* ---------- AI 对战：bot 深度随难度增减 ---------- */
   function botDepth(diff) {
-    return { easy: 2, normal: 4, hard: 6 }[MIGRATE[diff] || diff] || 4;
+    return { easy: 2, normal: 4, hard: 6, hell: 8 }[MIGRATE[diff] || diff] || 4;
   }
 
   window.Assist = {

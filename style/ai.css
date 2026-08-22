@@ -162,6 +162,28 @@
 
 .game-note { text-align: center; font-size: 12px; color: var(--dim); margin-top: 24px; line-height: 1.9; animation: cli-rise 0.5s var(--ease-pop) 0.3s both; }
 
+/* ---------- 地狱模式（Adversarial）----------
+   随机数生成器变成你的对手：你的出生块由 AI 恶意放置，
+   会把新块精准怼在你最薄弱的地方。页面染上灼烧的赤红。 */
+.container.is-hell .side.bot {
+  border-color: #d9603f;
+  box-shadow: 0 0 0 1px rgba(217, 96, 63, 0.55), 0 0 30px rgba(217, 96, 63, 0.30), var(--shadow-card);
+}
+.container.is-hell .side.bot .side-badge.bot {
+  background: linear-gradient(180deg, #e0704a, #c9442e);
+  box-shadow: 0 2px 0 #9c2f1e, 0 6px 16px rgba(201, 68, 46, 0.5);
+}
+.container.is-hell .game-note { color: rgba(201, 68, 46, 0.9); }
+.container.is-hell .vs {
+  background: linear-gradient(180deg, #e76a45, #c22e1e);
+  box-shadow: 0 2px 0 #901f12, 0 10px 24px rgba(194, 46, 30, 0.5);
+  animation: vs-in 0.6s var(--ease-pop) 0.24s both, hell-breathe 2.2s ease-in-out infinite;
+}
+@keyframes hell-breathe {
+  0%, 100% { box-shadow: 0 2px 0 #901f12, 0 10px 24px rgba(194, 46, 30, 0.4); }
+  50%      { box-shadow: 0 2px 0 #901f12, 0 0 34px rgba(231, 106, 69, 0.85); }
+}
+
 /* ---------- 响应式 ---------- */
 @media (max-width: 720px) {
   .arena { flex-wrap: wrap; }

@@ -39,6 +39,44 @@
     return min;
   }
 
+  /* ---------- 每个数字一块颜色（按 log2 区间在经典暖色阶上插值） ---------- */
+  // 关键色卡：索引 = log2(数字)，与经典 2048 暖色阶一致
+  var PALETTE = {
+    1:  [0xee, 0xe4, 0xda],  // 2
+    2:  [0xed, 0xe0, 0xc8],  // 4
+    3:  [0xf2, 0xb1, 0x79],  // 8
+    4:  [0xf5, 0x95, 0x63],  // 16
+    5:  [0xf6, 0x7c, 0x5f],  // 32
+    6:  [0xf6, 0x5e, 0x3b],  // 64
+    7:  [0xed, 0xcf, 0x72],  // 128
+    8:  [0xed, 0xcc, 0x61],  // 256
+    9:  [0xed, 0xc8, 0x50],  // 512
+    10: [0xed, 0xc5, 0x3f],  // 1024
+    11: [0xed, 0xc2, 0x2e]   // 2048
+  };
+  function mix(a, b, t) {
+    return [Math.round(a[0] + (b[0] - a[0]) * t),
+            Math.round(a[1] + (b[1] - a[1]) * t),
+            Math.round(a[2] + (b[2] - a[2]) * t)];
+  }
+  function rgb(v) { return "rgb(" + v[0] + "," + v[1] + "," + v[2] + ")"; }
+  // 亮度阈值决定文字用深色还是浅色
+  function divePalette(v) {
+    var l = Math.log(v) / Math.LN2;            // log2
+    var i1 = Math.floor(l);
+    var lo = PALETTE[Math.min(11, Math.max(1, i1))];
+    var hi = PALETTE[Math.min(11, Math.max(1, i1 + 1))];
+    var bg = mix(lo, hi, l - i1);
+    // 超过 2048：继续向金色高光推进
+    if (v > 2048) {
+      var gold = [0xf0, 0xa9, 0x3a];
+      var t = Math.min(0.65, (l - 11) / 4);
+      bg = mix([0xed, 0xc2, 0x2e], gold, t);
+    }
+    var bright = (0.299 * bg[0] + 0.587 * bg[1] + 0.114 * bg[2]) > 200;
+    return { bg: rgb(bg), fg: bright ? "#776e65" : "#f9f6f2" };
+  }
+
   function DiveGame(elBoard) {
     this.elBoard = elBoard;
     this.elScore = document.getElementById("dv-score");
@@ -239,12 +277,22 @@
       var t = this.g[r][c];
       if (!t) continue;
       var st = start[r + "," + c] || { fromR: r, fromC: c };
+      var pal = divePalette(t.v);
       var cell = document.createElement("div");
-      cell.className = "dgtile t" + t.v;
+      cell.className = "dgtile";
       cell.textContent = t.v;
       cell.style.left = (PAD + c * (this.cellW + GAP)) + "px";
       cell.style.top = (PAD + r * (this.cellH + GAP)) + "px";
       cell.style.width = this.cellW + "px"; cell.style.height = this.cellH + "px";
+      cell.style.background = pal.bg;
+      cell.style.color = pal.fg;
+      // 超过 2048 的瓦片加金色光晕
+      if (t.v > 2048) cell.style.boxShadow = "0 0 22px rgba(240,169,58,0.55)";
+      // 字号随数字变大而缩小，避免溢出
+      if (t.v < 100) cell.style.fontSize = "clamp(20px,6vw,30px)";
+      else if (t.v < 1000) cell.style.fontSize = "clamp(15px,4.5vw,24px)";
+      else if (t.v < 10000) cell.style.fontSize = "clamp(11px,3.4vw,20px)";
+      else cell.style.fontSize = "clamp(9px,2.8vw,16px)";
       var dx = (st.fromC - c) * this.cellW, dy = (st.fromR - r) * this.cellH;
       if (st.merge) {
         cell.className += " dg-pop";

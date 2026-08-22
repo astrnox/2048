@@ -30,7 +30,8 @@
   var SPAWN = {
     easy:   { bot: 0.16, human: 0.04 },
     normal: { bot: 0.10, human: 0.10 },
-    hard:   { bot: 0.02, human: 0.26 }
+    hard:   { bot: 0.02, human: 0.26 },
+    hell:   { bot: 0.00, human: 0.50 }   // 地狱：机器人几乎只出 2，人类出 4 概率拉满
   };
   function spawn(b, p4) {
     var cells = emptyCells(b);
@@ -41,8 +42,30 @@
   }
   // 把难度档位映射为当前对局的出块偏向
   function spawnBias(botDiff) {
-    var d = botDiff === "easy" ? "easy" : (botDiff === "hard" ? "hard" : "normal");
+    var d = botDiff === "easy" ? "easy" : (botDiff === "hard" ? "hard" : (botDiff === "hell" ? "hell" : "normal"));
     return SPAWN[d];
+  }
+
+  /* ---- 地狱模式 · 对抗性放置 ----
+     Adversarial 2048 核心：当随机数生成器变成你的对手。
+     不再均匀随机落子，而是对每个空位 × 取值(2/4) 模拟放置后，
+     用启发式打分选出【对你的局面破坏最大】的那个位置 ——
+     就像设下迷雾的对手，总把新块怼在你最薄弱、最致命的地方。 */
+  function spawnAdversarial(b) {
+    var cells = emptyCells(b);
+    if (!cells.length) return false;
+    var bestCell = null, bestVal = 2, worst = Infinity;
+    for (var i = 0; i < cells.length; i++) {
+      var rc = cells[i];
+      for (var vi = 0; vi < 2; vi++) {
+        var v = vi === 0 ? 2 : 4;
+        var nb = clone(b); nb[rc[0]][rc[1]] = v;
+        var h = heuristic(nb);
+        if (h < worst) { worst = h; bestCell = rc; bestVal = v; }
+      }
+    }
+    b[bestCell[0]][bestCell[1]] = bestVal;
+    return true;
   }
 
   // 棋盘几何（与 ai.css 一致：padding=8, gap=8）
@@ -215,7 +238,7 @@
 
   // 全局节点预算：让每次决策的计算量严格受控，深度再高也不至于卡顿
   var budget = 0;
-  var NODE_BUDGETS = { 2: 900, 4: 4200, 6: 20000 }; // 简单/普通/困难
+  var NODE_BUDGETS = { 2: 900, 4: 4200, 6: 20000, 8: 70000 }; // 简单/普通/困难/地狱
 
   // 按局面优劣排序候选方向，先试有希望的分支 → 更好的 alpha-beta 剪枝
   function moveOrder(board) {
@@ -292,6 +315,8 @@
     this.thinking = false;
 
     this.el = {
+      container: document.querySelector(".container"),
+      status: document.getElementById("ai-status"),
       pBoard: document.getElementById("board-p"),
       bBoard: document.getElementById("board-b"),
       pScore: document.getElementById("score-p"),
@@ -322,10 +347,21 @@
     var bias = spawnBias(diff);
     this.humanP4 = bias.human;
     this.botP4 = bias.bot;
+    this.hell = (diff === "hell");
+    if (this.el.container && this.el.container.classList) {
+      this.el.container.classList.toggle("is-hell", this.hell);
+      this.el.status.textContent = this.hell ? "地狱 · 你的落子在为你绊脚" : "你的回合";
+    }
+    this.setStatus(this.hell ? "地狱开局 · 新块由对手恶意放置" : "你的回合");
 
     if (this.el.combo) this.el.combo.classList.remove("on");
 
-    spawn(this.p, this.humanP4); spawn(this.p, this.humanP4); spawn(this.p, this.humanP4);
+    if (this.hell) {
+      // 地狱：玩家的出生块由对手“精准恶意”放置
+      spawnAdversarial(this.p); spawnAdversarial(this.p); spawnAdversarial(this.p);
+    } else {
+      spawn(this.p, this.humanP4); spawn(this.p, this.humanP4); spawn(this.p, this.humanP4);
+    }
     spawn(this.b, this.botP4); spawn(this.b, this.botP4); spawn(this.b, this.botP4);
 
     this.t0 = Date.now();
@@ -392,7 +428,7 @@
     this.ps += res.gained;
     this.pMerge += res.gained;
     this.pCombo = res.merges; // 2048+ 本步连击
-    spawn(this.p, this.humanP4);
+    if (this.hell) spawnAdversarial(this.p); else spawn(this.p, this.humanP4);
     if (window.Sound) { window.Sound.drop(); if (res.merges > 0) window.Sound.merge(); }
     this.checkWin();
     if (window.nudge) window.nudge(this.el.pBoard, dir); // 滑动跟随的推力

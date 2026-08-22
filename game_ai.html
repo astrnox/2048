@@ -81,11 +81,12 @@
   <script src="js/sfx.js"></script>
   <script src="js/ai2048.js"></script>
   <script>
-    window.AiDuel && window.AiDuel();
+    var _duel = window.AiDuel && window.AiDuel();
     window.Sound && Sound.mount('settings-slot', { label: '音效' });
     window.Assist && Assist.mount('diff-slot', {
       label: '机器人难度', key: '2048-botdiff', def: 'normal',
-      options: [['easy', '简单'], ['normal', '普通'], ['hard', '困难']]
+      options: [['easy', '简单'], ['normal', '普通'], ['hard', '困难'], ['hell', '地狱']],
+      onchange: function () { if (_duel) _duel.newRound(); }
     });
   </script>
 </body>
