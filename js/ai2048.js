@@ -490,6 +490,9 @@
       container.appendChild(cell);
     }
 
+    // 强制回流，让 a-slide 起始位先落版，再触发平滑过渡
+    void container.offsetHeight;
+
     // 下一帧让滑动位移归零 → 触发平滑过渡
     window.requestAnimationFrame(function () {
       var els = container.querySelectorAll(".a-slide");

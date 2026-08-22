@@ -341,14 +341,14 @@ OrbitGame.prototype.spawnAtRandom = function () {
         face.className += " g-new";
       } else if (st.merge) {
         // 合体：外层照常受重力落下，内层同时弹跳
-        var mdur = Math.min(0.66, 0.24 + Math.abs(st.fromR - r) * 0.12);
+        var mdur = Math.min(0.8, 0.34 + Math.abs(st.fromR - r) * 0.14);
         face.className += " g-pop";
         cell.className += " g-fall";
         cell.style.transitionDuration = mdur + "s";
         cell.style.transform = "translate(" + dx + "px," + dy + "px)";
       } else if (dx !== 0 || dy !== 0) {
         cell.className += " g-fall";
-        var dur = Math.min(0.72, 0.26 + Math.abs(st.fromR - r) * 0.13);
+        var dur = Math.min(0.85, 0.4 + Math.abs(st.fromR - r) * 0.15);
         cell.style.transitionDuration = dur + "s";
         cell.style.transform = "translate(" + dx + "px," + dy + "px)";
       } else if (!initial) {
@@ -356,6 +356,9 @@ OrbitGame.prototype.spawnAtRandom = function () {
       }
       this.elBoard.appendChild(cell);
     }
+
+    // 强制回流，让 g-fall 的起始位先落版，再触发下坠过渡
+    void this.elBoard.offsetHeight;
 
     // 下一帧让 g-fall 位移归零 → 触发重力下坠过渡
     window.requestAnimationFrame(function () {
