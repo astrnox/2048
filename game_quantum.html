@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>2048＋ · 量子</title>
+  <link rel="shortcut icon" href="favicon.ico">
+  <link href="style/ui.css" rel="stylesheet" type="text/css">
+  <link href="style/quantum.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+  <div class="console">
+    <header class="cli-bar">
+      <a class="back-link" href="index.html">← 返回</a>
+      <span class="cli-sys">MODE.2048 // QUANTUM</span>
+    </header>
+
+    <header class="callout">
+      <h1 class="tag">量子<span class="cn">QUANTUM</span></h1>
+      <p class="lede">每颗瓦片都可能是<b>叠加态</b>。滑动时同数相遇：要么<b>相干增强</b>合二为一，要么<b>干涉相消</b>湮灭，能量化作光子随机重演。</p>
+    </header>
+
+    <div class="telemetry">
+      <div class="gauge"><span class="gauge-label">得分</span><span class="gauge-num" id="q-score">0</span></div>
+      <div class="gauge"><span class="gauge-label">最佳</span><span class="gauge-num" id="q-best">0</span></div>
+      <div class="combo-wrap"><span class="combo" id="q-combo"></span></div>
+    </div>
+
+    <div class="board" id="board-q"></div>
+
+    <div class="msg" id="q-msg"></div>
+
+    <div id="settings-slot" class="diff-slot"></div>
+
+    <p class="manual">
+      方向键 / <b>WASD</b> 滑动 · 手机上直接<b>滑动</b><br>
+      <span class="fine">闪烁的<b>叠加态</b>诱人又危险：合体有惊喜，也会突然湮灭</span><br>
+      <span class="fine">目标：合成 <b>2048</b></span>
+    </p>
+  </div>
+
+  <script src="js/swipe.js"></script>
+  <script src="js/sfx.js"></script>
+  <script src="js/quantum2048.js"></script>
+  <script>
+    window.QuantumGame && new window.QuantumGame(document.getElementById("board-q"));
+    window.Sound && Sound.mount('settings-slot', { label: '音效' });
+  </script>
+</body>
+</html>

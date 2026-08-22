@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>2048＋ · 整除</title>
+  <link rel="shortcut icon" href="favicon.ico">
+  <link href="style/ui.css" rel="stylesheet" type="text/css">
+  <link href="style/dive.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+  <div class="console">
+    <header class="cli-bar">
+      <a class="back-link" href="index.html">← 返回</a>
+      <span class="cli-sys">MODE.2048 // DIVE</span>
+    </header>
+
+    <header class="callout">
+      <h1 class="tag">整除<span class="cn">DIVE</span></h1>
+      <p class="lede">瓦片不靠<b>加倍</b>，而是与其<b>约数</b>合体 ∶ 一枚能整除另一枚，便合成二者的<b>和</b>。出生只有 <b>2 · 3 · 5 · 7</b>，合成新数会<b>解锁</b>更多质数。</p>
+    </header>
+
+    <div class="telemetry">
+      <div class="gauge"><span class="gauge-label">得分</span><span class="gauge-num" id="dv-score">0</span></div>
+      <div class="gauge"><span class="gauge-label">最佳</span><span class="gauge-num" id="dv-best">0</span></div>
+    </div>
+
+    <div class="seed-panel">
+      <span class="seed-label">可用质数</span><span class="seed-list" id="dv-seeds"></span>
+      <span class="unlock" id="dv-unlock"></span>
+    </div>
+
+    <div class="board" id="board-dv"></div>
+
+    <div class="msg" id="dv-msg"></div>
+
+    <div id="settings-slot" class="diff-slot"></div>
+
+    <p class="manual">
+      方向键 / <b>WASD</b> 滑动 · 手机上直接<b>滑动</b><br>
+      <span class="fine">例：<b>6</b> 与 <b>2</b>（2 整除 6）相遇 → <b>8</b>；<b>2</b> 与 <b>3</b> 互不整除 → 无法合成</span><br>
+      <span class="fine">目标：合成 <b>2048</b>。合成新值若含未解锁质因数，便将其解锁为可用质数</span>
+    </p>
+  </div>
+
+  <script src="js/swipe.js"></script>
+  <script src="js/sfx.js"></script>
+  <script src="js/dive2048.js"></script>
+  <script>
+    window.DiveGame && new window.DiveGame(document.getElementById("board-dv"));
+    window.Sound && Sound.mount('settings-slot', { label: '音效' });
+  </script>
+</body>
+</html>

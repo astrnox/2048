@@ -383,7 +383,13 @@ GameManager.prototype.move = function (direction) {
 
     this.addRandomTile();
 
-    if (!this.movesAvailable()) {
+    // 反转模式判定（复用经典动画）
+    if (this.mode === "n128" && this.maxTile() >= 128) {
+      this.over = true; this.won = false;      // 造出 128 → 出局
+    } else if (this.mode === "anti") {
+      if (!this.movesAvailable()) { this.over = true; this.won = true; } // 填满 → 胜利
+      else if (this.maxTile() >= 2048) { this.over = true; this.won = true; } // 也算达成
+    } else if (!this.movesAvailable()) {
       this.over = true; // Game over!
     }
 
@@ -392,6 +398,13 @@ GameManager.prototype.move = function (direction) {
     this.combo = 0;
     this.comboBonus = 0;
   }
+};
+
+// 当前棋盘最大瓦片值
+GameManager.prototype.maxTile = function () {
+  var m = 0;
+  this.grid.eachCell(function (x, y, t) { if (t && t.value > m) m = t.value; });
+  return m;
 };
 
 // Get the vector representing the chosen direction
