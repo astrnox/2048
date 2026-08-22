@@ -66,14 +66,14 @@
     easy:   { pow: 0.5,  blunder: 0.85, aiStart: 2,  ceil: 8,   floor: 0,   depthFl: 3, winK: 1.7, loseK: 0.4, spawn: "help",   p4b: 0.10, p4p: 0.06 },
     normal: { pow: 1.0,  blunder: 0.45, aiStart: 2,  ceil: 256, floor: 0,   depthFl: 4, winK: 1.0, loseK: 1.0, spawn: "neutral", p4b: 0.10, p4p: 0.14 },
     hard:   { pow: 1.8,  blunder: 0.08, aiStart: 4,  ceil: 1024,floor: 0,   depthFl: 5, winK: 0.8, loseK: 1.3, spawn: "worst",  p4b: 0.10, p4p: 0.28 },
-    hell:   { pow: 4.0,  blunder: 0.0,  aiStart: 1024,ceil: 0,   floor: 60000, depthFl: 8, winK: 0.2, loseK: 2.0, spawn: "worst", p4b: 0.10, p4p: 0.40 }
+    hell:   { pow: 4.0,  blunder: 0.0,  aiStart: 2,  ceil: 0,   floor: 30000, depthFl: 8, winK: 0.2, loseK: 2.0, spawn: "worst", p4b: 0.10, p4p: 0.40 }
   };
   // 各档体验描述（UI 用）
   var DIFF_DESC = {
     easy:   "确定性封顶 · AI 撑不过 8 且常失误，随便划也能大比分赢",
     normal: "AI 随时能摸到 256，势均力敌",
     hard:   "AI 少失误 + 落点针对，逼近 1024 才止步",
-    hell:   "负反馈拉满 · AI 零失误持 1024 起手，分数/棋面全程碾压、不可破"
+    hell:   "负反馈拉满 · 与你同起点，零失误深搜直冲高位，几无胜算"
   };
 
   // —— 近期战绩滑动窗：驱动动态灵敏度（随活动与表现变化） ——
@@ -336,14 +336,21 @@
   function lg(v) { return v ? Math.log(v) / Math.LN2 : 0; }
 
   function heuristic(board) {
-    var empty = 0, corner = 0, smooth = 0, mono = 0;
+    var empty = 0, corner = 0, smooth = 0, mono = 0, mergable = 0;
     for (var r = 0; r < 4; r++) for (var c = 0; c < 4; c++) {
       var v = board[r][c];
       if (!v) { empty++; continue; }
       var l = lg(v);
       corner += l * W[r][c];                       // 大数压向角
-      if (c + 1 < 4 && board[r][c + 1]) smooth -= Math.abs(l - lg(board[r][c + 1]));
-      if (r + 1 < 4 && board[r + 1][c]) smooth -= Math.abs(l - lg(board[r + 1][c]));
+      // 相邻相等方块（可合并对数）—— AI 要爬到高位，必须主动把等值块对齐合并
+      if (c + 1 < 4 && board[r][c + 1]) {
+        smooth -= Math.abs(l - lg(board[r][c + 1]));
+        if (board[r][c + 1] === v) mergable += v;
+      }
+      if (r + 1 < 4 && board[r + 1][c]) {
+        smooth -= Math.abs(l - lg(board[r + 1][c]));
+        if (board[r + 1][c] === v) mergable += v;
+      }
     }
     // 列/行单调性：靠角一侧数值应更大（贪心保持递增）
     for (var x = 0; x < 4; x++) {
@@ -354,7 +361,7 @@
         if (w && u) mono -= (lg(u) > lg(w)) ? 0 : (lg(w) - lg(u));
       }
     }
-    return corner + smooth * 2.8 + mono * 1.3 + empty * 270;
+    return corner + smooth * 2.8 + mono * 1.3 + empty * 270 + mergable * 0.7;
   }
 
   // 从空位里随机抽样至多 k 个，作为"对手随机放子"的采样（限制计算量）
@@ -370,6 +377,7 @@
 
   // 全局节点预算：让每次决策的计算量严格受控，深度再高也不至于卡顿
   var budget = 0;
+  var budgetFloor = 0;   // 单步"预算闸"：一个方向只能吃自己那份，不能饿死其余方向
 
   // 按局面优劣排序候选方向，先试有希望的分支 → 更好的 alpha-beta 剪枝
   function moveOrder(board) {
@@ -386,7 +394,7 @@
 
   // chanceNode=true 轮到随机放子（对手），false 轮到 _max 挑最好走法（带 alpha-beta）
   function chanceNode(board, depth, alpha, beta) {
-    if (depth <= 0 || --budget <= 0) return heuristic(board);
+    if (depth <= 0 || --budget <= budgetFloor) return heuristic(board);
     var cells = emptyCells(board);
     if (!cells.length) return heuristic(board);
     var samples = sampleCells(cells, Math.min(3, cells.length));
@@ -401,7 +409,7 @@
   }
 
   function maxNode(board, depth, alpha, beta) {
-    if (depth <= 0 || --budget <= 0) return heuristic(board);
+    if (depth <= 0 || --budget <= budgetFloor) return heuristic(board);
     var best = -Infinity;
     var order = moveOrder(board);
     for (var i = 0; i < order.length; i++) {
@@ -417,15 +425,30 @@
   function bestMove(board, budgetIn, maxDepthIn, allowed) {
     budget = budgetIn || 4200;
     maxDepthIn = maxDepthIn || 4;
-    var bestDir = null, best = -Infinity;
-    var order = allowed || moveOrder(board);   // allowed: 已过滤(可动且不越天花板)的方向
-    for (var i = 0; i < order.length; i++) {
-      var d = order[i];
-      if (!tryMove(board, d).moved) continue;   // allowed 或缺省时都跳过无效方向
+    // 收集可动方向（可传 allowed 过滤，如"天花板约束"）
+    var dirs = [];
+    for (var dd = 0; dd < 4; dd++) if (tryMove(board, dd).moved) dirs.push(dd);
+    if (allowed) {
+      var ok = {}; for (var oi = 0; oi < allowed.length; oi++) ok[allowed[oi]] = 1;
+      dirs = dirs.filter(function (x) { return ok[x] === 1; });
+    }
+    if (!dirs.length) return null;
+    // 关键修正：只有"大预算"才按方向数平分 + budgetFloor 闸门，让每个方向
+    // 都被搜到同等深度 —— 避免"第一个方向递归耗尽全部预算、其余方向只评
+    // 一层"的错判（此前大预算反而越搜越弱）。小预算维持原逻辑（单路径快搜），
+    // 避免普通/困难这种中低预算的强度被均分稀释。
+    var split = budgetIn >= 9000;
+    var slice = split ? Math.max(40, Math.floor(budgetIn / dirs.length)) : 0;
+    var bestDir = dirs[0], best = -Infinity;
+    for (var i = 0; i < dirs.length; i++) {
+      var d = dirs[i];
+      budgetFloor = split ? Math.max(0, budget - slice) : 0;
       var res = tryMove(board, d);
       var s = chanceNode(res.board, maxDepthIn, best, Infinity);
       if (s > best) { best = s; bestDir = d; }
+      if (split && budget > budgetFloor) budget = budgetFloor; // 本方向没吃完也把光标前移
     }
+    budgetFloor = 0;
     return bestDir;
   }
 
@@ -514,7 +537,7 @@
     if (this.el.container && this.el.container.classList) {
       this.el.container.classList.toggle("is-hell", this.hell);
     }
-    this.setStatus(this.hell ? "地狱开局 · AI 已握高位块" : "你的回合");
+    this.setStatus(this.hell ? "地狱开局 · AI 与你同起点" : "你的回合");
     this.updateSkillBar();
 
     if (this.el.combo) this.el.combo.classList.remove("on");
@@ -531,8 +554,7 @@
     if (cfg.aiStart > 2) {
       var corner = [[0,0],[0,3],[3,0],[3,3]][Math.floor(Math.random() * 4)];
       this.b[corner[0]][corner[1]] = cfg.aiStart;
-      this.bs = cfg.aiStart;            // 高位起手块的"历史合成分"一并计入，
-                                        // 让地狱的分差在开局即拉开（负反馈拉满）
+      this.bs = cfg.aiStart;            // 高位起手块的历史合成分一并计入（困难档 4）
       spawn(this.b, this.p4b); spawn(this.b, this.p4b);
     } else {
       spawn(this.b, this.p4b); spawn(this.b, this.p4b); spawn(this.b, this.p4b);
