@@ -127,7 +127,7 @@ body {
   border-radius: 999px;
   background: linear-gradient(90deg, transparent, var(--gold), transparent);
 }
-/* 副标题：2048 PLUS */
+/* 副标题 */
 .logo-sub {
   margin: clamp(22px, 4vh, 34px) 0 0;
   font-size: clamp(11px, 3vw, 14px);
@@ -296,4 +296,59 @@ body {
 }
 .modal-cancel {
   background: #EFE9DC;
+}
+
+/* =====================================================
+   排行榜 / 设置 卡片
+   ===================================================== */
+.rank-card {
+  width: min(72vw, 420px);
+  padding: clamp(16px, 3.6vw, 22px) clamp(18px, 4vw, 26px);
+  background: var(--card);
+  border-radius: clamp(14px, 3vw, 20px);
+  box-shadow: var(--shadow-card);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.rank-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  padding: 10px 6px;
+  border-bottom: 1px solid rgba(90, 76, 60, 0.08);
+}
+.rank-row:last-child { border-bottom: 0; }
+.rank-name {
+  font-size: clamp(14px, 3.8vw, 16px); font-weight: 700; color: var(--ink);
+  letter-spacing: 1px;
+}
+.rank-val {
+  font-size: clamp(20px, 5vw, 26px); font-weight: 800; color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 设置分段开关 */
+.seg {
+  display: inline-flex; gap: 4px;
+  padding: 4px;
+  background: rgba(90, 76, 60, 0.08);
+  border-radius: 999px;
+}
+.seg-btn {
+  border: 0; cursor: pointer; font-family: inherit;
+  padding: 8px 22px; border-radius: 999px;
+  font-size: clamp(13px, 3.4vw, 15px); font-weight: 700; letter-spacing: 2px;
+  color: var(--sub); background: transparent;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+.seg-btn.on {
+  color: #fff;
+  background: linear-gradient(180deg, #E3B365, var(--gold));
+  box-shadow: 0 2px 8px rgba(201, 154, 74, 0.4);
+}
+
+/* =====================================================
+   PC 大屏：菜单保持居中，按钮行宽适度放宽
+   ===================================================== */
+@media (min-width: 900px) {
+  .stage { gap: clamp(36px, 7vh, 64px); }
+  .btn-3d { width: min(60vw, 460px); }
 }

@@ -5,6 +5,10 @@
 @import url("ui.css");
 
 .console { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 22px 16px 56px; }
+@media (min-width: 1024px) {
+  .console { max-width: 640px; }
+  .board   { width: min(460px, 84vw); }
+}
 
 .callout { margin: 30px 0 6px; animation: cli-rise 0.5s var(--ease-pop) both; }
 .tag { margin: 0; font-size: clamp(40px, 9vw, 60px); font-weight: 800; letter-spacing: 2px; line-height: 0.95; color: var(--ink); }

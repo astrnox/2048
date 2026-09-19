@@ -70,7 +70,7 @@ a:focus-visible, button:focus-visible {
   border-radius: 4px;
 }
 
-.cli-wrap { position: relative; z-index: 1; max-width: 500px; margin: 0 auto; padding: 20px 16px 56px; }
+.cli-wrap { position: relative; z-index: 1; max-width: 560px; margin: 0 auto; padding: 20px 16px 56px; }
 
 /* ---------- 统一顶栏：返回键 + 模式标记 ---------- */
 .cli-bar {
@@ -235,4 +235,10 @@ a:focus-visible, button:focus-visible {
     -webkit-animation-duration: 0.001ms !important; animation-duration: 0.001ms !important;
     -webkit-transition-duration: 0.001ms !important; transition-duration: 0.001ms !important;
   }
+}
+
+/* ---------- PC 大屏：消除两侧空旷 ---------- */
+@media (min-width: 1024px) {
+  .cli-wrap { max-width: 640px; }
+  .console  { max-width: 640px; }
 }

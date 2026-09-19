@@ -12,6 +12,9 @@
   margin: 0 auto;
   padding: 22px 16px 48px;
 }
+@media (min-width: 1024px) {
+  .container { max-width: 640px; }
+}
 
 /* ---------- 标题 + 读数 ---------- */
 .heading { text-align: center; animation: cli-rise 0.5s var(--ease-pop) both; }

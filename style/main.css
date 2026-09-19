@@ -10,6 +10,9 @@
   width: min(500px, 100%);
   margin: 0 auto;
 }
+@media (min-width: 1024px) {
+  .container { width: min(640px, 100%); }
+}
 
 /* ---------- 标题与读数 ---------- */
 .heading {
@@ -100,6 +103,100 @@ body.mode-time .timer.timer-warning {
 @keyframes timer-pulse {
   0%, 100% { box-shadow: var(--shadow-chip), 0 0 0 0 rgba(246, 94, 59, 0.4); }
   50%      { box-shadow: var(--shadow-chip), 0 0 0 8px rgba(246, 94, 59, 0); }
+}
+
+/* ---------- 限步读表 ---------- */
+.steps-container {
+  display: none; text-align: center; margin-top: 14px;
+}
+body.mode-steps .steps-container { display: block; }
+
+/* ---------- 障碍格 ---------- */
+.cell-blocked {
+  position: absolute;
+  width: calc((100% - 3 * var(--gap)) / 4);
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, rgba(93, 71, 48, 0.42), rgba(93, 71, 48, 0.28));
+  box-shadow: inset 0 2px 5px rgba(63, 47, 33, 0.25), inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 熔岩模式的障碍格：炽热岩浆 */
+.cell-blocked.is-lava {
+  background: linear-gradient(180deg, #f56547, #d93a12 60%, #a82308);
+  box-shadow: inset 0 2px 6px rgba(255, 200, 120, 0.55), inset 0 -2px 6px rgba(120, 20, 0, 0.6), 0 0 14px rgba(246, 94, 59, 0.4);
+  animation: lava-glow 1.4s ease-in-out infinite;
+}
+@keyframes lava-glow {
+  0%, 100% { box-shadow: inset 0 2px 6px rgba(255, 200, 120, 0.55), inset 0 -2px 6px rgba(120, 20, 0, 0.6), 0 0 10px rgba(246, 94, 59, 0.35); }
+  50%      { box-shadow: inset 0 2px 8px rgba(255, 210, 130, 0.7), inset 0 -2px 6px rgba(120, 20, 0, 0.6), 0 0 20px rgba(246, 94, 59, 0.6); }
+}
+
+/* ---------- 盲盒模式：数值藏背面，揭示时亮出 ---------- */
+body.mode-blind .tile-inner {
+  visibility: hidden;
+  background-image: radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.22), transparent 60%);
+}
+body.mode-blind .tile-container.reveal-all .tile-inner {
+  visibility: visible;
+}
+
+/* ---------- 引信模式：寿命徽标 ---------- */
+.fuse-badge {
+  position: absolute; top: -6px; right: -6px;
+  min-width: 26px; height: 20px; padding: 0 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; color: #fff;
+  background: linear-gradient(180deg, #6e5a45, #4d3d2c);
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(63, 47, 33, 0.4);
+  font-variant-numeric: tabular-nums;
+  z-index: 30;
+}
+.fuse-badge.fuse-hot {
+  background: linear-gradient(180deg, #f67c5f, #d93a12);
+  animation: fuse-pulse 0.7s ease-in-out infinite;
+}
+@keyframes fuse-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.15); }
+}
+
+/* 爆炸标记：入射落点就地渲染的爆裂警示 */
+.tile-explode-marker {
+  position: absolute;
+  width: calc((100% - 3 * var(--gap)) / 4);
+  aspect-ratio: 1 / 1;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 40;
+  pointer-events: none;
+  animation: tile-boom 0.65s ease-in-out forwards;
+}
+.tile-explode-inner {
+  display: flex; align-items: center; justify-content: center;
+  width: 74%; height: 74%;
+  border-radius: var(--radius-sm);
+  font-size: 18px; font-weight: 800; color: #ffe9d6;
+  background: linear-gradient(160deg, #f6a15c, #d93a12 70%, #8f1d06);
+  box-shadow: 0 0 18px rgba(246, 94, 59, 0.85);
+  font-variant-numeric: tabular-nums;
+}
+@keyframes tile-boom {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.35) rotate(8deg); filter: brightness(1.4); }
+  100% { transform: scale(0.2); opacity: 0; }
+}
+
+/* ---------- 旋模式：旋转轻摆 ---------- */
+.game-container.board-spun {
+  animation: board-twirl 0.34s var(--ease-pop);
+}
+@keyframes board-twirl {
+  0%   { transform: rotate(0deg) scale(1); }
+  45%  { transform: rotate(4deg) scale(0.99); }
+  100% { transform: rotate(0deg) scale(1); }
 }
 .hidden { display: none !important; }
 

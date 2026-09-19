@@ -4,26 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#F5F0E6">
-<title>2048＋ · 2048 Plus</title>
+<title>2048 · 多玩法合集</title>
 <link rel="stylesheet" href="style/spa.css">
 </head>
 <body>
 
-  <!-- 应用主容器：三视图切换 -->
+  <!-- 应用主容器：视图切换 -->
   <div id="app" class="app">
 
     <!-- ====== 视图 1：首页 ====== -->
     <section class="view view-home is-active" data-view="home">
       <div class="stage">
         <div class="brand">
-          <h1 class="logo-2048" aria-label="2048 Plus"><span class="logo-num">2048</span><span class="logo-plus">＋</span></h1>
-          <p class="logo-sub">2048 PLUS</p>
+          <h1 class="logo-2048" aria-label="2048"><span class="logo-num">2048</span></h1>
+          <p class="logo-sub">多种玩法，一种经典</p>
         </div>
-        <nav class="btn-stack">
+        <nav class="btn-stack" aria-label="主菜单">
           <button class="btn-3d" data-go="modes" data-ripple>开始游戏</button>
-          <button class="btn-3d" data-go="settings" data-ripple>排行榜</button>
+          <button class="btn-3d" data-go="rank" data-ripple>排行榜</button>
           <button class="btn-3d" data-go="settings" data-ripple>设置</button>
-          <button class="btn-3d" data-go="quit" data-ripple>退出游戏</button>
         </nav>
       </div>
     </section>
@@ -32,17 +31,17 @@
     <section class="view view-modes" data-view="modes" aria-hidden="true">
       <div class="stage">
         <div class="brand">
-          <h1 class="logo-2048"><span class="logo-num">2048</span><span class="logo-plus">＋</span></h1>
-          <p class="logo-sub">2048 PLUS</p>
+          <h1 class="logo-2048"><span class="logo-num">2048</span></h1>
+          <p class="logo-sub">选择玩法</p>
         </div>
-        <nav class="btn-stack">
+        <nav class="btn-stack" aria-label="玩法列表">
           <button class="btn-3d" data-play="classic" data-ripple>经典模式</button>
-          <button class="btn-3d" data-play="gravity" data-ripple>星落模式</button>
-          <button class="btn-3d" data-play="hex"     data-ripple>六边模式</button>
-          <button class="btn-3d" data-play="ai"      data-ripple>对抗模式</button>
-          <button class="btn-3d" data-play="quantum" data-ripple>量子模式</button>
-          <button class="btn-3d" data-play="dive"    data-ripple>整除模式</button>
-          <button class="btn-3d" data-play="fib"     data-ripple>斐波那契模式</button>
+          <button class="btn-3d" data-play="gravity" data-ripple>星落引力</button>
+          <button class="btn-3d" data-play="hex"     data-ripple>蜂窝六边形</button>
+          <button class="btn-3d" data-play="ai"      data-ripple>人机对抗</button>
+          <button class="btn-3d" data-play="quantum" data-ripple>量子叠加</button>
+          <button class="btn-3d" data-play="dive"    data-ripple>整除合成</button>
+          <button class="btn-3d" data-play="fib"     data-ripple>斐波那契</button>
           <button class="btn-3d btn-3d-muted" data-back="home" data-ripple>返回菜单</button>
         </nav>
       </div>
@@ -52,11 +51,11 @@
     <section class="view view-play" data-view="play" aria-hidden="true">
       <div class="stage">
         <div class="brand">
-          <h1 class="logo-2048"><span class="logo-num">2048</span><span class="logo-plus">＋</span></h1>
-          <p class="logo-sub">2048 PLUS</p>
+          <h1 class="logo-2048"><span class="logo-num">2048</span></h1>
+          <p class="logo-sub">选择玩法</p>
         </div>
         <div class="mode-chip" id="modeChip">经典模式</div>
-        <nav class="btn-stack">
+        <nav class="btn-stack" aria-label="开局方式">
           <button class="btn-3d" id="btnNewGame" data-ripple>新游戏</button>
           <button class="btn-3d" id="btnContinue" data-ripple>继续游戏</button>
           <button class="btn-3d btn-3d-muted" data-back="modes" data-ripple>返回</button>
@@ -64,10 +63,50 @@
       </div>
     </section>
 
+    <!-- ====== 视图 4：排行榜 ====== -->
+    <section class="view view-rank" data-view="rank" aria-hidden="true">
+      <div class="stage">
+        <div class="brand">
+          <h1 class="logo-2048"><span class="logo-num">2048</span></h1>
+          <p class="logo-sub">排行榜</p>
+        </div>
+        <div class="rank-card" id="rankCard">
+          <div class="rank-row"><span class="rank-name">经典最佳</span><span class="rank-val" id="rankClassic">0</span></div>
+          <div class="rank-row"><span class="rank-name">今日每日最佳</span><span class="rank-val" id="rankDaily">0</span></div>
+        </div>
+        <nav class="btn-stack">
+          <button class="btn-3d" id="btnReset" data-ripple>清空记录</button>
+          <button class="btn-3d btn-3d-muted" data-back="home" data-ripple>返回</button>
+        </nav>
+      </div>
+    </section>
+
+    <!-- ====== 视图 5：设置 ====== -->
+    <section class="view view-settings" data-view="settings" aria-hidden="true">
+      <div class="stage">
+        <div class="brand">
+          <h1 class="logo-2048"><span class="logo-num">2048</span></h1>
+          <p class="logo-sub">设置</p>
+        </div>
+        <div class="rank-card">
+          <div class="rank-row"><span class="rank-name">音效</span>
+            <span class="seg" id="segSound">
+              <button type="button" class="seg-btn" data-sound="1">开</button>
+              <button type="button" class="seg-btn" data-sound="0">关</button>
+            </span>
+          </div>
+        </div>
+        <nav class="btn-stack">
+          <button class="btn-3d" id="btnClearSave" data-ripple>清除游戏存档</button>
+          <button class="btn-3d btn-3d-muted" data-back="home" data-ripple>返回</button>
+        </nav>
+      </div>
+    </section>
+
   </div>
 
-  <!-- 底部版本号 -->
-  <div class="app-foot" aria-hidden="true">V1.0.0</div>
+  <!-- 底部说明 -->
+  <div class="app-foot" aria-hidden="true">经典 2048 · 更多玩法</div>
 
   <!-- ====== 确认框：覆盖层 ====== -->
   <div class="modal" id="confirmModal" aria-hidden="true">
@@ -82,6 +121,7 @@
     </div>
   </div>
 
+<script src="js/sfx.js"></script>
 <script src="js/spa.js"></script>
 </body>
 </html>

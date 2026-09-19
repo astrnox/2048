@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>2048＋ · AI 对抗</title>
+  <title>2048 · 人机对抗</title>
   <link rel="shortcut icon" href="favicon.ico">
   <link href="style/ui.css" rel="stylesheet" type="text/css">
   <link href="style/ai.css" rel="stylesheet" type="text/css">
@@ -13,12 +13,12 @@
 
     <header class="cli-bar">
       <a class="back-link" href="index.html">← 返回</a>
-      <span class="cli-sys">MODE.2048 // VS·AI</span>
+      <span class="cli-sys">人机对抗</span>
     </header>
 
     <header class="stage-head">
-      <h1 class="title">AI · 对抗</h1>
-      <p class="subtitle">你在左 · 机器人在右 · <b>逐步行棋</b>，谁先合成 <b>2048</b> 谁赢</p>
+      <h1 class="title">人机对抗</h1>
+      <p class="subtitle">你和电脑各执一盘、<b>轮流走子</b>，谁先合成 <b>2048</b> 谁赢</p>
     </header>
 
     <div class="race-info">
@@ -30,18 +30,9 @@
         <span class="clock-main" id="race-timer">0:00</span>
       </div>
       <div class="effort">
-        <span class="rate-dot bot"></span><span>机器人与你轮流走子</span>
+        <span class="rate-dot bot"></span><span>电脑与你轮流走子</span>
       </div>
     </div>
-
-    <div class="winbar">
-      <span class="winbar-tag you">你</span>
-      <div class="winbar-track"><div class="winbar-fill" id="winbar-fill"></div></div>
-      <span class="winbar-pct" id="winpct">50%</span>
-      <span class="winbar-tag bot">AI</span>
-    </div>
-
-    <div class="ai-bubble" id="ai-bubble"></div>
 
     <div class="arena">
       <section class="side you">
@@ -65,7 +56,7 @@
             <div class="stat"><span class="stat-num" id="score-b">0</span><span class="stat-label">得分</span></div>
             <div class="stat"><span class="stat-num golden" id="merges-b">+0</span><span class="stat-label">合成</span></div>
           </div>
-          <span class="side-badge bot">AI</span>
+          <span class="side-badge bot">电脑</span>
         </div>
         <div class="board" id="board-b"></div>
         <p class="side-key" id="ai-status">你的回合</p>
@@ -80,7 +71,7 @@
         <button type="button" class="diff-btn" id="sabot-val">放 2</button>
         <button type="button" class="diff-btn" id="sabot-cancel">取消</button>
       </div>
-      <p class="sabot-hint" id="sabot-hint">每完成一轮各 +1 点 · 攒 1 点可主动在 AI 盘放一个 2/4（可跳过）</p>
+      <p class="sabot-hint" id="sabot-hint">每完成一轮双方各 +1 点 · 攒 1 点可主动在电脑棋盘放一个 2/4（可跳过）</p>
     </div>
 
     <div class="banner" id="banner">
@@ -90,11 +81,9 @@
 
     <div id="diff-slot" class="diff-slot"></div>
 
-    <div class="skill-info" id="skill-info"></div>
-
     <div id="settings-slot" class="diff-slot"></div>
 
-    <p class="game-note">你走一步，机器人想一步（MCTS 深搜）后走一步——<b>严格轮流</b>。<b>捣乱技能点</b>：每完成一轮双方各 +1 点，攒 1 点可自愿在对方盘放一个 2/4。<b>地狱</b>：AI 接管你的生成落点 + 自盘可预知，MCTS 深搜步步紧逼。<button type="button" class="diff-btn" id="feed-toggle">反馈开</button></p>
+    <p class="game-note">双方轮流走子：你走一步，电脑走一步。<b>捣乱技能点</b>：每完成一轮双方各获得 1 点，攒够 1 点可以自愿在对方棋盘放一个 2 或 4。<b>地狱</b>：电脑会盯准你的落点出手，步步紧逼。</p>
 
   </div>
 
@@ -106,7 +95,7 @@
     var _duel = window.AiDuel && window.AiDuel();
     window.Sound && Sound.mount('settings-slot', { label: '音效' });
     window.Assist && Assist.mount('diff-slot', {
-      label: '机器人难度', key: '2048-botdiff', def: 'normal',
+      label: '电脑难度', key: '2048-botdiff', def: 'normal',
       options: [['easy', '简单'], ['normal', '普通'], ['hard', '困难'], ['hell', '地狱']],
       onchange: function () { if (_duel) _duel.newRound(); }
     });

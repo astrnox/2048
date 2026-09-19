@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>2048＋ · 经典</title>
+  <title>2048 · 经典</title>
   <link href="style/ui.css" rel="stylesheet" type="text/css">
   <link href="style/main.css" rel="stylesheet" type="text/css">
   <link href="style/classic.css" rel="stylesheet" type="text/css">
@@ -14,11 +14,11 @@
 
     <header class="cli-bar">
       <a class="back-link" href="index.html">← 返回</a>
-      <span class="cli-sys">MODE.2048 // CLASSIC</span>
+      <span class="cli-sys">经典玩法</span>
     </header>
 
     <div class="heading classic-head rise-in">
-      <h1 class="title">2048＋</h1>
+      <h1 class="title">2048</h1>
       <div class="scores-container">
         <div class="score-container">0</div>
         <div class="best-container">0</div>
@@ -32,6 +32,13 @@
       <a class="mode-button" data-mode="daily" href="game.html?mode=daily">每日</a>
       <a class="mode-button" data-mode="n128" href="game.html?mode=n128">别造128</a>
       <a class="mode-button" data-mode="anti" href="game.html?mode=anti">反转</a>
+      <a class="mode-button" data-mode="steps" href="game.html?mode=steps">限步</a>
+      <a class="mode-button" data-mode="block" href="game.html?mode=block">障碍</a>
+      <a class="mode-button" data-mode="spin" href="game.html?mode=spin">旋转</a>
+      <a class="mode-button" data-mode="lava" href="game.html?mode=lava">熔岩</a>
+      <a class="mode-button" data-mode="blind" href="game.html?mode=blind">盲盒</a>
+      <a class="mode-button" data-mode="fission" href="game.html?mode=fission">裂变</a>
+      <a class="mode-button" data-mode="fuse" href="game.html?mode=fuse">引信</a>
     </div>
 
     <div class="daily-hud hidden" id="dailyHud">
@@ -45,6 +52,11 @@
       <div class="timer">1:00</div>
     </div>
 
+    <div class="steps-container" id="stepsHud">
+      <span class="timer-label">剩余步数</span>
+      <div class="timer" id="stepsLeft">60</div>
+    </div>
+
     <div class="above-game classic-above">
       <p class="game-intro" id="mode-hint">同数相撞即合体，合出 <strong>2048</strong> 获胜。</p>
       <a class="restart-button">重开</a>
@@ -54,8 +66,6 @@
       <a class="undo-button" id="undoBtn" title="悔一步（Z / 退格）">悔一步</a>
       <div class="combo-badge hidden" id="comboBadge">连击 <span id="comboCount">×1</span></div>
     </div>
-
-    <div id="diff-slot" class="diff-slot"></div>
 
     <div id="settings-slot" class="diff-slot"></div>
 
@@ -77,7 +87,7 @@
     </div>
 
     <p class="cli-tut">
-      方向键 / <span class="k">WASD</span> 移动 · 手机上直接<span class="k">滑动</span> · <span class="k">R</span> 重开<br>
+      方向键 / <span class="k">WASD</span> 移动 · 手机上直接<span class="k">滑动</span> · 电脑可<b>拖拽棋盘</b> · <span class="k">R</span> 重开 · <span class="k">Z</span> 悔一步<br>
       <span class="k">相同</span>数字相撞即<b>合体</b>，数字翻倍；刚开始先占一角，别把大数顶散。
     </p>
 
@@ -93,11 +103,9 @@
   <script src="js/local_storage_manager.js"></script>
   <script src="js/game_manager.js"></script>
   <script src="js/modes.js"></script>
-  <script src="js/assist.js"></script>
   <script src="js/sfx.js"></script>
   <script src="js/application.js"></script>
   <script>
-    window.Assist && Assist.mount('diff-slot', { label: '难度', key: '2048-diff' });
     window.Sound && Sound.mount('settings-slot', { label: '音效' });
   </script>
 </body>

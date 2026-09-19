@@ -467,10 +467,10 @@
     hell:   { pow: 4.0,  blunder: 0.0,  aiStart: 2,  ceil: 0,   floor: 60000, depthFl: 8, winK: 0.2, loseK: 2.0, spawn: "neutral", p4b: 0.16, p4p: 0.25, controlSpawn: true,  selfKnown: true,  timeMs: 880, nodes: 50000 }
   };
   var DIFF_DESC = {
-    easy:   "AI 温和陪跑到 64 再认输 · 你必胜且玩得久",
-    normal: "AI 随时能摸到 256，势均力敌",
-    hard:   "AI 少失误 + 落点针对，逼近 1024 才止步",
-    hell:   "看似公平开局 · 实则 AI 暗中操控你棋盘的落子与数字，必败"
+    easy:   "电脑温和陪跑到 64 再认输 · 你必胜且玩得久",
+    normal: "电脑随时能摸到 256，势均力敌",
+    hard:   "电脑少失误 + 落点针对，逼近 1024 才止步",
+    hell:   "看似公平开局 · 实则电脑暗中操控你棋盘的落子与数字，必败"
   };
 
   /* 情绪状态机（只调表达与预算上浮，绝不低于难度基线） */
@@ -742,7 +742,7 @@
     this.hellMinGap = 1;  // 地狱对抗生成保留的最小空位（填得极狠但仍有活路）
 
     if (this.el.container && this.el.container.classList) this.el.container.classList.toggle("is-hell", this.hell);
-    this.setStatus(this.hell ? "地狱开局 · AI 与你同起点" : "你的回合");
+    this.setStatus(this.hell ? "地狱开局 · 电脑与你同起点" : "你的回合");
     this.updateSkillBar();
 
     function seedPlayerBlock() {
@@ -774,7 +774,7 @@
     el.innerHTML = '<span class="skill-elo">隐藏分 <b>' + playerRating() + '</b></span>' +
       '<span class="skill-target">目标胜率 <b>' + Math.round(DIFF_TARGET[this.diff] * 100) + '%</b></span>' +
       '<span class="skill-emotion">情绪 <b class="b-em-' + this.emotion + '">' + EMOTION_NAME[this.emotion] + '</b></span>' +
-      '<span class="skill-ai">AI强度 ' + Math.round(this.aiRating) + '</span>' +
+      '<span class="skill-ai">电脑强度 ' + Math.round(this.aiRating) + '</span>' +
       (d ? '<span class="skill-desc">' + d + '</span>' : '');
   };
 
@@ -800,18 +800,9 @@
     }
   };
 
-  /* ---- 气泡 ---- */
-  Duel.prototype.say = function (txt) {
-    if (!this.feedbackOn || !this.el.bubble) return;
-    this.el.bubble.textContent = txt;
-    this.el.bubble.classList.remove("on");
-    void this.el.bubble.offsetWidth;
-    this.el.bubble.classList.add("on");
-    if (this._bubbleT) window.clearTimeout(this._bubbleT);
-    var self = this;
-    this._bubbleT = window.setTimeout(function () { self.bubbleHide(); }, 2600);
-  };
-  Duel.prototype.bubbleHide = function () { if (this.el.bubble) this.el.bubble.classList.remove("on"); };
+  /* ---- 指令气泡（已下线：不再展示台词） ---- */
+  Duel.prototype.say = function () {};
+  Duel.prototype.bubbleHide = function () {};
 
   /* ---- 胜率进度条（真实评估差） ---- */
   Duel.prototype.playerWinEstimate = function () {
@@ -859,7 +850,7 @@
     this.sabotPts--;
     this.updateSabotUI();
     this.highlightSabotCells(true);
-    this.setStatus("在 AI 盘选一个空位放 " + this.sabotVal + "（再点切换 / 点空位放置）");
+    this.setStatus("在电脑棋盘选一个空位放 " + this.sabotVal + "（再点切换 / 点空位放置）");
   };
   Duel.prototype.highlightSabotCells = function (on) {
     var board = this.el.bBoard, self = this;
@@ -1000,7 +991,7 @@
     var self = this;
     if (this.winner) return;
     this.locked = true;
-    this.setStatus("机器人思考中…");
+    this.setStatus("电脑走子中…");
     var mult = (EMOTIONS[this.emotion] || EMOTIONS.calm).mult;
     var cfg = {
       board: this.b, timeMs: this.timeMs, nodes: this.nodes,
@@ -1036,7 +1027,7 @@
   Duel.prototype.onAIResult = function (dir) {
     if (this.winner) return;
     var sc, old, res;
-    if (dir === null) { this.checkWin(); this.locked = false; this.renderB(null); this.setStatus(this.winner ? "" : "机器已至上限 · 等待你反超"); return; }
+    if (dir === null) { this.checkWin(); this.locked = false; this.renderB(null); this.setStatus(this.winner ? "" : "电脑已至上限 · 等待你反超"); return; }
     var d = dir;
     old = this.b;
     res = tryMove(this.b, d);
@@ -1125,26 +1116,8 @@
     else c.classList.remove("on");
   };
 
-  /* ---- 推荐高亮（P4，真最优不连续 + 概率示次优） ---- */
-  Duel.prototype.showReco = function () {
-    if (!this.feedbackOn) return;
-    var cfg = {
-      board: this.p, timeMs: 10, nodes: 40, spawn: "random", p4: this.p4p,
-      blunder: 0, ceil: 0, mult: 1
-    };
-    var d = this.syncChoose(cfg);
-    if (d === null) { this.hideReco(); return; }
-    // 防利用：真最优不连续两次
-    if (d === this.lastPlayerDir) {
-      var others = [];
-      for (var x = 0; x < 4; x++) if (x !== d && tryMove(this.p, x).moved) others.push(x);
-      if (others.length) d = others[(Math.random() * others.length) | 0];
-    }
-    this.lastPlayerDir = d;
-    this.recoBestDir = d; // 用于判定 P1 wasBest
-    this.hideReco();      // 只增/删箭头，不再重绘棋盘（避免打断滑动画）
-    this.renderReco(d);
-  };
+  /* ---- 推荐高亮（已下线：不再提示玩家该怎么走） ---- */
+  Duel.prototype.showReco = function () {};
   Duel.prototype.renderReco = function (d) {
     // 在玩家盘加方向提示
     var el = this.el.pBoard, cw = (el.clientWidth - 2 * PAD - 3 * GAP) / 4;
@@ -1185,11 +1158,11 @@
     var txt;
     if (this.winner === "p") {
       txt = (this.reason === "reach2048") ? "你赢了 · 抢先合成 2048"
-        : (this.reason === "bot-dead") ? "你赢了 · AI 被堵死了"
+        : (this.reason === "bot-dead") ? "你赢了 · 电脑被堵死了"
         : (this.reason === "bot-ceil") ? "你赢了 · AI 触顶" : "你赢了 · 得分更高";
     } else {
-      txt = (this.reason === "player-dead") ? "机器人赢了 · 你被堵死了"
-        : "机器人赢了 · 它先合成了 2048";
+      txt = (this.reason === "player-dead") ? "电脑赢了 · 你被堵死了"
+        : "电脑赢了 · 它先合成了 2048";
     }
     this.el.bannerText.textContent = txt;
   };

@@ -18,6 +18,19 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.undoStack      = null;          // 单步悔棋快照
   this.moves          = 0;             // 已走步数
 
+  // 经典变体：限步挑战 / 障碍格
+  this.stepsLimit     = 60;            // 限步模式可用步数
+  this.stepsLeft      = this.stepsLimit;
+  this.blockCount     = 3;             // 障碍模式障碍格数量
+
+  // 经典变体 v2：旋 / 熔 / 盲 / 裂 / 炸
+  this.lavaMoves      = 0;             // 熔岩模式：岩浆上升的累计步数
+  this.fissionChance  = 0.30;          // 裂变模式：单块分裂概率
+  this.fuseLife       = 8;             // 炸弹模式：瓦片基础寿命（步）
+
+  // 本次操作是否真实移动（true=需要重绘棋盘；false=无效滑动不刷新界面）
+  this._lastMoved = true;
+
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
@@ -46,17 +59,24 @@ GameManager.prototype.startNewGame = function (mode) {
   }
 
   this.timeLeft = this.timeLimit;
+  this.stepsLeft = this.stepsLimit;
+  this.lavaMoves = 0;
 
   // 2048+：重置增强状态；每日模式用当天日期播种，保证全天同一盘、运数相同
   this.moves      = 0;
   this.combo      = 0;
   this.comboBonus = 0;
   this.undoStack  = null;
+  this.lastSpawn  = null;
+  this.lastSpawnTile = null;
+  this.lastExplosions = null;
+  this._lastMoved = true; // 开局/重开总是全量绘制
   this.rng = (this.mode === "daily") ? this.mulberry32(this.todaySeed()) : Math.random;
 
   this.storageManager.clearGameState();
   this.actuator.continueGame(); // Clear the game won/lost message
   this.actuator.updateTimer(this.timeLeft);
+  this.actuator.updateSteps(this.stepsLeft);
   this.actuator.updateModeExtras(this.mode);
 
   this.setup();
@@ -110,7 +130,8 @@ GameManager.prototype.setup = function () {
   // Reload the game from a previous game if present
   if (previousState) {
     this.grid        = new Grid(previousState.grid.size,
-                                previousState.grid.cells); // Reload grid
+                                previousState.grid.cells,
+                                previousState.grid.blocked); // Reload grid
     this.score       = previousState.score;
     this.over        = previousState.over;
     this.won         = previousState.won;
@@ -121,6 +142,11 @@ GameManager.prototype.setup = function () {
     this.over        = false;
     this.won         = false;
     this.keepPlaying = false;
+
+    // 障碍模式：开局布置固定数量的障碍格
+    if (this.mode === "block") {
+      this.grid.addBlockedCells(this.blockCount, this.rng);
+    }
 
     // Add the initial tiles
     this.addStartTiles();
@@ -142,19 +168,15 @@ GameManager.prototype.addRandomTile = function () {
   if (!this.grid.cellsAvailable()) return;
 
   var cell, value;
-  // 每日模式要求可复现：绕过难度(assist)，走后端可复现随机
-  if (this.mode !== "daily" && window.Assist) {
-    value = window.Assist.spawnValue(window.Assist.get());
-    cell = { x: Math.floor(this.rng() * this.size), y: Math.floor(this.rng() * this.size) };
-    if (!this.grid.cellAvailable(cell)) cell = this.pickSpawnCell();
-  }
-  if (!cell) {
-    value = this.pickSpawnValue();
-    cell = this.pickSpawnCell();
-  }
+  value = this.pickSpawnValue();
+  cell = this.pickSpawnCell();
+  if (!cell) return;
 
-  var tile = new Tile(cell, value);
+  var tile = new Tile(cell, value, this.fuseLife);
   this.grid.insertTile(tile);
+  // 炸弹模式：记录本轮出生瓦片引用，避免立即倒计时
+  this.lastSpawnTile = tile;
+  this.lastSpawn = cell;
 };
 
 // 可复现落子值：用 this.rng（每日模式=按日期播种）替代 Math.random
@@ -208,6 +230,10 @@ GameManager.prototype.actuate = function () {
     comboBonus:  this.comboBonus,
     canUndo:     !!this.undoStack,
     moves:       this.moves,
+    stepsLeft:   this.stepsLeft,
+    moved:       this._lastMoved,
+    fuseLife:    this.fuseLife,
+    lastExplosions: this.lastExplosions,
     dailyBest:   (this.mode === "daily") ? this.recordDaily() : 0
   });
 
@@ -231,7 +257,9 @@ GameManager.prototype.snapshot = function () {
   return {
     state:       this.serialize(),
     combo:       this.combo,
-    comboBonus:  this.comboBonus
+    comboBonus:  this.comboBonus,
+    stepsLeft:   this.stepsLeft,
+    lavaMoves:   this.lavaMoves
   };
 };
 
@@ -243,13 +271,22 @@ GameManager.prototype.undo = function () {
   var s  = this.undoStack;
   var st = s.state;
   this.undoStack  = null;
-  this.grid       = new Grid(st.grid.size, st.grid.cells);
+  this.grid       = new Grid(st.grid.size, st.grid.cells, st.grid.blocked);
   this.score      = st.score;
   this.over       = false;
   this.won        = st.won;
   this.keepPlaying = false;
   this.combo      = 0;
   this.comboBonus = 0;
+  this.stepsLeft  = (s.stepsLeft !== undefined) ? s.stepsLeft : this.stepsLeft;
+  this.lavaMoves  = (s.lavaMoves !== undefined) ? s.lavaMoves : this.lavaMoves;
+  this.actuator.updateSteps(this.stepsLeft);
+
+  // 炸弹模式：撤销后所有瓦片寿命已随 serialize 恢复，无需额外处理
+  this.lastSpawn = null;
+  this.lastSpawnTile = null;
+  this.lastExplosions = null;
+  this._lastMoved = true; // 悔棋后棋盘已变，必须重绘
 
   this.actuate();
 };
@@ -322,6 +359,7 @@ GameManager.prototype.move = function (direction) {
   var preMove = this.snapshot();
   this.combo = 0;
   this.comboBonus = 0;
+  this.lastExplosions = null;
 
   var cell, tile;
 
@@ -344,7 +382,7 @@ GameManager.prototype.move = function (direction) {
 
         // Only one merger per row traversal?
         if (next && next.value === tile.value && !next.mergedFrom) {
-          var merged = new Tile(positions.next, tile.value * 2);
+          var merged = new Tile(positions.next, tile.value * 2, self.fuseLife);
           merged.mergedFrom = [tile, next];
 
           self.grid.insertTile(merged);
@@ -361,8 +399,13 @@ GameManager.prototype.move = function (direction) {
             self.comboBonus += merged.value;
           }
 
-          // Win classic & daily when reaching 2048; time & endless play on
-          if (merged.value === 2048 && (this.mode === "classic" || this.mode === "daily")) self.won = true;
+          // Win classic, daily & new variant modes when reaching 2048; time & endless play on
+          if (merged.value === 2048 &&
+              (self.mode === "classic" || self.mode === "daily" ||
+               self.mode === "steps" || self.mode === "block" ||
+               self.mode === "spin" || self.mode === "lava" ||
+               self.mode === "blind" || self.mode === "fission" ||
+               self.mode === "fuse")) self.won = true;
         } else {
           self.moveTile(tile, positions.farthest);
         }
@@ -378,26 +421,44 @@ GameManager.prototype.move = function (direction) {
     // 2048+：保留悔棋快照、累计连击加分与步数
     this.undoStack  = preMove;
     this.moves++;
+
+    // 限步模式：每步扣一，用完即止
+    if (this.mode === "steps") {
+      this.stepsLeft = Math.max(0, this.stepsLeft - 1);
+      this.actuator.updateSteps(this.stepsLeft);
+    }
+
     if (this.comboBonus > 0) this.score += this.comboBonus;
     if (window.Sound && window.Sound.move) window.Sound.move(); // 滑动解压声（合并另有 啵）
 
     this.addRandomTile();
 
-    // 反转模式判定（复用经典动画）
-    if (this.mode === "n128" && this.maxTile() >= 128) {
-      this.over = true; this.won = false;      // 造出 128 → 出局
-    } else if (this.mode === "anti") {
-      if (!this.movesAvailable()) { this.over = true; this.won = true; } // 填满 → 胜利
-      else if (this.maxTile() >= 2048) { this.over = true; this.won = true; } // 也算达成
-    } else if (!this.movesAvailable()) {
-      this.over = true; // Game over!
-    }
-
-    this.actuate();
+    // 变体副作用：旋转 / 裂变 / 熔岩 / 炸弹
+    if (this.mode === "spin") this.rotateBoard();
+    if (this.mode === "fission") this.maybeFission();
+    if (this.mode === "lava") this.riseLava();
+    if (this.mode === "fuse") this.tickFuses();
   } else {
     this.combo = 0;
     this.comboBonus = 0;
   }
+
+  // 记录本次是否有真实移动：无效滑动时跳过棋盘重绘，避免界面闪烁刷新
+  this._lastMoved = moved;
+
+  // 统一收尾判定（无效果的一步也检查死局，障碍格可能造成"空位但无路可走"）
+  if (this.mode === "n128" && this.maxTile() >= 128) {
+    this.over = true; this.won = false;      // 造出 128 → 出局
+  } else if (this.mode === "anti") {
+    if (!this.movesAvailable()) { this.over = true; this.won = true; } // 填满 → 胜利
+    else if (this.maxTile() >= 2048) { this.over = true; this.won = true; } // 也算达成
+  } else if (this.mode === "steps" && this.stepsLeft <= 0) {
+    this.over = true;                        // 步数用尽 → 结算
+  } else if (!this.movesAvailable()) {
+    this.over = true; // Game over!
+  }
+
+  this.actuate();
 };
 
 // 当前棋盘最大瓦片值
@@ -405,6 +466,114 @@ GameManager.prototype.maxTile = function () {
   var m = 0;
   this.grid.eachCell(function (x, y, t) { if (t && t.value > m) m = t.value; });
   return m;
+};
+
+// ============ 经典变体 v2：旋 / 裂 / 熔 / 炸 的副作用 ============
+
+// 旋：整个棋盘顺时针旋转 90°（连同瓦片）
+GameManager.prototype.rotateBoard = function () {
+  var n = this.size;
+  var cells = this.grid.cells;
+  var out = [];
+  for (var x = 0; x < n; x++) out[x] = [];
+
+  // 数据棋盘可用，直接旋转 cell 数组（Tile 的 x/y 一并更新）
+  for (var px = 0; px < n; px++) {
+    for (var py = 0; py < n; py++) {
+      var t = cells[px][py];
+      // 顺时针：新(x,y) = 旧(y, n-1-x)
+      var nx = py, ny = n - 1 - px;
+      if (t) {
+        out[nx][ny] = t;
+        t.updatePosition({ x: nx, y: ny });
+      } else {
+        out[nx][ny] = null;
+      }
+    }
+  }
+  // 障碍格（熔岩/障碍模式）也一起旋转，保持位置一致
+  var newBlocked = [];
+  this.grid.blocked.forEach(function (b) {
+    newBlocked.push({ x: b.y, y: n - 1 - b.x });
+  });
+  this.grid.blocked = newBlocked;
+  this.grid.cells = out;
+};
+
+// 判断 (x,y) 是否被障碍(熔岩/障碍格)占据
+GameManager.prototype.isBlockedCell = function (x, y) {
+  return this.grid.isBlocked(x, y);
+};
+
+// 裂：每个 ≥8 且非本轮新生成的瓦片，有概率分裂成两个半值
+GameManager.prototype.maybeFission = function () {
+  // 先收集候选（避免在遍历中改格）
+  var candidates = [];
+  var self = this;
+  this.grid.eachCell(function (x, y, t) {
+    if (t && t.value >= 8 && !t.mergedFrom) candidates.push(t);
+  });
+  candidates.forEach(function (tile) {
+    if (self.rng() >= self.fissionChance) return;
+    var empty = self.grid.availableCells();
+    if (!empty.length) return;
+    var half = Math.floor(tile.value / 2);
+    if (half < 1) return;
+    var cell = empty[Math.floor(self.rng() * empty.length)];
+    // 分裂：原块减半留在原位，新半块落到随机空位
+    tile.value = half;
+    var fresh = new Tile(cell, half, self.fuseLife);
+    fresh.mergedFrom = null;
+    self.grid.insertTile(fresh);
+  });
+};
+
+// 熔：每 4 步岩浆从底部上升一行；新吞没的行封死并烧毁上面的瓦片
+GameManager.prototype.riseLava = function () {
+  this.lavaMoves++;
+  var step = Math.floor((this.lavaMoves - 1) / 4);     // 已升起的行数
+  var target = Math.min(Math.floor(this.lavaMoves / 4), this.size); // 应升到的行数（封顶）
+  if (target <= step) return;
+
+  for (var row = step; row < target; row++) {
+    var y = this.size - 1 - row; // 从底层往上
+    for (var x = 0; x < this.size; x++) {
+      var t = this.grid.cellContent({ x: x, y: y });
+      if (t) {
+        this.grid.removeTile(t);
+        // 烧毁扣分？熔岩只吞噬不扣分（丢了离散就是惩罚）
+      }
+    }
+    // 该行全部封死
+    for (x = 0; x < this.size; x++) {
+      this.grid.blocked.push({ x: x, y: y });
+    }
+  }
+};
+
+// 炸：每个瓦片倒计时减一；归零则爆炸移除并扣分
+GameManager.prototype.tickFuses = function () {
+  var self = this;
+  var explode = [];
+  this.grid.eachCell(function (x, y, t) {
+    if (!t) return;
+    // 本轮新出生/新合成的不倒计时，寿命回满
+    if (t.mergedFrom || t === self.lastSpawnTile) {
+      t.fuse = self.fuseLife;
+      return;
+    }
+    t.fuse--;
+    if (t.fuse <= 0) explode.push({ x: x, y: y, value: t.value });
+  });
+
+  explode.forEach(function (p) {
+    self.grid.removeTile({ x: p.x, y: p.y });
+    // 爆炸扣分：扣掉该瓦片面值的一半
+    self.score = Math.max(0, self.score - Math.floor(p.value / 2));
+  });
+  if (explode.length) {
+    this.lastExplosions = explode.map(function (p) { return { x: p.x, y: p.y, value: p.value }; });
+  }
 };
 
 // Get the vector representing the chosen direction
@@ -453,7 +622,20 @@ GameManager.prototype.findFarthestPosition = function (cell, vector) {
 };
 
 GameManager.prototype.movesAvailable = function () {
-  return this.grid.cellsAvailable() || this.tileMatchesAvailable();
+  if (this.tileMatchesAvailable()) return true;
+
+  // 障碍格可能产生"有空位但被隔开"的局面：检查是否有任一瓦片能滑进相邻空位
+  var canSlide = false;
+  var self = this;
+  this.grid.eachCell(function (x, y, tile) {
+    if (!tile) return;
+    for (var d = 0; d < 4; d++) {
+      var v = self.getVector(d);
+      var nb = { x: x + v.x, y: y + v.y };
+      if (self.grid.withinBounds(nb) && self.grid.cellAvailable(nb)) { canSlide = true; }
+    }
+  });
+  return canSlide;
 };
 
 // Check for available matches between tiles (more expensive check)
